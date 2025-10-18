@@ -13,9 +13,9 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
   const [currentStep, setCurrentStep] = useState(1);
 
   const steps = [
-    { id: 1, title: "Identity Range", description: "Define who can participate" },
-    { id: 2, title: "Voting Logic", description: "Configure voting rules" },
-    { id: 3, title: "Bill & Certification", description: "Upload your proposal" },
+    { id: 1, title: "Identity Range", description: "Who gets to vote?" },
+    { id: 2, title: "Voting Logic", description: "How should it work?" },
+    { id: 3, title: "Bill & Certification", description: "What are we voting on?" },
   ];
 
   const handleNext = () => {
@@ -100,10 +100,10 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
           </Button>
         ) : (
           <Button
-            onClick={() => alert("Vote deployed! 🌎")}
+            onClick={() => alert("🌎 Vote deployed! Democracy is live. Share it everywhere. 🚀")}
             className="bg-primary hover:bg-primary/90 text-primary-foreground glow-border smooth-transition"
           >
-            Deploy Vote
+            Deploy to Earth 🌎
             <Check className="w-4 h-4 ml-2" />
           </Button>
         )}

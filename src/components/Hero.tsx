@@ -40,13 +40,12 @@ const Hero = ({ onStartWizard }: HeroProps) => {
 
         {/* Tagline */}
         <p className="text-2xl md:text-3xl text-muted-foreground font-light">
-          The programmable voting machine for all humanity
+          Your programmable voting machine 🗳️✨
         </p>
 
         {/* Description */}
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-          A lightweight, censorship-resistant protocol that allows anyone to create, 
-          configure, and deploy democratic votes on the internet.
+          Build democracy like you build code. Create votes, configure rules, and deploy governance—all from your browser. No borders. No gatekeepers. Just humans deciding together.
         </p>
 
         {/* Features */}
@@ -72,14 +71,14 @@ const Hero = ({ onStartWizard }: HeroProps) => {
             size="lg"
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 py-6 text-lg glow-border smooth-transition"
           >
-            Create a Vote
+            Start Voting 🚀
           </Button>
         </div>
 
         {/* Philosophy quote */}
         <div className="pt-12 max-w-2xl mx-auto">
           <blockquote className="text-muted-foreground italic text-sm md:text-base border-l-2 border-primary/50 pl-4">
-            "Democracy is not a place we go to vote. It's a protocol we all run."
+            "Democracy isn't a place you visit—it's a protocol you run. Fork it. Remix it. Make it yours."
             <footer className="text-xs mt-2 not-italic text-primary">
               — Democracy Earth Foundation
             </footer>

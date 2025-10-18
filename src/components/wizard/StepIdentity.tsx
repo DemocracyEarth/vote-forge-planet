@@ -6,28 +6,28 @@ const identityOptions = [
   {
     id: "poh",
     title: "Proof of Humanity",
-    description: "Open to all verified humans via Proof of Humanity registry",
+    description: "Any verified human on Earth can vote. Democracy at planetary scale. 🌍",
     icon: Users,
     badge: "Recommended",
   },
   {
     id: "community",
     title: "Community Restricted",
-    description: "Limited to DAO members or specific Ethereum addresses",
+    description: "Your crew, your rules. Limit voting to your DAO or address list. 🎯",
     icon: Shield,
     badge: null,
   },
   {
     id: "zk",
     title: "Zero-Knowledge Proof",
-    description: "Anonymous participation with ZK-ID verification",
+    description: "Vote anonymously while proving you're legit. Privacy magic. ✨",
     icon: Lock,
     badge: "Privacy",
   },
   {
     id: "invite",
     title: "Invite-Only",
-    description: "Private key signatures for exclusive access",
+    description: "VIP access only. Private keys = exclusive voting rights. 🔑",
     icon: Key,
     badge: null,
   },
@@ -39,9 +39,9 @@ const StepIdentity = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-display font-bold mb-2">Define Identity Range</h2>
+        <h2 className="text-3xl font-display font-bold mb-2">Who Gets to Vote? 🎭</h2>
         <p className="text-muted-foreground">
-          Select who can participate in this vote. This determines the voter registry.
+          Pick your voters. Everyone? Your squad? Secret agents? You decide.
         </p>
       </div>
 

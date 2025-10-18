@@ -12,9 +12,9 @@ const Footer = () => {
           
           <div className="text-center">
             <p className="text-sm text-muted-foreground italic">
-              "Democracy is not a place we go to vote. It's a protocol we all run."
+              "Democracy isn't a place you visit—it's a protocol you run."
             </p>
-            <p className="text-xs text-primary mt-1">— Democracy Earth Foundation</p>
+            <p className="text-xs text-primary mt-1">— Built by humans, for humans</p>
           </div>
 
           <div className="flex gap-4 text-xs text-muted-foreground">

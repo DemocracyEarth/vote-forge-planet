@@ -15,9 +15,9 @@ const StepBill = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-display font-bold mb-2">Bill & Certification</h2>
+        <h2 className="text-3xl font-display font-bold mb-2">What Are We Voting On? 📜</h2>
         <p className="text-muted-foreground">
-          Define what is being voted on and set voting parameters.
+          Time to write your proposal. Make it count—this is what democracy looks like.
         </p>
       </div>
 
@@ -26,11 +26,11 @@ const StepBill = () => {
         <div className="space-y-2">
           <Label htmlFor="title" className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-primary" />
-            Bill Title
+            Proposal Title
           </Label>
           <Input
             id="title"
-            placeholder="e.g., Universal Basic Income Pilot Program"
+            placeholder="e.g., Let's Give Everyone Free Money (UBI Pilot) 💰"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
@@ -38,10 +38,10 @@ const StepBill = () => {
 
         {/* Description */}
         <div className="space-y-2">
-          <Label htmlFor="description">Full Proposal Text</Label>
+          <Label htmlFor="description">The Full Story</Label>
           <Textarea
             id="description"
-            placeholder="Enter the full text of your proposal in markdown format..."
+            placeholder="Tell us everything. Use markdown, get fancy, make your case. This is your moment. ✍️"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={8}
@@ -118,8 +118,7 @@ const StepBill = () => {
             Certification Type
           </div>
           <p className="text-xs text-muted-foreground">
-            Your proposal will be timestamped and stored on IPFS with a signed hash recorded 
-            on-chain for immutability and verification.
+            We'll timestamp your proposal, store it on IPFS, and anchor the hash on-chain. Translation: it's permanent, verifiable, and censorship-proof. 🛡️
           </p>
         </Card>
       </div>

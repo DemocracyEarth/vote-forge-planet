@@ -8,25 +8,25 @@ const votingModels = [
   {
     id: "direct",
     title: "Direct Democracy",
-    description: "One person, one vote. Simple majority wins.",
+    description: "Classic. One person = one vote. Majority rules. 👊",
     icon: Vote,
   },
   {
     id: "liquid",
     title: "Liquid Voting",
-    description: "Delegate your vote to trusted representatives.",
+    description: "Too busy? Delegate to someone you trust. Democracy on autopilot. 🌊",
     icon: Network,
   },
   {
     id: "quadratic",
     title: "Quadratic Voting",
-    description: "Allocate voting power with diminishing returns.",
+    description: "Spread your power across issues. Math that fights extremism. 📊",
     icon: Scale,
   },
   {
     id: "weighted",
     title: "Reputation-Based",
-    description: "Votes weighted by reputation or contribution.",
+    description: "Your contribution = your voice. Meritocracy mode activated. ⭐",
     icon: Star,
   },
 ];
@@ -39,9 +39,9 @@ const StepVotingLogic = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-display font-bold mb-2">Configure Voting Logic</h2>
+        <h2 className="text-3xl font-display font-bold mb-2">How Should Voting Work? ⚙️</h2>
         <p className="text-muted-foreground">
-          Define the rules of your vote using templates or AI-powered prompts.
+          Pick a template or let AI cook up custom rules. Democracy, your way.
         </p>
       </div>
 
@@ -102,10 +102,10 @@ const StepVotingLogic = () => {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium mb-2 block">
-                Describe your voting system in natural language
+                Describe your dream voting system ✨
               </label>
               <Textarea
-                placeholder="Example: Create a quadratic voting system where verified citizens can allocate up to 100 points per issue, redistributing their voting power logarithmically. Votes are transparent but pseudonymous."
+                placeholder="Example: Make a quadratic vote where people get 100 points to split across issues. The more you spend on one thing, the less powerful each point becomes. Keep it anonymous but verifiable. Basically, democracy that can't be gamed."
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
                 rows={6}
