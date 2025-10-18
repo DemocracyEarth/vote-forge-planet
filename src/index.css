@@ -8,45 +8,46 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Aurora light theme - blue to white to green gradient */
-    --background: 210 100% 98%;
-    --foreground: 220 25% 15%;
+    /* Accessible light theme - deep blue and warm amber */
+    --background: 210 40% 98%;
+    --foreground: 220 40% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 25% 15%;
+    --card-foreground: 220 40% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 15%;
+    --popover-foreground: 220 40% 15%;
 
-    /* Cyan/turquoise primary accent */
-    --primary: 172 100% 50%;
-    --primary-foreground: 220 25% 10%;
+    /* Deep blue primary */
+    --primary: 217 91% 45%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 60% 95%;
-    --secondary-foreground: 220 25% 15%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 220 40% 15%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 220 15% 45%;
+    --muted: 210 40% 95%;
+    --muted-foreground: 220 20% 40%;
 
-    --accent: 172 100% 50%;
-    --accent-foreground: 220 25% 10%;
+    /* Warm amber accent */
+    --accent: 38 92% 50%;
+    --accent-foreground: 220 40% 15%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 84% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 30% 88%;
-    --input: 210 30% 90%;
-    --ring: 172 100% 50%;
+    --border: 214 32% 85%;
+    --input: 214 32% 90%;
+    --ring: 217 91% 45%;
 
     --radius: 0.75rem;
 
     /* Custom design tokens */
-    --aurora-start: 210 100% 85%;
+    --aurora-start: 217 71% 92%;
     --aurora-mid: 0 0% 98%;
-    --aurora-end: 150 80% 85%;
+    --aurora-end: 38 80% 92%;
     
-    --glow: 172 100% 50%;
-    --glow-secondary: 164 100% 45%;
+    --glow: 217 91% 45%;
+    --glow-secondary: 38 92% 50%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -59,42 +60,44 @@ All colors MUST be HSL.
   }
 
   .dark {
-    /* Dark theme - black to violet to blue gradient */
-    --background: 240 20% 8%;
-    --foreground: 0 0% 98%;
+    /* Accessible dark theme - deep navy and warm gold */
+    --background: 220 40% 10%;
+    --foreground: 210 40% 98%;
 
-    --card: 240 15% 12%;
-    --card-foreground: 0 0% 98%;
+    --card: 220 35% 14%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 240 15% 12%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 220 35% 14%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 164 100% 55%;
-    --primary-foreground: 240 20% 8%;
+    /* Bright blue primary */
+    --primary: 217 91% 60%;
+    --primary-foreground: 220 40% 10%;
 
-    --secondary: 250 30% 18%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 220 30% 20%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 240 15% 15%;
-    --muted-foreground: 220 10% 60%;
+    --muted: 220 30% 18%;
+    --muted-foreground: 220 15% 65%;
 
-    --accent: 172 100% 50%;
-    --accent-foreground: 240 20% 8%;
+    /* Warm gold accent */
+    --accent: 45 93% 58%;
+    --accent-foreground: 220 40% 10%;
 
-    --destructive: 0 70% 50%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 240 15% 20%;
-    --input: 240 15% 18%;
-    --ring: 164 100% 55%;
+    --border: 220 30% 22%;
+    --input: 220 30% 20%;
+    --ring: 217 91% 60%;
 
     /* Custom design tokens for dark */
-    --aurora-start: 260 60% 15%;
-    --aurora-mid: 240 30% 10%;
-    --aurora-end: 220 70% 25%;
+    --aurora-start: 220 60% 18%;
+    --aurora-mid: 220 40% 12%;
+    --aurora-end: 45 40% 20%;
     
-    --glow: 164 100% 55%;
-    --glow-secondary: 172 100% 50%;
+    --glow: 217 91% 60%;
+    --glow-secondary: 45 93% 58%;
 
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
