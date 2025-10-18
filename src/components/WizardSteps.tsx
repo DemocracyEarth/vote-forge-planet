@@ -35,9 +35,9 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto py-8 animate-fade-in-up">
+    <div className="max-w-5xl mx-auto py-4 sm:py-8 animate-fade-in-up">
       {/* Progress indicator */}
-      <div className="mb-12">
+      <div className="mb-8 sm:mb-12">
         <div className="flex items-center justify-between relative">
           {/* Progress line */}
           <div className="absolute top-5 left-0 right-0 h-0.5 bg-border -z-10" />
@@ -49,7 +49,7 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
           {steps.map((step) => (
             <div key={step.id} className="flex flex-col items-center">
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
+                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
                   step.id < currentStep
                     ? "bg-primary border-primary text-primary-foreground"
                     : step.id === currentStep
@@ -58,16 +58,16 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
                 }`}
               >
                 {step.id < currentStep ? (
-                  <Check className="w-5 h-5" />
+                  <Check className="w-4 h-4 sm:w-5 sm:h-5" />
                 ) : (
-                  <span className="font-semibold">{step.id}</span>
+                  <span className="font-semibold text-sm sm:text-base">{step.id}</span>
                 )}
               </div>
-              <div className="mt-3 text-center">
-                <p className={`text-sm font-medium ${step.id === currentStep ? "text-primary" : "text-muted-foreground"}`}>
+              <div className="mt-2 sm:mt-3 text-center max-w-[90px] sm:max-w-none">
+                <p className={`text-xs sm:text-sm font-medium ${step.id === currentStep ? "text-primary" : "text-muted-foreground"}`}>
                   {step.title}
                 </p>
-                <p className="text-xs text-muted-foreground hidden md:block">{step.description}</p>
+                <p className="text-xs text-muted-foreground hidden lg:block">{step.description}</p>
               </div>
             </div>
           ))}
@@ -75,38 +75,43 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
       </div>
 
       {/* Step content */}
-      <div className="bg-card/50 backdrop-blur-sm rounded-lg p-8 card-glow smooth-transition min-h-[500px]">
+      <div className="bg-card/50 backdrop-blur-sm rounded-lg p-4 sm:p-6 md:p-8 card-glow smooth-transition min-h-[400px] sm:min-h-[500px]">
         {currentStep === 1 && <StepIdentity />}
         {currentStep === 2 && <StepVotingLogic />}
         {currentStep === 3 && <StepBill />}
       </div>
 
       {/* Navigation */}
-      <div className="flex justify-between mt-8">
+      <div className="flex justify-between gap-2 mt-6 sm:mt-8">
         <Button
           variant="outline"
           onClick={handlePrevious}
-          className="smooth-transition"
+          className="smooth-transition text-xs sm:text-sm"
+          size="sm"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          {currentStep === 1 ? t('wizard.backToHome') : t('wizard.previous')}
+          <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+          <span className="hidden xs:inline">{currentStep === 1 ? t('wizard.backToHome') : t('wizard.previous')}</span>
+          <span className="xs:hidden">{currentStep === 1 ? t('wizard.back') : t('wizard.prev')}</span>
         </Button>
 
         {currentStep < 3 ? (
           <Button
             onClick={handleNext}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground smooth-transition"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground smooth-transition text-xs sm:text-sm"
+            size="sm"
           >
-            {t('wizard.nextStep')}
-            <ArrowRight className="w-4 h-4 ml-2" />
+            <span className="hidden xs:inline">{t('wizard.nextStep')}</span>
+            <span className="xs:hidden">{t('wizard.next')}</span>
+            <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
           </Button>
         ) : (
           <Button
             onClick={() => alert(t('wizard.deploySuccess'))}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground glow-border smooth-transition"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground glow-border smooth-transition text-xs sm:text-sm"
+            size="sm"
           >
             {t('wizard.deploy')}
-            <Check className="w-4 h-4 ml-2" />
+            <Check className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
           </Button>
         )}
       </div>

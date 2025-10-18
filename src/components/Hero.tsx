@@ -37,42 +37,42 @@ const Hero = ({ onStartWizard }: HeroProps) => {
         </div>
 
         {/* Main heading */}
-        <h1 className="text-5xl md:text-7xl font-display font-bold tracking-tight glow-text">
+        <h1 className="text-4xl sm:text-5xl md:text-7xl font-display font-bold tracking-tight glow-text px-4">
           {t('hero.title')}
         </h1>
 
         {/* Tagline */}
-        <p className="text-2xl md:text-3xl text-muted-foreground font-light">
+        <p className="text-xl sm:text-2xl md:text-3xl text-muted-foreground font-light px-4">
           {t('hero.tagline')}
         </p>
 
         {/* Description */}
-        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+        <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed px-4">
           {t('hero.description')}
         </p>
 
         {/* Features */}
-        <div className="flex flex-wrap justify-center gap-6 py-8">
+        <div className="flex flex-wrap justify-center gap-4 sm:gap-6 py-6 sm:py-8 px-4">
           <div className="flex items-center gap-2 text-foreground/80">
-            <Users className="w-5 h-5 text-primary" />
-            <span className="text-sm">{t('hero.proofOfHumanity')}</span>
+            <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            <span className="text-xs sm:text-sm">{t('hero.proofOfHumanity')}</span>
           </div>
           <div className="flex items-center gap-2 text-foreground/80">
-            <Sparkles className="w-5 h-5 text-primary" />
-            <span className="text-sm">{t('hero.aiPowered')}</span>
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            <span className="text-xs sm:text-sm">{t('hero.aiPowered')}</span>
           </div>
           <div className="flex items-center gap-2 text-foreground/80">
-            <Globe className="w-5 h-5 text-primary" />
-            <span className="text-sm">{t('hero.decentralized')}</span>
+            <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            <span className="text-xs sm:text-sm">{t('hero.decentralized')}</span>
           </div>
         </div>
 
         {/* CTA */}
-        <div className="pt-4">
+        <div className="pt-4 px-4">
           <Button 
             onClick={onStartWizard}
             size="lg"
-            className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 py-6 text-lg glow-border smooth-transition"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg glow-border smooth-transition"
           >
             {t('hero.cta')}
           </Button>

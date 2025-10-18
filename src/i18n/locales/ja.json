@@ -12,8 +12,11 @@
   },
   "wizard": {
     "backToHome": "ホームに戻る",
+    "back": "戻る",
     "previous": "前へ",
+    "prev": "前",
     "nextStep": "次のステップ",
+    "next": "次",
     "deploy": "地球にデプロイ 🌎",
     "deploySuccess": "🌎 投票がデプロイされました！民主主義がライブです。どこでも共有してください。🚀"
   },

@@ -37,16 +37,16 @@ const StepVotingLogic = () => {
   const [useAI, setUseAI] = useState(false);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
-        <h2 className="text-3xl font-display font-bold mb-2">How Should Voting Work? ⚙️</h2>
-        <p className="text-muted-foreground">
+        <h2 className="text-2xl sm:text-3xl font-display font-bold mb-2">How Should Voting Work? ⚙️</h2>
+        <p className="text-sm sm:text-base text-muted-foreground">
           Pick a template or let AI cook up custom rules. Democracy, your way.
         </p>
       </div>
 
       {/* Toggle between templates and AI */}
-      <div className="flex gap-2 p-1 bg-muted rounded-lg w-fit">
+      <div className="flex gap-2 p-1 bg-muted rounded-lg w-full sm:w-fit">
         <Button
           variant={!useAI ? "default" : "ghost"}
           size="sm"
@@ -69,7 +69,7 @@ const StepVotingLogic = () => {
       {!useAI ? (
         <>
           {/* Template selection */}
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
             {votingModels.map((model) => {
               const Icon = model.icon;
               const isSelected = selectedModel === model.id;
@@ -78,17 +78,17 @@ const StepVotingLogic = () => {
                 <Card
                   key={model.id}
                   onClick={() => setSelectedModel(model.id)}
-                  className={`p-6 cursor-pointer smooth-transition ${
+                  className={`p-4 sm:p-6 cursor-pointer smooth-transition ${
                     isSelected
                       ? "border-primary bg-primary/5 glow-border"
                       : "border-border hover:border-primary/50"
                   }`}
                 >
-                  <div className="flex items-start gap-4">
-                    <Icon className={`w-6 h-6 shrink-0 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    <Icon className={`w-5 h-5 sm:w-6 sm:h-6 shrink-0 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
                     <div>
-                      <h3 className="font-semibold text-lg mb-1">{model.title}</h3>
-                      <p className="text-sm text-muted-foreground">{model.description}</p>
+                      <h3 className="font-semibold text-base sm:text-lg mb-1">{model.title}</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground">{model.description}</p>
                     </div>
                   </div>
                 </Card>

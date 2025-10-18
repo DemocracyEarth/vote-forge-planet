@@ -13,18 +13,18 @@ const StepBill = () => {
   const [threshold, setThreshold] = useState("simple");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
-        <h2 className="text-3xl font-display font-bold mb-2">What Are We Voting On? 📜</h2>
-        <p className="text-muted-foreground">
+        <h2 className="text-2xl sm:text-3xl font-display font-bold mb-2">What Are We Voting On? 📜</h2>
+        <p className="text-sm sm:text-base text-muted-foreground">
           Time to write your proposal. Make it count—this is what democracy looks like.
         </p>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Title */}
         <div className="space-y-2">
-          <Label htmlFor="title" className="flex items-center gap-2">
+          <Label htmlFor="title" className="flex items-center gap-2 text-sm sm:text-base">
             <FileText className="w-4 h-4 text-primary" />
             Proposal Title
           </Label>
@@ -33,53 +33,56 @@ const StepBill = () => {
             placeholder="e.g., Let's Give Everyone Free Money (UBI Pilot) 💰"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            className="text-sm sm:text-base"
           />
         </div>
 
         {/* Description */}
         <div className="space-y-2">
-          <Label htmlFor="description">The Full Story</Label>
+          <Label htmlFor="description" className="text-sm sm:text-base">The Full Story</Label>
           <Textarea
             id="description"
             placeholder="Tell us everything. Use markdown, get fancy, make your case. This is your moment. ✍️"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            rows={8}
-            className="resize-none font-mono text-sm"
+            rows={6}
+            className="resize-none font-mono text-xs sm:text-sm"
           />
         </div>
 
         {/* Time window */}
-        <Card className="p-4 space-y-4">
-          <div className="flex items-center gap-2 text-sm font-medium">
+        <Card className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+          <div className="flex items-center gap-2 text-xs sm:text-sm font-medium">
             <Calendar className="w-4 h-4 text-primary" />
             Voting Time Window
           </div>
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date</Label>
+              <Label htmlFor="startDate" className="text-xs sm:text-sm">Start Date</Label>
               <Input
                 id="startDate"
                 type="datetime-local"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
+                className="text-xs sm:text-sm"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="endDate">End Date</Label>
+              <Label htmlFor="endDate" className="text-xs sm:text-sm">End Date</Label>
               <Input
                 id="endDate"
                 type="datetime-local"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
+                className="text-xs sm:text-sm"
               />
             </div>
           </div>
         </Card>
 
         {/* Outcome threshold */}
-        <Card className="p-4 space-y-4">
-          <div className="flex items-center gap-2 text-sm font-medium">
+        <Card className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+          <div className="flex items-center gap-2 text-xs sm:text-sm font-medium">
             <Target className="w-4 h-4 text-primary" />
             Outcome Threshold
           </div>
@@ -105,19 +108,19 @@ const StepBill = () => {
                     <div className="w-2 h-2 rounded-full bg-primary-foreground" />
                   )}
                 </div>
-                <span className="text-sm">{option.label}</span>
+                <span className="text-xs sm:text-sm">{option.label}</span>
               </label>
             ))}
           </div>
         </Card>
 
         {/* Certification */}
-        <Card className="p-4 space-y-3">
-          <div className="flex items-center gap-2 text-sm font-medium">
+        <Card className="p-3 sm:p-4 space-y-2 sm:space-y-3">
+          <div className="flex items-center gap-2 text-xs sm:text-sm font-medium">
             <Shield className="w-4 h-4 text-primary" />
             Certification Type
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground leading-relaxed">
             We'll timestamp your proposal, store it on IPFS, and anchor the hash on-chain. Translation: it's permanent, verifiable, and censorship-proof. 🛡️
           </p>
         </Card>

@@ -12,8 +12,11 @@
   },
   "wizard": {
     "backToHome": "返回主页",
+    "back": "返回",
     "previous": "上一步",
+    "prev": "上一步",
     "nextStep": "下一步",
+    "next": "下一步",
     "deploy": "部署到地球 🌎",
     "deploySuccess": "🌎 投票已部署！民主已上线。到处分享它。🚀"
   },

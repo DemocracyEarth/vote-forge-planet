@@ -12,8 +12,11 @@
   },
   "wizard": {
     "backToHome": "Voltar ao início",
+    "back": "Voltar",
     "previous": "Anterior",
+    "prev": "Ant.",
     "nextStep": "Próximo passo",
+    "next": "Próx.",
     "deploy": "Implantar na Terra 🌎",
     "deploySuccess": "🌎 Voto implantado! A democracia está ao vivo. Compartilhe em todos os lugares. 🚀"
   },

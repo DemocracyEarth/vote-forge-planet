@@ -12,8 +12,11 @@
   },
   "wizard": {
     "backToHome": "Back to Home",
+    "back": "Back",
     "previous": "Previous",
+    "prev": "Prev",
     "nextStep": "Next Step",
+    "next": "Next",
     "deploy": "Deploy to Earth 🌎",
     "deploySuccess": "🌎 Vote deployed! Democracy is live. Share it everywhere. 🚀"
   },
