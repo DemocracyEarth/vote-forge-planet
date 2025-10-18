@@ -18,9 +18,9 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 220 25% 15%;
 
-    /* Cyan/turquoise primary accent */
-    --primary: 172 100% 50%;
-    --primary-foreground: 220 25% 10%;
+    /* Electric teal primary accent - better contrast */
+    --primary: 180 85% 38%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 210 60% 95%;
     --secondary-foreground: 220 25% 15%;
@@ -69,7 +69,7 @@ All colors MUST be HSL.
     --popover: 240 15% 12%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 164 100% 55%;
+    --primary: 168 100% 65%;
     --primary-foreground: 240 20% 8%;
 
     --secondary: 250 30% 18%;
