@@ -5,7 +5,7 @@ import { Check, Users, Lock, Shield, Key } from "lucide-react";
 const identityOptions = [
   {
     id: "poh",
-    title: "Proof of Humanity",
+    title: "World ID",
     description: "Any verified human on Earth can vote. Democracy at planetary scale. 🌍",
     icon: Users,
     badge: "Recommended",
