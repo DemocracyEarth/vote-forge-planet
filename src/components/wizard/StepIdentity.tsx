@@ -1,52 +1,54 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Check, Users, Lock, Shield, Key } from "lucide-react";
-
-const identityOptions = [
-  {
-    id: "poh",
-    title: "World ID",
-    description: "Any verified human on Earth can vote. Democracy at planetary scale. 🌍",
-    icon: Users,
-    badge: "Recommended",
-  },
-  {
-    id: "community",
-    title: "Community Restricted",
-    description: "Your crew, your rules. Limit voting to your DAO or address list. 🎯",
-    icon: Shield,
-    badge: null,
-  },
-  {
-    id: "zk",
-    title: "Zero-Knowledge Proof",
-    description: "Vote anonymously while proving you're legit. Privacy magic. ✨",
-    icon: Lock,
-    badge: "Privacy",
-  },
-  {
-    id: "invite",
-    title: "Invite-Only",
-    description: "VIP access only. Private keys = exclusive voting rights. 🔑",
-    icon: Key,
-    badge: null,
-  },
-];
+import { useTranslation } from "react-i18next";
 
 const StepIdentity = () => {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<string>("poh");
+
+  const identityOptionsTranslated = [
+    {
+      id: "poh",
+      title: t('steps.identity.worldId'),
+      description: t('steps.identity.worldIdDesc'),
+      icon: Users,
+      badge: t('steps.identity.recommended'),
+    },
+    {
+      id: "community",
+      title: t('steps.identity.community'),
+      description: t('steps.identity.communityDesc'),
+      icon: Shield,
+      badge: null,
+    },
+    {
+      id: "zk",
+      title: t('steps.identity.zk'),
+      description: t('steps.identity.zkDesc'),
+      icon: Lock,
+      badge: t('steps.identity.privacy'),
+    },
+    {
+      id: "invite",
+      title: t('steps.identity.invite'),
+      description: t('steps.identity.inviteDesc'),
+      icon: Key,
+      badge: null,
+    },
+  ];
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-display font-bold mb-2">Who Gets to Vote? 🎭</h2>
+        <h2 className="text-3xl font-display font-bold mb-2">{t('steps.identity.heading')}</h2>
         <p className="text-muted-foreground">
-          Pick your voters. Everyone? Your squad? Secret agents? You decide.
+          {t('steps.identity.subtitle')}
         </p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
-        {identityOptions.map((option) => {
+        {identityOptionsTranslated.map((option) => {
           const Icon = option.icon;
           const isSelected = selected === option.id;
 
@@ -97,8 +99,7 @@ const StepIdentity = () => {
       {/* Additional info */}
       <div className="mt-8 p-4 bg-muted/50 rounded-lg border border-border">
         <p className="text-sm text-muted-foreground">
-          <strong className="text-foreground">Output:</strong> Your selection will generate a voter 
-          registry JSON schema with on-chain or off-chain verification parameters.
+          <strong className="text-foreground">{t('steps.identity.output')}</strong> {t('steps.identity.outputDesc')}
         </p>
       </div>
     </div>

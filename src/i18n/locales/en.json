@@ -1,0 +1,48 @@
+{
+  "hero": {
+    "title": "Democracy Earth Protocol",
+    "tagline": "Your programmable voting machine 🗳️✨",
+    "description": "Build democracy like you build code. Create votes, configure rules, and deploy governance—all from your browser. No borders. No gatekeepers. Just humans deciding together.",
+    "proofOfHumanity": "Proof of Humanity",
+    "aiPowered": "AI-Powered Logic",
+    "decentralized": "Decentralized",
+    "cta": "Start Voting 🚀",
+    "quote": "Democracy isn't a place you visit—it's a protocol you run. Fork it. Remix it. Make it yours.",
+    "quoteAuthor": "Democracy Earth Foundation"
+  },
+  "wizard": {
+    "backToHome": "Back to Home",
+    "previous": "Previous",
+    "nextStep": "Next Step",
+    "deploy": "Deploy to Earth 🌎",
+    "deploySuccess": "🌎 Vote deployed! Democracy is live. Share it everywhere. 🚀"
+  },
+  "steps": {
+    "identity": {
+      "title": "Identity Range",
+      "description": "Who gets to vote?",
+      "heading": "Who Gets to Vote? 🎭",
+      "subtitle": "Pick your voters. Everyone? Your squad? Secret agents? You decide.",
+      "worldId": "World ID",
+      "worldIdDesc": "Any verified human on Earth can vote. Democracy at planetary scale. 🌍",
+      "community": "Community Restricted",
+      "communityDesc": "Your crew, your rules. Limit voting to your DAO or address list. 🎯",
+      "zk": "Zero-Knowledge Proof",
+      "zkDesc": "Vote anonymously while proving you're legit. Privacy magic. ✨",
+      "invite": "Invite-Only",
+      "inviteDesc": "VIP access only. Private keys = exclusive voting rights. 🔑",
+      "recommended": "Recommended",
+      "privacy": "Privacy",
+      "output": "Output:",
+      "outputDesc": "Your selection will generate a voter registry JSON schema with on-chain or off-chain verification parameters."
+    },
+    "voting": {
+      "title": "Voting Logic",
+      "description": "How should it work?"
+    },
+    "bill": {
+      "title": "Bill & Certification",
+      "description": "What are we voting on?"
+    }
+  }
+}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import StepIdentity from "@/components/wizard/StepIdentity";
 import StepVotingLogic from "@/components/wizard/StepVotingLogic";
 import StepBill from "@/components/wizard/StepBill";
@@ -10,12 +11,13 @@ interface WizardStepsProps {
 }
 
 const WizardSteps = ({ onBack }: WizardStepsProps) => {
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1);
 
   const steps = [
-    { id: 1, title: "Identity Range", description: "Who gets to vote?" },
-    { id: 2, title: "Voting Logic", description: "How should it work?" },
-    { id: 3, title: "Bill & Certification", description: "What are we voting on?" },
+    { id: 1, title: t('steps.identity.title'), description: t('steps.identity.description') },
+    { id: 2, title: t('steps.voting.title'), description: t('steps.voting.description') },
+    { id: 3, title: t('steps.bill.title'), description: t('steps.bill.description') },
   ];
 
   const handleNext = () => {
@@ -87,7 +89,7 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
           className="smooth-transition"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          {currentStep === 1 ? "Back to Home" : "Previous"}
+          {currentStep === 1 ? t('wizard.backToHome') : t('wizard.previous')}
         </Button>
 
         {currentStep < 3 ? (
@@ -95,15 +97,15 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
             onClick={handleNext}
             className="bg-primary hover:bg-primary/90 text-primary-foreground smooth-transition"
           >
-            Next Step
+            {t('wizard.nextStep')}
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         ) : (
           <Button
-            onClick={() => alert("🌎 Vote deployed! Democracy is live. Share it everywhere. 🚀")}
+            onClick={() => alert(t('wizard.deploySuccess'))}
             className="bg-primary hover:bg-primary/90 text-primary-foreground glow-border smooth-transition"
           >
-            Deploy to Earth 🌎
+            {t('wizard.deploy')}
             <Check className="w-4 h-4 ml-2" />
           </Button>
         )}

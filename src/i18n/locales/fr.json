@@ -1,0 +1,48 @@
+{
+  "hero": {
+    "title": "Protocole Democracy Earth",
+    "tagline": "Votre machine de vote programmable 🗳️✨",
+    "description": "Construisez la démocratie comme vous construisez du code. Créez des votes, configurez des règles et déployez la gouvernance—tout depuis votre navigateur. Pas de frontières. Pas de gardiens. Juste des humains qui décident ensemble.",
+    "proofOfHumanity": "Preuve d'humanité",
+    "aiPowered": "Logique alimentée par l'IA",
+    "decentralized": "Décentralisé",
+    "cta": "Commencer à voter 🚀",
+    "quote": "La démocratie n'est pas un endroit que vous visitez—c'est un protocole que vous exécutez. Forkez-le. Remixez-le. Faites-en le vôtre.",
+    "quoteAuthor": "Fondation Democracy Earth"
+  },
+  "wizard": {
+    "backToHome": "Retour à l'accueil",
+    "previous": "Précédent",
+    "nextStep": "Étape suivante",
+    "deploy": "Déployer sur Terre 🌎",
+    "deploySuccess": "🌎 Vote déployé! La démocratie est en direct. Partagez-le partout. 🚀"
+  },
+  "steps": {
+    "identity": {
+      "title": "Gamme d'identité",
+      "description": "Qui peut voter?",
+      "heading": "Qui peut voter? 🎭",
+      "subtitle": "Choisissez vos électeurs. Tout le monde? Votre équipe? Des agents secrets? Vous décidez.",
+      "worldId": "ID Mondial",
+      "worldIdDesc": "Tout humain vérifié sur Terre peut voter. Démocratie à l'échelle planétaire. 🌍",
+      "community": "Restreint à la communauté",
+      "communityDesc": "Votre équipe, vos règles. Limitez le vote à votre DAO ou liste d'adresses. 🎯",
+      "zk": "Preuve à divulgation nulle de connaissance",
+      "zkDesc": "Votez de manière anonyme tout en prouvant que vous êtes légitime. Magie de la vie privée. ✨",
+      "invite": "Sur invitation uniquement",
+      "inviteDesc": "Accès VIP uniquement. Clés privées = droits de vote exclusifs. 🔑",
+      "recommended": "Recommandé",
+      "privacy": "Confidentialité",
+      "output": "Sortie:",
+      "outputDesc": "Votre sélection générera un schéma JSON de registre des électeurs avec des paramètres de vérification en chaîne ou hors chaîne."
+    },
+    "voting": {
+      "title": "Logique de vote",
+      "description": "Comment devrait-il fonctionner?"
+    },
+    "bill": {
+      "title": "Projet de loi et certification",
+      "description": "Sur quoi votons-nous?"
+    }
+  }
+}

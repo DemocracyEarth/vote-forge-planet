@@ -1,0 +1,48 @@
+{
+  "hero": {
+    "title": "Protocolo Democracy Earth",
+    "tagline": "Tu máquina de votación programable 🗳️✨",
+    "description": "Construye la democracia como construyes código. Crea votos, configura reglas y despliega gobernanza—todo desde tu navegador. Sin fronteras. Sin guardianes. Solo humanos decidiendo juntos.",
+    "proofOfHumanity": "Prueba de Humanidad",
+    "aiPowered": "Lógica impulsada por IA",
+    "decentralized": "Descentralizado",
+    "cta": "Comenzar a votar 🚀",
+    "quote": "La democracia no es un lugar que visitas—es un protocolo que ejecutas. Bifúrcalo. Remíxalo. Hazlo tuyo.",
+    "quoteAuthor": "Fundación Democracy Earth"
+  },
+  "wizard": {
+    "backToHome": "Volver al inicio",
+    "previous": "Anterior",
+    "nextStep": "Siguiente paso",
+    "deploy": "Desplegar a la Tierra 🌎",
+    "deploySuccess": "🌎 ¡Voto desplegado! La democracia está en vivo. Compártelo en todas partes. 🚀"
+  },
+  "steps": {
+    "identity": {
+      "title": "Rango de identidad",
+      "description": "¿Quién puede votar?",
+      "heading": "¿Quién puede votar? 🎭",
+      "subtitle": "Elige tus votantes. ¿Todos? ¿Tu equipo? ¿Agentes secretos? Tú decides.",
+      "worldId": "ID Mundial",
+      "worldIdDesc": "Cualquier humano verificado en la Tierra puede votar. Democracia a escala planetaria. 🌍",
+      "community": "Restringido a la comunidad",
+      "communityDesc": "Tu equipo, tus reglas. Limita la votación a tu DAO o lista de direcciones. 🎯",
+      "zk": "Prueba de conocimiento cero",
+      "zkDesc": "Vota de forma anónima mientras demuestras que eres legítimo. Magia de privacidad. ✨",
+      "invite": "Solo por invitación",
+      "inviteDesc": "Acceso VIP solamente. Claves privadas = derechos de voto exclusivos. 🔑",
+      "recommended": "Recomendado",
+      "privacy": "Privacidad",
+      "output": "Salida:",
+      "outputDesc": "Tu selección generará un esquema JSON de registro de votantes con parámetros de verificación en cadena o fuera de cadena."
+    },
+    "voting": {
+      "title": "Lógica de votación",
+      "description": "¿Cómo debería funcionar?"
+    },
+    "bill": {
+      "title": "Proyecto y certificación",
+      "description": "¿Sobre qué estamos votando?"
+    }
+  }
+}

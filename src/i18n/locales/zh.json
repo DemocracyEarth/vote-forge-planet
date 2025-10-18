@@ -1,0 +1,48 @@
+{
+  "hero": {
+    "title": "地球民主协议",
+    "tagline": "您的可编程投票机 🗳️✨",
+    "description": "像构建代码一样构建民主。创建投票、配置规则并部署治理——所有这些都可以在浏览器中完成。没有边界。没有看门人。只有人类共同决策。",
+    "proofOfHumanity": "人类证明",
+    "aiPowered": "人工智能驱动的逻辑",
+    "decentralized": "去中心化",
+    "cta": "开始投票 🚀",
+    "quote": "民主不是你访问的地方——它是你运行的协议。分叉它。重新混合它。让它成为你的。",
+    "quoteAuthor": "地球民主基金会"
+  },
+  "wizard": {
+    "backToHome": "返回主页",
+    "previous": "上一步",
+    "nextStep": "下一步",
+    "deploy": "部署到地球 🌎",
+    "deploySuccess": "🌎 投票已部署！民主已上线。到处分享它。🚀"
+  },
+  "steps": {
+    "identity": {
+      "title": "身份范围",
+      "description": "谁可以投票？",
+      "heading": "谁可以投票？🎭",
+      "subtitle": "选择你的选民。每个人？你的团队？秘密特工？你决定。",
+      "worldId": "世界身份",
+      "worldIdDesc": "地球上任何经过验证的人都可以投票。行星规模的民主。🌍",
+      "community": "社区限制",
+      "communityDesc": "你的团队，你的规则。将投票限制在你的 DAO 或地址列表中。🎯",
+      "zk": "零知识证明",
+      "zkDesc": "匿名投票，同时证明你是合法的。隐私魔法。✨",
+      "invite": "仅限邀请",
+      "inviteDesc": "仅限VIP访问。私钥=独家投票权。🔑",
+      "recommended": "推荐",
+      "privacy": "隐私",
+      "output": "输出：",
+      "outputDesc": "您的选择将生成一个带有链上或链下验证参数的选民注册 JSON 架构。"
+    },
+    "voting": {
+      "title": "投票逻辑",
+      "description": "它应该如何工作？"
+    },
+    "bill": {
+      "title": "法案与认证",
+      "description": "我们在投票什么？"
+    }
+  }
+}

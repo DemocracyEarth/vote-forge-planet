@@ -1,11 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Globe, Sparkles, Users } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface HeroProps {
   onStartWizard: () => void;
 }
 
 const Hero = ({ onStartWizard }: HeroProps) => {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden">
       {/* Animated particles */}
@@ -35,32 +38,32 @@ const Hero = ({ onStartWizard }: HeroProps) => {
 
         {/* Main heading */}
         <h1 className="text-5xl md:text-7xl font-display font-bold tracking-tight glow-text">
-          Democracy Earth Protocol
+          {t('hero.title')}
         </h1>
 
         {/* Tagline */}
         <p className="text-2xl md:text-3xl text-muted-foreground font-light">
-          Your programmable voting machine 🗳️✨
+          {t('hero.tagline')}
         </p>
 
         {/* Description */}
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-          Build democracy like you build code. Create votes, configure rules, and deploy governance—all from your browser. No borders. No gatekeepers. Just humans deciding together.
+          {t('hero.description')}
         </p>
 
         {/* Features */}
         <div className="flex flex-wrap justify-center gap-6 py-8">
           <div className="flex items-center gap-2 text-foreground/80">
             <Users className="w-5 h-5 text-primary" />
-            <span className="text-sm">Proof of Humanity</span>
+            <span className="text-sm">{t('hero.proofOfHumanity')}</span>
           </div>
           <div className="flex items-center gap-2 text-foreground/80">
             <Sparkles className="w-5 h-5 text-primary" />
-            <span className="text-sm">AI-Powered Logic</span>
+            <span className="text-sm">{t('hero.aiPowered')}</span>
           </div>
           <div className="flex items-center gap-2 text-foreground/80">
             <Globe className="w-5 h-5 text-primary" />
-            <span className="text-sm">Decentralized</span>
+            <span className="text-sm">{t('hero.decentralized')}</span>
           </div>
         </div>
 
@@ -71,16 +74,16 @@ const Hero = ({ onStartWizard }: HeroProps) => {
             size="lg"
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-8 py-6 text-lg glow-border smooth-transition"
           >
-            Start Voting 🚀
+            {t('hero.cta')}
           </Button>
         </div>
 
         {/* Philosophy quote */}
         <div className="pt-12 max-w-2xl mx-auto">
           <blockquote className="text-muted-foreground italic text-sm md:text-base border-l-2 border-primary/50 pl-4">
-            "Democracy isn't a place you visit—it's a protocol you run. Fork it. Remix it. Make it yours."
+            {t('hero.quote')}
             <footer className="text-xs mt-2 not-italic text-primary">
-              — Democracy Earth Foundation
+              — {t('hero.quoteAuthor')}
             </footer>
           </blockquote>
         </div>
