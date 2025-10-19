@@ -79,27 +79,51 @@ Create a comprehensive JSON configuration that captures all these rules and defi
     }
 
     const aiResponse = await response.json();
-    let generatedConfig = aiResponse.choices[0].message.content;
-    
-    console.log("Generated config:", generatedConfig);
+    let raw = aiResponse.choices?.[0]?.message?.content;
 
-    // Strip markdown code blocks if present
-    if (generatedConfig.trim().startsWith('```')) {
-      const lines = generatedConfig.trim().split('\n');
-      lines.shift(); // Remove first ```json or ```
-      if (lines[lines.length - 1].trim() === '```') {
-        lines.pop(); // Remove closing ```
-      }
-      generatedConfig = lines.join('\n');
+    console.log("Generated config (raw):", raw);
+
+    // Try to coerce the response into valid JSON
+    let votingPageConfig: any = null;
+
+    // 1) If it's already an object, use it
+    if (raw && typeof raw === 'object') {
+      votingPageConfig = raw;
     }
 
-    // Parse the JSON configuration
-    let votingPageConfig;
-    try {
-      votingPageConfig = JSON.parse(generatedConfig);
-    } catch (e) {
-      console.error("Failed to parse AI response as JSON:", generatedConfig);
-      throw new Error("Invalid JSON configuration generated");
+    if (!votingPageConfig && typeof raw === 'string') {
+      let s = raw.trim();
+
+      // 2) If wrapped in markdown code fences, extract inner
+      const fenceMatch = s.match(/^```(?:json)?\n([\s\S]*?)\n```$/i);
+      if (fenceMatch) {
+        s = fenceMatch[1];
+      } else {
+        // 3) Try to extract the first JSON object by braces
+        const firstBrace = s.indexOf('{');
+        const lastBrace = s.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+          s = s.slice(firstBrace, lastBrace + 1);
+        }
+      }
+
+      // 4) Parse
+      try {
+        votingPageConfig = JSON.parse(s);
+      } catch (e) {
+        console.error("Failed to parse AI response as JSON:", s);
+        return new Response(
+          JSON.stringify({ error: "Invalid JSON configuration generated" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    if (!votingPageConfig) {
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON configuration generated" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Save to database
@@ -107,18 +131,22 @@ Create a comprehensive JSON configuration that captures all these rules and defi
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Normalize dates
+    const startDate = billConfig?.startDate ? new Date(billConfig.startDate).toISOString() : null;
+    const endDate = billConfig?.isOngoing ? null : (billConfig?.endDate ? new Date(billConfig.endDate).toISOString() : null);
+
     const { data: election, error: dbError } = await supabase
       .from('elections')
       .insert({
-        title: billConfig.title || 'Untitled Election',
-        description: billConfig.description,
+        title: (billConfig?.title && String(billConfig.title).trim()) || 'Untitled Election',
+        description: billConfig?.description || null,
         identity_config: identityConfig,
         voting_logic_config: votingLogicConfig,
         bill_config: billConfig,
         voting_page_config: votingPageConfig,
-        start_date: billConfig.startDate,
-        end_date: billConfig.endDate,
-        is_ongoing: billConfig.isOngoing || false,
+        start_date: startDate,
+        end_date: endDate,
+        is_ongoing: !!billConfig?.isOngoing,
       })
       .select()
       .single();
