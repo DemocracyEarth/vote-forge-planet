@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import StepIdentity from "@/components/wizard/StepIdentity";
 import StepVotingLogic from "@/components/wizard/StepVotingLogic";
 import StepBill from "@/components/wizard/StepBill";
@@ -12,8 +15,14 @@ interface WizardStepsProps {
 
 const WizardSteps = ({ onBack }: WizardStepsProps) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedVotingModel, setSelectedVotingModel] = useState<string>("direct");
+  const [identityData, setIdentityData] = useState<any>({});
+  const [votingLogicData, setVotingLogicData] = useState<any>({});
+  const [billData, setBillData] = useState<any>({});
+  const [isDeploying, setIsDeploying] = useState(false);
 
   const steps = [
     { id: 1, title: t('steps.identity.title'), description: t('steps.identity.description') },
@@ -32,6 +41,38 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
       setCurrentStep(currentStep - 1);
     } else {
       onBack();
+    }
+  };
+
+  const handleDeploy = async () => {
+    setIsDeploying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-election', {
+        body: {
+          identityConfig: identityData,
+          votingLogicConfig: votingLogicData,
+          billConfig: billData,
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Election Created!",
+        description: "Your voting page has been generated and is ready to share.",
+      });
+
+      // Navigate to the voting page
+      navigate(`/vote/${data.electionId}`);
+    } catch (error) {
+      console.error('Error deploying election:', error);
+      toast({
+        title: "Deployment Failed",
+        description: error instanceof Error ? error.message : "Failed to create election",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeploying(false);
     }
   };
 
@@ -77,9 +118,9 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
 
       {/* Step content */}
       <div className="bg-card/50 backdrop-blur-sm rounded-lg p-4 sm:p-6 md:p-8 card-glow smooth-transition min-h-[400px] sm:min-h-[500px]">
-        {currentStep === 1 && <StepIdentity />}
-        {currentStep === 2 && <StepVotingLogic selectedModel={selectedVotingModel} onModelChange={setSelectedVotingModel} />}
-        {currentStep === 3 && <StepBill votingModel={selectedVotingModel} />}
+        {currentStep === 1 && <StepIdentity onDataChange={setIdentityData} />}
+        {currentStep === 2 && <StepVotingLogic selectedModel={selectedVotingModel} onModelChange={setSelectedVotingModel} onDataChange={setVotingLogicData} />}
+        {currentStep === 3 && <StepBill votingModel={selectedVotingModel} onDataChange={setBillData} />}
       </div>
 
       {/* Navigation */}
@@ -107,12 +148,22 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
           </Button>
         ) : (
           <Button
-            onClick={() => alert(t('wizard.deploySuccess'))}
+            onClick={handleDeploy}
+            disabled={isDeploying}
             className="bg-primary hover:bg-primary/90 text-primary-foreground glow-border smooth-transition text-xs sm:text-sm"
             size="sm"
           >
-            {t('wizard.deploy')}
-            <Check className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
+            {isDeploying ? (
+              <>
+                <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
+                {t('wizard.deploying') || 'Deploying...'}
+              </>
+            ) : (
+              <>
+                {t('wizard.deploy')}
+                <Check className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
+              </>
+            )}
           </Button>
         )}
       </div>

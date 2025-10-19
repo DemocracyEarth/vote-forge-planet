@@ -1,11 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Check, Users, Lock, Shield, Key } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-const StepIdentity = () => {
+interface StepIdentityProps {
+  onDataChange?: (data: any) => void;
+}
+
+const StepIdentity = ({ onDataChange }: StepIdentityProps) => {
   const { t } = useTranslation();
   const [selected, setSelected] = useState<string>("poh");
+
+  useEffect(() => {
+    if (onDataChange) {
+      onDataChange({
+        verificationType: selected,
+      });
+    }
+  }, [selected, onDataChange]);
 
   const identityOptionsTranslated = [
     {

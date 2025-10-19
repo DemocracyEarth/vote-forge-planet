@@ -14,7 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      elections: {
+        Row: {
+          bill_config: Json
+          created_at: string
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          identity_config: Json
+          is_ongoing: boolean | null
+          start_date: string | null
+          status: string | null
+          title: string
+          voting_logic_config: Json
+          voting_page_config: Json
+        }
+        Insert: {
+          bill_config: Json
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          identity_config: Json
+          is_ongoing?: boolean | null
+          start_date?: string | null
+          status?: string | null
+          title: string
+          voting_logic_config: Json
+          voting_page_config: Json
+        }
+        Update: {
+          bill_config?: Json
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          identity_config?: Json
+          is_ongoing?: boolean | null
+          start_date?: string | null
+          status?: string | null
+          title?: string
+          voting_logic_config?: Json
+          voting_page_config?: Json
+        }
+        Relationships: []
+      }
+      votes: {
+        Row: {
+          election_id: string
+          id: string
+          metadata: Json | null
+          vote_value: string
+          vote_weight: number | null
+          voted_at: string
+          voter_identifier: string
+        }
+        Insert: {
+          election_id: string
+          id?: string
+          metadata?: Json | null
+          vote_value: string
+          vote_weight?: number | null
+          voted_at?: string
+          voter_identifier: string
+        }
+        Update: {
+          election_id?: string
+          id?: string
+          metadata?: Json | null
+          vote_value?: string
+          vote_weight?: number | null
+          voted_at?: string
+          voter_identifier?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_election_id_fkey"
+            columns: ["election_id"]
+            isOneToOne: false
+            referencedRelation: "elections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,1 +1,4 @@
 project_id = "qwmgzbgcpypwjenchfei"
+
+[functions.create-election]
+verify_jwt = false

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,12 +27,22 @@ const votingModels = [
 interface StepVotingLogicProps {
   selectedModel: string;
   onModelChange: (model: string) => void;
+  onDataChange?: (data: any) => void;
 }
 
-const StepVotingLogic = ({ selectedModel, onModelChange }: StepVotingLogicProps) => {
+const StepVotingLogic = ({ selectedModel, onModelChange, onDataChange }: StepVotingLogicProps) => {
   const { t } = useTranslation();
   const [aiPrompt, setAiPrompt] = useState("");
   const [useAI, setUseAI] = useState(false);
+
+  useEffect(() => {
+    if (onDataChange) {
+      onDataChange({
+        model: selectedModel,
+        aiPrompt: useAI ? aiPrompt : undefined,
+      });
+    }
+  }, [selectedModel, aiPrompt, useAI, onDataChange]);
 
   const handleModelSelect = (modelId: string) => {
     onModelChange(modelId);

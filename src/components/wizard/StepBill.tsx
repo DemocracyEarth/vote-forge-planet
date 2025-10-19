@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -8,9 +8,10 @@ import { Calendar, FileText, Shield, Target, Percent } from "lucide-react";
 
 interface StepBillProps {
   votingModel: string;
+  onDataChange?: (data: any) => void;
 }
 
-const StepBill = ({ votingModel }: StepBillProps) => {
+const StepBill = ({ votingModel, onDataChange }: StepBillProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -23,6 +24,21 @@ const StepBill = ({ votingModel }: StepBillProps) => {
     voteCost: "1",
     reputationMinimum: "100",
   });
+
+  useEffect(() => {
+    if (onDataChange) {
+      onDataChange({
+        title,
+        description,
+        startDate,
+        endDate,
+        isOngoing,
+        threshold,
+        customThreshold: threshold === "custom" ? customThreshold : undefined,
+        customOptions: threshold === "custom_logic" ? customOptions : undefined,
+      });
+    }
+  }, [title, description, startDate, endDate, isOngoing, threshold, customThreshold, customOptions, onDataChange]);
 
   return (
     <div className="space-y-4 sm:space-y-6">
