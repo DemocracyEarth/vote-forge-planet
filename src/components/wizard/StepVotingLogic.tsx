@@ -24,14 +24,18 @@ const votingModels = [
   },
 ];
 
-const StepVotingLogic = () => {
+interface StepVotingLogicProps {
+  selectedModel: string;
+  onModelChange: (model: string) => void;
+}
+
+const StepVotingLogic = ({ selectedModel, onModelChange }: StepVotingLogicProps) => {
   const { t } = useTranslation();
-  const [selectedModel, setSelectedModel] = useState<string>("direct");
   const [aiPrompt, setAiPrompt] = useState("");
   const [useAI, setUseAI] = useState(false);
 
   const handleModelSelect = (modelId: string) => {
-    setSelectedModel(modelId);
+    onModelChange(modelId);
     const promptText = t(`steps.voting.models.${modelId}.prompt`);
     setAiPrompt(promptText);
   };

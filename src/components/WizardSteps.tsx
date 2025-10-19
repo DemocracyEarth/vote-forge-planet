@@ -13,6 +13,7 @@ interface WizardStepsProps {
 const WizardSteps = ({ onBack }: WizardStepsProps) => {
   const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1);
+  const [selectedVotingModel, setSelectedVotingModel] = useState<string>("direct");
 
   const steps = [
     { id: 1, title: t('steps.identity.title'), description: t('steps.identity.description') },
@@ -77,8 +78,8 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
       {/* Step content */}
       <div className="bg-card/50 backdrop-blur-sm rounded-lg p-4 sm:p-6 md:p-8 card-glow smooth-transition min-h-[400px] sm:min-h-[500px]">
         {currentStep === 1 && <StepIdentity />}
-        {currentStep === 2 && <StepVotingLogic />}
-        {currentStep === 3 && <StepBill />}
+        {currentStep === 2 && <StepVotingLogic selectedModel={selectedVotingModel} onModelChange={setSelectedVotingModel} />}
+        {currentStep === 3 && <StepBill votingModel={selectedVotingModel} />}
       </div>
 
       {/* Navigation */}
