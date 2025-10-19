@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,27 +23,16 @@ import { useToast } from "@/hooks/use-toast";
 
 export const LLMSettings = () => {
   const [open, setOpen] = useState(false);
-  const [apiKey, setApiKey] = useState("");
-  const [model, setModel] = useState("gpt-5-2025-08-07");
-  const [saveLocally, setSaveLocally] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    const savedKey = localStorage.getItem("llm_api_key");
-    const savedModel = localStorage.getItem("llm_model");
-    const savedPreference = localStorage.getItem("llm_save_locally");
-    
-    if (savedKey) {
-      setApiKey(savedKey);
-      setSaveLocally(true);
-    }
-    if (savedModel) {
-      setModel(savedModel);
-    }
-    if (savedPreference) {
-      setSaveLocally(savedPreference === "true");
-    }
-  }, []);
+  
+  // Load from localStorage on open
+  const savedKey = typeof window !== 'undefined' ? localStorage.getItem("llm_api_key") || "" : "";
+  const savedModel = typeof window !== 'undefined' ? localStorage.getItem("llm_model") || "gpt-5-2025-08-07" : "gpt-5-2025-08-07";
+  const savedLocally = typeof window !== 'undefined' ? localStorage.getItem("llm_save_locally") === "true" : false;
+  
+  const [apiKey, setApiKey] = useState(savedKey);
+  const [model, setModel] = useState(savedModel);
+  const [saveLocally, setSaveLocally] = useState(savedLocally);
 
   const handleSave = () => {
     if (saveLocally) {
