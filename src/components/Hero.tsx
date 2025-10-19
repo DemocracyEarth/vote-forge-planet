@@ -1,6 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Globe, Sparkles, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 import logo from "@/assets/logo.png";
 
 interface HeroProps {
@@ -9,6 +12,20 @@ interface HeroProps {
 
 const Hero = ({ onStartWizard }: HeroProps) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden">
@@ -69,7 +86,7 @@ const Hero = ({ onStartWizard }: HeroProps) => {
         </div>
 
         {/* CTA */}
-        <div className="pt-4 px-4">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4 px-4">
           <Button 
             onClick={onStartWizard}
             size="lg"
@@ -77,6 +94,25 @@ const Hero = ({ onStartWizard }: HeroProps) => {
           >
             {t('hero.cta')}
           </Button>
+          {user ? (
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => navigate("/dashboard")}
+              className="px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg"
+            >
+              Go to Dashboard
+            </Button>
+          ) : (
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => navigate("/auth")}
+              className="px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg"
+            >
+              Sign In
+            </Button>
+          )}
         </div>
 
         {/* Philosophy quote */}

@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { identityConfig, votingLogicConfig, billConfig } = await req.json();
+    const { identityConfig, votingLogicConfig, billConfig, userId } = await req.json();
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -147,6 +147,7 @@ Create a comprehensive JSON configuration that captures all these rules and defi
         start_date: startDate,
         end_date: endDate,
         is_ongoing: !!billConfig?.isOngoing,
+        created_by: userId || null,
       })
       .select()
       .single();
