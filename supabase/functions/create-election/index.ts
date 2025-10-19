@@ -79,9 +79,19 @@ Create a comprehensive JSON configuration that captures all these rules and defi
     }
 
     const aiResponse = await response.json();
-    const generatedConfig = aiResponse.choices[0].message.content;
+    let generatedConfig = aiResponse.choices[0].message.content;
     
     console.log("Generated config:", generatedConfig);
+
+    // Strip markdown code blocks if present
+    if (generatedConfig.trim().startsWith('```')) {
+      const lines = generatedConfig.trim().split('\n');
+      lines.shift(); // Remove first ```json or ```
+      if (lines[lines.length - 1].trim() === '```') {
+        lines.pop(); // Remove closing ```
+      }
+      generatedConfig = lines.join('\n');
+    }
 
     // Parse the JSON configuration
     let votingPageConfig;
