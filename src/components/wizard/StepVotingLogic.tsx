@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -7,41 +8,40 @@ import { Vote, Users2, Scale, Network, Star, Sparkles } from "lucide-react";
 const votingModels = [
   {
     id: "direct",
-    title: "Direct Democracy",
-    description: "Classic. One person = one vote. Majority rules. 👊",
     icon: Vote,
   },
   {
     id: "liquid",
-    title: "Liquid Voting",
-    description: "Too busy? Delegate to someone you trust. Democracy on autopilot. 🌊",
     icon: Network,
   },
   {
     id: "quadratic",
-    title: "Quadratic Voting",
-    description: "Spread your power across issues. Math that fights extremism. 📊",
     icon: Scale,
   },
   {
     id: "weighted",
-    title: "Reputation-Based",
-    description: "Your contribution = your voice. Meritocracy mode activated. ⭐",
     icon: Star,
   },
 ];
 
 const StepVotingLogic = () => {
+  const { t } = useTranslation();
   const [selectedModel, setSelectedModel] = useState<string>("direct");
   const [aiPrompt, setAiPrompt] = useState("");
   const [useAI, setUseAI] = useState(false);
 
+  const handleModelSelect = (modelId: string) => {
+    setSelectedModel(modelId);
+    const promptText = t(`steps.voting.models.${modelId}.prompt`);
+    setAiPrompt(promptText);
+  };
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <div>
-        <h2 className="text-2xl sm:text-3xl font-display font-bold mb-2">How Should Voting Work? ⚙️</h2>
+        <h2 className="text-2xl sm:text-3xl font-display font-bold mb-2">{t('steps.voting.heading')}</h2>
         <p className="text-sm sm:text-base text-muted-foreground">
-          Pick a template or let AI cook up custom rules. Democracy, your way.
+          {t('steps.voting.subtitle')}
         </p>
       </div>
 
@@ -53,7 +53,7 @@ const StepVotingLogic = () => {
           onClick={() => setUseAI(false)}
           className="smooth-transition"
         >
-          Templates
+          {t('steps.voting.templates')}
         </Button>
         <Button
           variant={useAI ? "default" : "ghost"}
@@ -62,7 +62,7 @@ const StepVotingLogic = () => {
           className="smooth-transition"
         >
           <Sparkles className="w-4 h-4 mr-2" />
-          AI Prompt
+          {t('steps.voting.aiPrompt')}
         </Button>
       </div>
 
@@ -77,7 +77,7 @@ const StepVotingLogic = () => {
               return (
                 <Card
                   key={model.id}
-                  onClick={() => setSelectedModel(model.id)}
+                  onClick={() => handleModelSelect(model.id)}
                   className={`p-4 sm:p-6 cursor-pointer smooth-transition ${
                     isSelected
                       ? "border-primary bg-primary/5 glow-border"
@@ -87,8 +87,12 @@ const StepVotingLogic = () => {
                   <div className="flex items-start gap-3 sm:gap-4">
                     <Icon className={`w-5 h-5 sm:w-6 sm:h-6 shrink-0 ${isSelected ? "text-primary" : "text-muted-foreground"}`} />
                     <div>
-                      <h3 className="font-semibold text-base sm:text-lg mb-1">{model.title}</h3>
-                      <p className="text-xs sm:text-sm text-muted-foreground">{model.description}</p>
+                      <h3 className="font-semibold text-base sm:text-lg mb-1">
+                        {t(`steps.voting.models.${model.id}.title`)}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        {t(`steps.voting.models.${model.id}.description`)}
+                      </p>
                     </div>
                   </div>
                 </Card>
@@ -102,10 +106,10 @@ const StepVotingLogic = () => {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium mb-2 block">
-                Describe your dream voting system ✨
+                {t('steps.voting.aiPromptLabel')}
               </label>
               <Textarea
-                placeholder="Example: Make a quadratic vote where people get 100 points to split across issues. The more you spend on one thing, the less powerful each point becomes. Keep it anonymous but verifiable. Basically, democracy that can't be gamed."
+                placeholder={t('steps.voting.aiPromptPlaceholder')}
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
                 rows={6}
@@ -118,18 +122,14 @@ const StepVotingLogic = () => {
               disabled={!aiPrompt.trim()}
             >
               <Sparkles className="w-4 h-4 mr-2" />
-              Generate Voting Logic
+              {t('steps.voting.generateButton')}
             </Button>
 
             {/* Example prompts */}
             <div className="space-y-2">
-              <p className="text-sm font-medium">Example prompts:</p>
+              <p className="text-sm font-medium">{t('steps.voting.examplePrompts')}</p>
               <div className="space-y-2">
-                {[
-                  "Quadratic voting with 100 points per voter",
-                  "Delegative democracy with liquid vote transfers",
-                  "Reputation-weighted voting based on contribution history",
-                ].map((example, i) => (
+                {(t('steps.voting.exampleList', { returnObjects: true }) as string[]).map((example, i) => (
                   <button
                     key={i}
                     onClick={() => setAiPrompt(example)}
@@ -147,8 +147,7 @@ const StepVotingLogic = () => {
       {/* Output preview */}
       <div className="mt-8 p-4 bg-muted/50 rounded-lg border border-border">
         <p className="text-sm text-muted-foreground">
-          <strong className="text-foreground">Output:</strong> Smart contract ABI or JSON logic 
-          definition will be generated based on your selection.
+          <strong className="text-foreground">{t('steps.voting.output')}</strong> {t('steps.voting.outputDesc')}
         </p>
       </div>
     </div>

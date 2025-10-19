@@ -41,7 +41,44 @@
     },
     "voting": {
       "title": "Voting Logic",
-      "description": "How should it work?"
+      "description": "How should it work?",
+      "heading": "How Should Voting Work? ⚙️",
+      "subtitle": "Pick a template or let AI cook up custom rules. Democracy, your way.",
+      "templates": "Templates",
+      "aiPrompt": "AI Prompt",
+      "aiPromptLabel": "Describe your dream voting system ✨",
+      "aiPromptPlaceholder": "Example: Make a quadratic vote where people get 100 points to split across issues. The more you spend on one thing, the less powerful each point becomes. Keep it anonymous but verifiable. Basically, democracy that can't be gamed.",
+      "generateButton": "Generate Voting Logic",
+      "examplePrompts": "Example prompts:",
+      "models": {
+        "direct": {
+          "title": "Direct Democracy",
+          "description": "Classic. One person = one vote. Majority rules. 👊",
+          "prompt": "Create a direct democracy voting system where each person gets exactly one vote with equal weight. Simple majority wins. Every vote counts the same, no delegation, no complexity. This is pure one-person-one-vote democracy."
+        },
+        "liquid": {
+          "title": "Liquid Voting",
+          "description": "Too busy? Delegate to someone you trust. Democracy on autopilot. 🌊",
+          "prompt": "Build a liquid democracy system where voters can either vote directly OR delegate their voting power to someone they trust. Delegates can further delegate to others, creating a chain of trust. Voters can revoke delegation and vote directly at any time. Track delegation chains and prevent circular delegation loops."
+        },
+        "quadratic": {
+          "title": "Quadratic Voting",
+          "description": "Spread your power across issues. Math that fights extremism. 📊",
+          "prompt": "Implement quadratic voting where each voter receives a fixed number of credits (e.g., 100 points) to distribute across multiple issues. The cost of votes increases quadratically: 1 vote = 1 credit, 2 votes = 4 credits, 3 votes = 9 credits, etc. This allows voters to express preference intensity while preventing vote concentration on single issues."
+        },
+        "weighted": {
+          "title": "Reputation-Based",
+          "description": "Your contribution = your voice. Meritocracy mode activated. ⭐",
+          "prompt": "Create a reputation-weighted voting system where voting power is proportional to the voter's contribution or reputation score. Define clear metrics for reputation (e.g., participation history, contribution quality, tenure). Higher reputation = more voting weight. Include mechanisms to prevent plutocracy and ensure new members can gain influence."
+        }
+      },
+      "exampleList": [
+        "Quadratic voting with 100 points per voter",
+        "Delegative democracy with liquid vote transfers",
+        "Reputation-weighted voting based on contribution history"
+      ],
+      "output": "Output:",
+      "outputDesc": "Smart contract ABI or JSON logic definition will be generated based on your selection."
     },
     "bill": {
       "title": "Bill & Certification",

@@ -40,8 +40,45 @@
       "outputDesc": "Sua seleção gerará um esquema JSON de registro de eleitores com parâmetros de verificação on-chain ou off-chain."
     },
     "voting": {
-      "title": "Lógica de votação",
-      "description": "Como deve funcionar?"
+      "title": "Lógica de Votação",
+      "description": "Como deveria funcionar?",
+      "heading": "Como a Votação Deveria Funcionar? ⚙️",
+      "subtitle": "Escolha um modelo ou deixe a IA criar regras personalizadas. Democracia do seu jeito.",
+      "templates": "Modelos",
+      "aiPrompt": "Prompt de IA",
+      "aiPromptLabel": "Descreva o seu sistema de votação dos sonhos ✨",
+      "aiPromptPlaceholder": "Exemplo: Faça um voto quadrático onde as pessoas recebem 100 pontos para dividir entre questões. Quanto mais você gasta em uma coisa, menos poderoso cada ponto se torna. Mantenha anônimo mas verificável. Basicamente, democracia que não pode ser manipulada.",
+      "generateButton": "Gerar Lógica de Votação",
+      "examplePrompts": "Exemplos de prompts:",
+      "models": {
+        "direct": {
+          "title": "Democracia Direta",
+          "description": "Clássico. Uma pessoa = um voto. A maioria manda. 👊",
+          "prompt": "Crie um sistema de democracia direta onde cada pessoa recebe exatamente um voto com peso igual. A maioria simples vence. Cada voto conta da mesma forma, sem delegação, sem complexidade. Esta é a pura democracia uma-pessoa-um-voto."
+        },
+        "liquid": {
+          "title": "Votação Líquida",
+          "description": "Muito ocupado? Delegue a alguém de confiança. Democracia no piloto automático. 🌊",
+          "prompt": "Construa um sistema de democracia líquida onde os eleitores podem votar diretamente OU delegar seu poder de voto a alguém em quem confiam. Delegados podem delegar ainda mais a outros, criando uma cadeia de confiança. Os eleitores podem revogar a delegação e votar diretamente a qualquer momento. Rastreie cadeias de delegação e evite loops de delegação circular."
+        },
+        "quadratic": {
+          "title": "Votação Quadrática",
+          "description": "Espalhe seu poder entre questões. Matemática que combate extremismo. 📊",
+          "prompt": "Implemente votação quadrática onde cada eleitor recebe um número fixo de créditos (ex: 100 pontos) para distribuir entre várias questões. O custo dos votos aumenta quadraticamente: 1 voto = 1 crédito, 2 votos = 4 créditos, 3 votos = 9 créditos, etc. Isso permite aos eleitores expressar intensidade de preferência enquanto evita concentração de votos em questões únicas."
+        },
+        "weighted": {
+          "title": "Baseado em Reputação",
+          "description": "Sua contribuição = sua voz. Modo meritocracia ativado. ⭐",
+          "prompt": "Crie um sistema de votação ponderado por reputação onde o poder de voto é proporcional à contribuição ou pontuação de reputação do eleitor. Defina métricas claras para reputação (ex: histórico de participação, qualidade de contribuição, tempo de serviço). Maior reputação = mais peso de voto. Inclua mecanismos para prevenir plutocracia e garantir que novos membros possam ganhar influência."
+        }
+      },
+      "exampleList": [
+        "Votação quadrática com 100 pontos por eleitor",
+        "Democracia delegativa com transferências de voto líquido",
+        "Votação ponderada por reputação baseada em histórico de contribuição"
+      ],
+      "output": "Saída:",
+      "outputDesc": "Um ABI de contrato inteligente ou definição de lógica JSON será gerado com base na sua seleção."
     },
     "bill": {
       "title": "Projeto e certificação",
