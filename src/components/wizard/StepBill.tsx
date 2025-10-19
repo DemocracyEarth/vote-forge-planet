@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar, FileText, Shield, Target } from "lucide-react";
 
 const StepBill = () => {
@@ -10,6 +11,7 @@ const StepBill = () => {
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [isOngoing, setIsOngoing] = useState(false);
   const [threshold, setThreshold] = useState("simple");
 
   return (
@@ -56,6 +58,24 @@ const StepBill = () => {
             <Calendar className="w-4 h-4 text-primary" />
             Voting Time Window
           </div>
+          
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="ongoing"
+              checked={isOngoing}
+              onCheckedChange={(checked) => {
+                setIsOngoing(checked as boolean);
+                if (checked) setEndDate("");
+              }}
+            />
+            <Label
+              htmlFor="ongoing"
+              className="text-xs sm:text-sm font-normal cursor-pointer"
+            >
+              Ongoing election (no end date - real-time voting) ⏳
+            </Label>
+          </div>
+
           <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
               <Label htmlFor="startDate" className="text-xs sm:text-sm">Start Date</Label>
@@ -68,13 +88,16 @@ const StepBill = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="endDate" className="text-xs sm:text-sm">End Date</Label>
+              <Label htmlFor="endDate" className="text-xs sm:text-sm">
+                End Date {isOngoing && <span className="text-muted-foreground">(disabled)</span>}
+              </Label>
               <Input
                 id="endDate"
                 type="datetime-local"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="text-xs sm:text-sm"
+                disabled={isOngoing}
+                className="text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
           </div>
