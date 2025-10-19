@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Globe, Sparkles, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import logo from "@/assets/logo.png";
 
 interface HeroProps {
   onStartWizard: () => void;
@@ -28,10 +29,10 @@ const Hero = ({ onStartWizard }: HeroProps) => {
       </div>
 
       <div className="text-center z-10 max-w-4xl mx-auto space-y-8 animate-fade-in-up">
-        {/* Logo/Icon */}
+        {/* Logo */}
         <div className="flex justify-center mb-6">
           <div className="relative">
-            <Globe className="w-20 h-20 text-primary animate-float" strokeWidth={1.5} />
+            <img src={logo} alt="Democracy Earth Logo" className="w-20 h-20 sm:w-24 sm:h-24 animate-float" />
             <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full animate-pulse-glow" />
           </div>
         </div>
