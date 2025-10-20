@@ -9,44 +9,45 @@ interface StepIdentityProps {
 
 const StepIdentity = ({ onDataChange }: StepIdentityProps) => {
   const { t } = useTranslation();
-  const [selected, setSelected] = useState<string>("poh");
+  const [selected, setSelected] = useState<string>("email");
 
   useEffect(() => {
     if (onDataChange) {
       onDataChange({
-        verificationType: selected,
+        authenticationType: selected,
+        requireLogin: true,
       });
     }
   }, [selected, onDataChange]);
 
   const identityOptionsTranslated = [
     {
-      id: "poh",
-      title: t('steps.identity.worldId'),
-      description: t('steps.identity.worldIdDesc'),
-      icon: Users,
+      id: "email",
+      title: t('steps.identity.email'),
+      description: t('steps.identity.emailDesc'),
+      icon: Shield,
       badge: t('steps.identity.recommended'),
     },
     {
-      id: "community",
-      title: t('steps.identity.community'),
-      description: t('steps.identity.communityDesc'),
-      icon: Shield,
-      badge: null,
-    },
-    {
-      id: "zk",
-      title: t('steps.identity.zk'),
-      description: t('steps.identity.zkDesc'),
+      id: "phone",
+      title: t('steps.identity.phone'),
+      description: t('steps.identity.phoneDesc'),
       icon: Lock,
-      badge: t('steps.identity.privacy'),
+      badge: null,
     },
     {
-      id: "invite",
-      title: t('steps.identity.invite'),
-      description: t('steps.identity.inviteDesc'),
-      icon: Key,
+      id: "google",
+      title: t('steps.identity.google'),
+      description: t('steps.identity.googleDesc'),
+      icon: Users,
       badge: null,
+    },
+    {
+      id: "worldid",
+      title: t('steps.identity.worldId'),
+      description: t('steps.identity.worldIdDesc'),
+      icon: Key,
+      badge: t('steps.identity.crypto'),
     },
   ];
 
