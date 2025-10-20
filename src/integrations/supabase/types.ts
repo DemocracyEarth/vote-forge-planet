@@ -24,6 +24,7 @@ export type Database = {
           id: string
           identity_config: Json
           is_ongoing: boolean | null
+          is_public: boolean
           start_date: string | null
           status: string | null
           title: string
@@ -39,6 +40,7 @@ export type Database = {
           id?: string
           identity_config: Json
           is_ongoing?: boolean | null
+          is_public?: boolean
           start_date?: string | null
           status?: string | null
           title: string
@@ -54,6 +56,7 @@ export type Database = {
           id?: string
           identity_config?: Json
           is_ongoing?: boolean | null
+          is_public?: boolean
           start_date?: string | null
           status?: string | null
           title?: string

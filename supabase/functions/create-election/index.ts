@@ -147,6 +147,7 @@ Create a comprehensive JSON configuration that captures all these rules and defi
         start_date: startDate,
         end_date: endDate,
         is_ongoing: !!billConfig?.isOngoing,
+        is_public: billConfig?.isPublic ?? true, // Default to public
         created_by: userId || null,
       })
       .select()
