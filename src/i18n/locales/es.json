@@ -82,7 +82,14 @@
     },
     "bill": {
       "title": "Proyecto y certificación",
-      "description": "¿Sobre qué estamos votando?"
+      "description": "¿Sobre qué estamos votando?",
+      "ballotOptions": "Opciones de votación",
+      "singleChoice": "Opción única",
+      "multipleChoice": "Opción múltiple",
+      "addOption": "Agregar opción",
+      "optionPlaceholder": "Opción",
+      "singleChoiceDesc": "Los votantes pueden seleccionar solo una opción.",
+      "multipleChoiceDesc": "Los votantes pueden seleccionar múltiples opciones."
     }
   }
 }

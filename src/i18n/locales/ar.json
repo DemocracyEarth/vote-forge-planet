@@ -82,7 +82,14 @@
     },
     "bill": {
       "title": "مشروع القانون والشهادة",
-      "description": "على ماذا نصوت؟"
+      "description": "على ماذا نصوت؟",
+      "ballotOptions": "خيارات الاقتراع",
+      "singleChoice": "اختيار واحد",
+      "multipleChoice": "اختيارات متعددة",
+      "addOption": "إضافة خيار",
+      "optionPlaceholder": "الخيار",
+      "singleChoiceDesc": "يمكن للناخبين اختيار خيار واحد فقط.",
+      "multipleChoiceDesc": "يمكن للناخبين اختيار خيارات متعددة."
     }
   }
 }

@@ -4,7 +4,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Calendar, FileText, Shield, Target, Percent } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, FileText, Shield, Target, Percent, Plus, X, List } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface StepBillProps {
   votingModel: string;
@@ -12,8 +14,11 @@ interface StepBillProps {
 }
 
 const StepBill = ({ votingModel, onDataChange }: StepBillProps) => {
+  const { t } = useTranslation();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [ballotType, setBallotType] = useState<"single" | "multiple">("single");
+  const [ballotOptions, setBallotOptions] = useState<string[]>(["YES", "NO", "ABSTENTION"]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [isOngoing, setIsOngoing] = useState(false);
@@ -25,11 +30,29 @@ const StepBill = ({ votingModel, onDataChange }: StepBillProps) => {
     reputationMinimum: "100",
   });
 
+  const handleAddOption = () => {
+    setBallotOptions([...ballotOptions, ""]);
+  };
+
+  const handleRemoveOption = (index: number) => {
+    if (ballotOptions.length > 2) {
+      setBallotOptions(ballotOptions.filter((_, i) => i !== index));
+    }
+  };
+
+  const handleUpdateOption = (index: number, value: string) => {
+    const newOptions = [...ballotOptions];
+    newOptions[index] = value;
+    setBallotOptions(newOptions);
+  };
+
   useEffect(() => {
     if (onDataChange) {
       onDataChange({
         title,
         description,
+        ballotType,
+        ballotOptions: ballotOptions.filter(opt => opt.trim() !== ""),
         startDate,
         endDate,
         isOngoing,
@@ -38,7 +61,7 @@ const StepBill = ({ votingModel, onDataChange }: StepBillProps) => {
         customOptions: threshold === "custom_logic" ? customOptions : undefined,
       });
     }
-  }, [title, description, startDate, endDate, isOngoing, threshold, customThreshold, customOptions, onDataChange]);
+  }, [title, description, ballotType, ballotOptions, startDate, endDate, isOngoing, threshold, customThreshold, customOptions, onDataChange]);
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -77,6 +100,89 @@ const StepBill = ({ votingModel, onDataChange }: StepBillProps) => {
             className="resize-none font-mono text-xs sm:text-sm"
           />
         </div>
+
+        {/* Ballot Options */}
+        <Card className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+          <div className="flex items-center gap-2 text-xs sm:text-sm font-medium">
+            <List className="w-4 h-4 text-primary" />
+            {t('steps.bill.ballotOptions')}
+          </div>
+
+          {/* Choice Type Toggle */}
+          <div className="flex items-center gap-4 text-xs sm:text-sm">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <div
+                className={`w-4 h-4 rounded-full border-2 flex items-center justify-center smooth-transition ${
+                  ballotType === "single"
+                    ? "border-primary bg-primary"
+                    : "border-muted-foreground/30"
+                }`}
+                onClick={() => setBallotType("single")}
+              >
+                {ballotType === "single" && (
+                  <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                )}
+              </div>
+              <span>{t('steps.bill.singleChoice')}</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <div
+                className={`w-4 h-4 rounded-full border-2 flex items-center justify-center smooth-transition ${
+                  ballotType === "multiple"
+                    ? "border-primary bg-primary"
+                    : "border-muted-foreground/30"
+                }`}
+                onClick={() => setBallotType("multiple")}
+              >
+                {ballotType === "multiple" && (
+                  <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                )}
+              </div>
+              <span>{t('steps.bill.multipleChoice')}</span>
+            </label>
+          </div>
+
+          {/* Options List */}
+          <div className="space-y-2">
+            {ballotOptions.map((option, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <Input
+                  value={option}
+                  onChange={(e) => handleUpdateOption(index, e.target.value)}
+                  placeholder={`${t('steps.bill.optionPlaceholder')} ${index + 1}`}
+                  className="text-xs sm:text-sm"
+                />
+                {ballotOptions.length > 2 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemoveOption(index)}
+                    className="shrink-0"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Add Option Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleAddOption}
+            className="w-full text-xs sm:text-sm"
+          >
+            <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+            {t('steps.bill.addOption')}
+          </Button>
+
+          <p className="text-xs text-muted-foreground">
+            {ballotType === "single" 
+              ? t('steps.bill.singleChoiceDesc')
+              : t('steps.bill.multipleChoiceDesc')}
+          </p>
+        </Card>
 
         {/* Time window */}
         <Card className="p-3 sm:p-4 space-y-3 sm:space-y-4">

@@ -82,7 +82,14 @@
     },
     "bill": {
       "title": "বিল এবং সার্টিফিকেশন",
-      "description": "আমরা কিসের উপর ভোট দিচ্ছি?"
+      "description": "আমরা কিসের উপর ভোট দিচ্ছি?",
+      "ballotOptions": "ভোটের বিকল্প",
+      "singleChoice": "একক পছন্দ",
+      "multipleChoice": "একাধিক পছন্দ",
+      "addOption": "বিকল্প যোগ করুন",
+      "optionPlaceholder": "বিকল্প",
+      "singleChoiceDesc": "ভোটাররা শুধুমাত্র একটি বিকল্প নির্বাচন করতে পারেন।",
+      "multipleChoiceDesc": "ভোটাররা একাধিক বিকল্প নির্বাচন করতে পারেন।"
     }
   }
 }

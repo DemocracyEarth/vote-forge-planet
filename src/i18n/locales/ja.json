@@ -82,7 +82,14 @@
     },
     "bill": {
       "title": "法案と認証",
-      "description": "何に投票していますか？"
+      "description": "何に投票していますか？",
+      "ballotOptions": "投票オプション",
+      "singleChoice": "単一選択",
+      "multipleChoice": "複数選択",
+      "addOption": "オプションを追加",
+      "optionPlaceholder": "オプション",
+      "singleChoiceDesc": "有権者は1つのオプションのみを選択できます。",
+      "multipleChoiceDesc": "有権者は複数のオプションを選択できます。"
     }
   }
 }

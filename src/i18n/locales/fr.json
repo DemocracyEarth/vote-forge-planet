@@ -82,7 +82,14 @@
     },
     "bill": {
       "title": "Projet de loi et certification",
-      "description": "Sur quoi votons-nous?"
+      "description": "Sur quoi votons-nous?",
+      "ballotOptions": "Options de vote",
+      "singleChoice": "Choix unique",
+      "multipleChoice": "Choix multiples",
+      "addOption": "Ajouter une option",
+      "optionPlaceholder": "Option",
+      "singleChoiceDesc": "Les électeurs ne peuvent sélectionner qu'une seule option.",
+      "multipleChoiceDesc": "Les électeurs peuvent sélectionner plusieurs options."
     }
   }
 }

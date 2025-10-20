@@ -82,7 +82,14 @@
     },
     "bill": {
       "title": "法案与认证",
-      "description": "我们在投票什么？"
+      "description": "我们在投票什么？",
+      "ballotOptions": "投票选项",
+      "singleChoice": "单选",
+      "multipleChoice": "多选",
+      "addOption": "添加选项",
+      "optionPlaceholder": "选项",
+      "singleChoiceDesc": "选民只能选择一个选项。",
+      "multipleChoiceDesc": "选民可以选择多个选项。"
     }
   }
 }

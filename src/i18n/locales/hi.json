@@ -82,7 +82,14 @@
     },
     "bill": {
       "title": "बिल और प्रमाणन",
-      "description": "हम किस पर मतदान कर रहे हैं?"
+      "description": "हम किस पर मतदान कर रहे हैं?",
+      "ballotOptions": "मतपत्र विकल्प",
+      "singleChoice": "एकल विकल्प",
+      "multipleChoice": "बहु विकल्प",
+      "addOption": "विकल्प जोड़ें",
+      "optionPlaceholder": "विकल्प",
+      "singleChoiceDesc": "मतदाता केवल एक विकल्प का चयन कर सकते हैं।",
+      "multipleChoiceDesc": "मतदाता कई विकल्पों का चयन कर सकते हैं।"
     }
   }
 }

@@ -82,7 +82,14 @@
     },
     "bill": {
       "title": "Bill & Certification",
-      "description": "What are we voting on?"
+      "description": "What are we voting on?",
+      "ballotOptions": "Ballot Options",
+      "singleChoice": "Single Choice",
+      "multipleChoice": "Multiple Choice",
+      "addOption": "Add Option",
+      "optionPlaceholder": "Option",
+      "singleChoiceDesc": "Voters can select only one option.",
+      "multipleChoiceDesc": "Voters can select multiple options."
     }
   }
 }

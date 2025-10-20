@@ -82,7 +82,14 @@
     },
     "bill": {
       "title": "Билль и сертификация",
-      "description": "За что мы голосуем?"
+      "description": "За что мы голосуем?",
+      "ballotOptions": "Варианты голосования",
+      "singleChoice": "Один вариант",
+      "multipleChoice": "Несколько вариантов",
+      "addOption": "Добавить вариант",
+      "optionPlaceholder": "Вариант",
+      "singleChoiceDesc": "Избиратели могут выбрать только один вариант.",
+      "multipleChoiceDesc": "Избиратели могут выбрать несколько вариантов."
     }
   }
 }
