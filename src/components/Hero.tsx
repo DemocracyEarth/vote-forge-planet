@@ -95,24 +95,24 @@ const Hero = ({ onStartWizard }: HeroProps) => {
             {t('hero.cta')}
           </Button>
           {user ? (
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => navigate("/dashboard")}
-              className="px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg"
-            >
-              Go to Dashboard
-            </Button>
-          ) : (
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => navigate("/auth")}
-              className="px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg"
-            >
-              Sign In
-            </Button>
-          )}
+          <Button
+            size="lg"
+            variant="outline"
+            onClick={() => navigate("/dashboard")}
+            className="px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg"
+          >
+            {t('hero.goToDashboard')}
+          </Button>
+        ) : (
+          <Button
+            size="lg"
+            variant="outline"
+            onClick={() => navigate("/auth")}
+            className="px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg"
+          >
+            {t('hero.signIn')}
+          </Button>
+        )}
         </div>
 
         {/* Philosophy quote */}

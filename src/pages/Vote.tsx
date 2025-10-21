@@ -14,8 +14,10 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import Footer from "@/components/Footer";
+import { useTranslation } from "react-i18next";
 
 const Vote = () => {
+  const { t } = useTranslation();
   const { electionId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -50,8 +52,8 @@ const Vote = () => {
     } catch (error) {
       console.error('Error loading election:', error);
       toast({
-        title: "Error",
-        description: "Failed to load election details",
+        title: t('vote.failedToLoad'),
+        description: t('vote.failedToLoad'),
         variant: "destructive",
       });
     } finally {
@@ -82,8 +84,8 @@ const Vote = () => {
       if (error) {
         if (error.code === '23505') {
           toast({
-            title: "Already Voted",
-            description: "You have already cast your vote in this election",
+            title: t('vote.alreadyVoted'),
+            description: t('vote.alreadyVotedDesc'),
             variant: "destructive",
           });
         } else {
@@ -91,8 +93,8 @@ const Vote = () => {
         }
       } else {
         toast({
-          title: "Vote Recorded",
-          description: "Your vote has been successfully recorded",
+          title: t('vote.voteRecorded'),
+          description: t('vote.voteRecordedDesc'),
         });
         setVoterIdentifier("");
         setVoteValue("");
@@ -101,8 +103,8 @@ const Vote = () => {
     } catch (error) {
       console.error('Error submitting vote:', error);
       toast({
-        title: "Error",
-        description: "Failed to submit vote",
+        title: t('auth.error'),
+        description: t('vote.failedToSubmit'),
         variant: "destructive",
       });
     } finally {
@@ -122,10 +124,10 @@ const Vote = () => {
     return (
       <div className="min-h-screen aurora-bg flex items-center justify-center">
         <Card className="p-8 text-center">
-          <h1 className="text-2xl font-bold mb-4">Election Not Found</h1>
+          <h1 className="text-2xl font-bold mb-4">{t('vote.electionNotFound')}</h1>
           <Button onClick={() => navigate('/')}>
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Go Home
+            {t('vote.goHome')}
           </Button>
         </Card>
       </div>
@@ -146,7 +148,7 @@ const Vote = () => {
           className="mb-6"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          {user ? 'Back to Dashboard' : 'Back to Home'}
+          {user ? t('vote.backToDashboard') : t('vote.backToHome')}
         </Button>
 
         <Card className="p-6 sm:p-8 card-glow">
@@ -162,7 +164,7 @@ const Vote = () => {
 
           <div className="mb-8 space-y-4">
             <div>
-              <h3 className="font-semibold mb-2">Election Details</h3>
+              <h3 className="font-semibold mb-2">{t('vote.electionDetails')}</h3>
               <div className="space-y-2 text-sm">
                 {election.start_date && (
                   <p>Start: {new Date(election.start_date).toLocaleString()}</p>
