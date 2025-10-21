@@ -36,6 +36,24 @@ const Vote = () => {
   }, [electionId]);
 
   useEffect(() => {
+    if (user && election) {
+      // Auto-populate identifier based on auth method
+      const authMethod = user.app_metadata?.provider || 'email';
+      let identifier = '';
+      
+      if (authMethod === 'google') {
+        identifier = user.email || '';
+      } else if (authMethod === 'phone') {
+        identifier = user.phone || '';
+      } else {
+        identifier = user.email || '';
+      }
+      
+      setVoterIdentifier(identifier);
+    }
+  }, [user, election]);
+
+  useEffect(() => {
     if (!election?.is_ongoing) return;
 
     // Load initial vote results
@@ -248,14 +266,30 @@ const Vote = () => {
               <Input
                 id="identifier"
                 type="text"
-                placeholder="Enter your email, ID, or identifier"
+                placeholder={user ? "Auto-filled from your account" : "Enter your email, ID, or identifier"}
                 value={voterIdentifier}
                 onChange={(e) => setVoterIdentifier(e.target.value)}
+                readOnly={!!user}
                 required
+                className={user ? "bg-muted cursor-not-allowed" : ""}
               />
-              <p className="text-xs text-muted-foreground">
-                Based on: {election.identity_config?.verificationType || 'Email'}
-              </p>
+              <div className="text-xs space-y-1">
+                <p className="text-muted-foreground">
+                  Required: {election.identity_config?.verificationType || 'Email'}
+                </p>
+                {user && (() => {
+                  const authMethod = user.app_metadata?.provider || 'email';
+                  const requiredType = election.identity_config?.verificationType?.toLowerCase() || 'email';
+                  const userType = authMethod === 'google' ? 'email' : authMethod;
+                  const matches = requiredType.includes(userType) || userType.includes(requiredType);
+                  
+                  return (
+                    <p className={matches ? "text-green-600 dark:text-green-400" : "text-amber-600 dark:text-amber-400"}>
+                      {matches ? "✓ Your authentication matches the election requirements" : "⚠ Your authentication type may not match the election requirements"}
+                    </p>
+                  );
+                })()}
+              </div>
             </div>
 
             <div className="space-y-4">
