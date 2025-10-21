@@ -190,46 +190,36 @@ const Vote = () => {
               </p>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="vote">Your Vote</Label>
+            <div className="space-y-4">
+              <Label>Your Vote</Label>
               {election?.bill_config?.ballotOptions ? (
-                election.bill_config.ballotType === "single" ? (
-                  <RadioGroup
-                    value={selectedOptions[0] || ""}
-                    onValueChange={(value) => setSelectedOptions([value])}
-                    required
-                  >
-                    {election.bill_config.ballotOptions.map((option: string, index: number) => (
-                      <div key={index} className="flex items-center space-x-2">
-                        <RadioGroupItem value={option} id={`option-${index}`} />
-                        <Label htmlFor={`option-${index}`} className="cursor-pointer font-normal">
-                          {option}
-                        </Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                ) : (
-                  <div className="space-y-2">
-                    {election.bill_config.ballotOptions.map((option: string, index: number) => (
-                      <div key={index} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`option-${index}`}
-                          checked={selectedOptions.includes(option)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedOptions([...selectedOptions, option]);
-                            } else {
-                              setSelectedOptions(selectedOptions.filter((o) => o !== option));
-                            }
-                          }}
-                        />
-                        <Label htmlFor={`option-${index}`} className="cursor-pointer font-normal">
-                          {option}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                )
+                <div className="grid gap-3">
+                  {election.bill_config.ballotOptions.map((option: string, index: number) => (
+                    <Button
+                      key={index}
+                      type="button"
+                      variant={
+                        election.bill_config.ballotType === "single"
+                          ? selectedOptions[0] === option ? "default" : "outline"
+                          : selectedOptions.includes(option) ? "default" : "outline"
+                      }
+                      className="h-auto py-4 px-6 text-lg justify-start"
+                      onClick={() => {
+                        if (election.bill_config.ballotType === "single") {
+                          setSelectedOptions([option]);
+                        } else {
+                          if (selectedOptions.includes(option)) {
+                            setSelectedOptions(selectedOptions.filter((o) => o !== option));
+                          } else {
+                            setSelectedOptions([...selectedOptions, option]);
+                          }
+                        }
+                      }}
+                    >
+                      {option}
+                    </Button>
+                  ))}
+                </div>
               ) : (
                 <Textarea
                   id="vote"
@@ -239,6 +229,11 @@ const Vote = () => {
                   required
                   rows={4}
                 />
+              )}
+              {election?.bill_config?.ballotType === "multiple" && selectedOptions.length > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  {selectedOptions.length} option{selectedOptions.length !== 1 ? 's' : ''} selected
+                </p>
               )}
             </div>
 
