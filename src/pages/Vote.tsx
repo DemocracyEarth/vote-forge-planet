@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Vote as VoteIcon, ArrowLeft } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import Footer from "@/components/Footer";
 
 const Vote = () => {
@@ -20,6 +22,7 @@ const Vote = () => {
   const [election, setElection] = useState<any>(null);
   const [voterIdentifier, setVoterIdentifier] = useState("");
   const [voteValue, setVoteValue] = useState("");
+  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -52,13 +55,17 @@ const Vote = () => {
     e.preventDefault();
     setSubmitting(true);
 
+    const finalVoteValue = election?.bill_config?.ballotOptions 
+      ? selectedOptions.join(", ") 
+      : voteValue;
+
     try {
       const { error } = await supabase
         .from('votes')
         .insert({
           election_id: electionId,
           voter_identifier: voterIdentifier,
-          vote_value: voteValue,
+          vote_value: finalVoteValue,
           metadata: {
             voted_at: new Date().toISOString(),
           }
@@ -81,6 +88,7 @@ const Vote = () => {
         });
         setVoterIdentifier("");
         setVoteValue("");
+        setSelectedOptions([]);
       }
     } catch (error) {
       console.error('Error submitting vote:', error);
@@ -184,14 +192,54 @@ const Vote = () => {
 
             <div className="space-y-2">
               <Label htmlFor="vote">Your Vote</Label>
-              <Textarea
-                id="vote"
-                placeholder="Enter your vote (Yes/No or your choice)"
-                value={voteValue}
-                onChange={(e) => setVoteValue(e.target.value)}
-                required
-                rows={4}
-              />
+              {election?.bill_config?.ballotOptions ? (
+                election.bill_config.ballotType === "single" ? (
+                  <RadioGroup
+                    value={selectedOptions[0] || ""}
+                    onValueChange={(value) => setSelectedOptions([value])}
+                    required
+                  >
+                    {election.bill_config.ballotOptions.map((option: string, index: number) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <RadioGroupItem value={option} id={`option-${index}`} />
+                        <Label htmlFor={`option-${index}`} className="cursor-pointer font-normal">
+                          {option}
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
+                ) : (
+                  <div className="space-y-2">
+                    {election.bill_config.ballotOptions.map((option: string, index: number) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`option-${index}`}
+                          checked={selectedOptions.includes(option)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedOptions([...selectedOptions, option]);
+                            } else {
+                              setSelectedOptions(selectedOptions.filter((o) => o !== option));
+                            }
+                          }}
+                        />
+                        <Label htmlFor={`option-${index}`} className="cursor-pointer font-normal">
+                          {option}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                )
+              ) : (
+                <Textarea
+                  id="vote"
+                  placeholder="Enter your vote (Yes/No or your choice)"
+                  value={voteValue}
+                  onChange={(e) => setVoteValue(e.target.value)}
+                  required
+                  rows={4}
+                />
+              )}
             </div>
 
             <Button 
