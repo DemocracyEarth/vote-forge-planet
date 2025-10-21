@@ -227,176 +227,260 @@ const Vote = () => {
           {user ? t('vote.backToDashboard') : t('vote.backToHome')}
         </Button>
 
-        <Card className="p-6 sm:p-8 card-glow">
-          <div className="mb-8">
-            <h1 className="text-3xl sm:text-4xl font-bold mb-4 flex items-center gap-3">
-              <VoteIcon className="w-8 h-8 text-primary" />
-              {election.title}
-            </h1>
-            {election.description && (
-              <p className="text-muted-foreground text-lg">{election.description}</p>
+        <Card className="relative overflow-hidden border-border/50 bg-card/40 backdrop-blur-xl">
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+          
+          <div className="relative p-6 sm:p-8">
+            {/* Header Section */}
+            <div className="mb-8 pb-6 border-b border-border/50">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 backdrop-blur-sm">
+                  <VoteIcon className="w-8 h-8 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <h1 className="text-3xl sm:text-4xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                    {election.title}
+                  </h1>
+                  {election.description && (
+                    <p className="text-muted-foreground text-lg leading-relaxed">{election.description}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Election Details Grid */}
+            <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="group p-4 rounded-xl bg-gradient-to-br from-card/60 to-card/30 backdrop-blur-sm border border-border/50 hover:border-primary/30 smooth-transition">
+                <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider flex items-center gap-2">
+                  <div className="w-1 h-4 bg-primary rounded-full" />
+                  {t('vote.electionDetails')}
+                </h3>
+                <div className="space-y-2 text-sm">
+                  {election.start_date && (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <span className="w-20 font-medium">Start:</span>
+                      <span>{new Date(election.start_date).toLocaleString()}</span>
+                    </div>
+                  )}
+                  {election.is_ongoing ? (
+                    <div className="flex items-center gap-2">
+                      <span className="w-20 font-medium text-muted-foreground">Status:</span>
+                      <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-semibold text-xs border border-primary/20">
+                        ● Ongoing Election
+                      </span>
+                    </div>
+                  ) : election.end_date ? (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <span className="w-20 font-medium">End:</span>
+                      <span>{new Date(election.end_date).toLocaleString()}</span>
+                    </div>
+                  ) : null}
+                  {!election.is_ongoing && (
+                    <div className="flex items-center gap-2">
+                      <span className="w-20 font-medium text-muted-foreground">Status:</span>
+                      <span className="capitalize font-semibold">{election.status}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="group p-4 rounded-xl bg-gradient-to-br from-card/60 to-card/30 backdrop-blur-sm border border-border/50 hover:border-accent/30 smooth-transition">
+                <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider flex items-center gap-2">
+                  <div className="w-1 h-4 bg-accent rounded-full" />
+                  Voting Model
+                </h3>
+                <p className="text-sm font-medium capitalize px-3 py-2 rounded-lg bg-accent/10 text-accent border border-accent/20 inline-block">
+                  {election.voting_logic_config?.model || 'Direct Voting'}
+                </p>
+              </div>
+            </div>
+
+            {/* Voting Form Section */}
+            <form onSubmit={handleSubmitVote} className="space-y-8">
+              {/* Identifier Section */}
+              <div className="space-y-3 p-5 rounded-xl bg-gradient-to-br from-muted/30 to-muted/10 border border-border/50">
+                <Label htmlFor="identifier" className="text-base font-semibold flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-primary" />
+                  Your Identifier
+                </Label>
+                <Input
+                  id="identifier"
+                  type="text"
+                  placeholder={user ? "Auto-filled from your account" : "Enter your email, ID, or identifier"}
+                  value={voterIdentifier}
+                  onChange={(e) => setVoterIdentifier(e.target.value)}
+                  readOnly={!!user}
+                  required
+                  className={user ? "bg-muted/50 cursor-not-allowed border-border/50" : "bg-background/50 backdrop-blur-sm"}
+                />
+                <div className="text-xs space-y-2 pl-1">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <span className="font-medium">Required:</span>
+                    <span className="px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                      {election.identity_config?.verificationType || 'Email'}
+                    </span>
+                  </div>
+                  {user && (() => {
+                    const authMethod = user.app_metadata?.provider || 'email';
+                    const requiredType = election.identity_config?.verificationType?.toLowerCase() || 'email';
+                    const userType = authMethod === 'google' ? 'email' : authMethod;
+                    const matches = requiredType.includes(userType) || userType.includes(requiredType);
+                    
+                    return (
+                      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${matches ? "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20" : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"}`}>
+                        <span className="font-medium">{matches ? "✓" : "⚠"}</span>
+                        <span className="text-xs">
+                          {matches ? "Your authentication matches the election requirements" : "Your authentication type may not match the election requirements"}
+                        </span>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Vote Selection Section */}
+              <div className="space-y-4">
+                <Label className="text-base font-semibold flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-accent" />
+                  Your Vote
+                </Label>
+                {election?.bill_config?.ballotOptions ? (
+                  <div className="grid gap-3">
+                    {election.bill_config.ballotOptions.map((option: string, index: number) => (
+                      <Button
+                        key={index}
+                        type="button"
+                        variant={
+                          election.bill_config.ballotType === "single"
+                            ? selectedOptions[0] === option ? "default" : "outline"
+                            : selectedOptions.includes(option) ? "default" : "outline"
+                        }
+                        className={`h-auto py-5 px-6 text-lg justify-start font-medium smooth-transition ${
+                          (election.bill_config.ballotType === "single" ? selectedOptions[0] === option : selectedOptions.includes(option))
+                            ? "bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/20 border-primary"
+                            : "bg-card/60 backdrop-blur-sm hover:bg-card/80 hover:border-primary/40"
+                        }`}
+                        onClick={() => {
+                          if (election.bill_config.ballotType === "single") {
+                            setSelectedOptions([option]);
+                          } else {
+                            if (selectedOptions.includes(option)) {
+                              setSelectedOptions(selectedOptions.filter((o) => o !== option));
+                            } else {
+                              setSelectedOptions([...selectedOptions, option]);
+                            }
+                          }
+                        }}
+                      >
+                        <span className="flex items-center gap-3">
+                          {(election.bill_config.ballotType === "single" ? selectedOptions[0] === option : selectedOptions.includes(option)) && (
+                            <span className="w-2 h-2 rounded-full bg-primary-foreground animate-pulse" />
+                          )}
+                          {option}
+                        </span>
+                      </Button>
+                    ))}
+                  </div>
+                ) : (
+                  <Textarea
+                    id="vote"
+                    placeholder="Enter your vote (Yes/No or your choice)"
+                    value={voteValue}
+                    onChange={(e) => setVoteValue(e.target.value)}
+                    required
+                    rows={4}
+                    className="bg-background/50 backdrop-blur-sm resize-none"
+                  />
+                )}
+                {election?.bill_config?.ballotType === "multiple" && selectedOptions.length > 0 && (
+                  <div className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg bg-accent/10 text-accent border border-accent/20 w-fit">
+                    <span className="font-semibold">{selectedOptions.length}</span>
+                    <span>option{selectedOptions.length !== 1 ? 's' : ''} selected</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Submit Button */}
+              <Button 
+                type="submit" 
+                className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/20 smooth-transition" 
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Submitting Vote...
+                  </>
+                ) : (
+                  <>
+                    <VoteIcon className="w-5 h-5 mr-2" />
+                    Cast Your Vote
+                  </>
+                )}
+              </Button>
+            </form>
+
+            {/* Live Results Section */}
+            {election?.is_ongoing && Object.keys(voteResults).length > 0 && (
+              <div className="mt-8 p-6 rounded-xl bg-gradient-to-br from-primary/10 via-transparent to-accent/10 border border-primary/20 backdrop-blur-sm">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="relative">
+                    <div className="w-3 h-3 rounded-full bg-primary animate-pulse" />
+                    <div className="absolute inset-0 w-3 h-3 rounded-full bg-primary animate-ping" />
+                  </div>
+                  <h4 className="font-semibold text-lg">Live Results</h4>
+                </div>
+                <div className="space-y-4">
+                  {Object.entries(voteResults)
+                    .sort(([, a], [, b]) => b - a)
+                    .map(([option, count], index) => {
+                      const total = Object.values(voteResults).reduce((sum, val) => sum + val, 0);
+                      const percentage = ((count / total) * 100).toFixed(1);
+                      return (
+                        <div key={option} className="space-y-2 p-4 rounded-lg bg-card/40 backdrop-blur-sm border border-border/50 hover:border-primary/30 smooth-transition">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                              {index === 0 && (
+                                <span className="text-lg">🥇</span>
+                              )}
+                              <span className="font-semibold text-base">{option}</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-sm text-muted-foreground font-medium">{count} votes</span>
+                              <span className="text-lg font-bold text-primary">{percentage}%</span>
+                            </div>
+                          </div>
+                          <div className="h-3 bg-muted/50 rounded-full overflow-hidden relative">
+                            <div 
+                              className="h-full bg-gradient-to-r from-primary via-primary to-accent transition-all duration-700 ease-out rounded-full shadow-lg shadow-primary/30"
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
             )}
           </div>
 
-          <div className="mb-8 space-y-4">
-            <div>
-              <h3 className="font-semibold mb-2">{t('vote.electionDetails')}</h3>
-              <div className="space-y-2 text-sm">
-                {election.start_date && (
-                  <p>Start: {new Date(election.start_date).toLocaleString()}</p>
-                )}
-                {election.is_ongoing ? (
-                  <p className="text-primary font-semibold">Ongoing Election (No end date)</p>
-                ) : election.end_date ? (
-                  <p>End: {new Date(election.end_date).toLocaleString()}</p>
-                ) : null}
-                <p>Status: <span className="capitalize font-semibold">{election.status}</span></p>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-2">Voting Model</h3>
-              <p className="text-sm capitalize">{election.voting_logic_config?.model || 'Direct Voting'}</p>
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmitVote} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="identifier">Your Identifier</Label>
-              <Input
-                id="identifier"
-                type="text"
-                placeholder={user ? "Auto-filled from your account" : "Enter your email, ID, or identifier"}
-                value={voterIdentifier}
-                onChange={(e) => setVoterIdentifier(e.target.value)}
-                readOnly={!!user}
-                required
-                className={user ? "bg-muted cursor-not-allowed" : ""}
-              />
-              <div className="text-xs space-y-1">
-                <p className="text-muted-foreground">
-                  Required: {election.identity_config?.verificationType || 'Email'}
-                </p>
-                {user && (() => {
-                  const authMethod = user.app_metadata?.provider || 'email';
-                  const requiredType = election.identity_config?.verificationType?.toLowerCase() || 'email';
-                  const userType = authMethod === 'google' ? 'email' : authMethod;
-                  const matches = requiredType.includes(userType) || userType.includes(requiredType);
-                  
-                  return (
-                    <p className={matches ? "text-green-600 dark:text-green-400" : "text-amber-600 dark:text-amber-400"}>
-                      {matches ? "✓ Your authentication matches the election requirements" : "⚠ Your authentication type may not match the election requirements"}
-                    </p>
-                  );
-                })()}
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <Label>Your Vote</Label>
-              {election?.bill_config?.ballotOptions ? (
-                <div className="grid gap-3">
-                  {election.bill_config.ballotOptions.map((option: string, index: number) => (
-                    <Button
-                      key={index}
-                      type="button"
-                      variant={
-                        election.bill_config.ballotType === "single"
-                          ? selectedOptions[0] === option ? "default" : "outline"
-                          : selectedOptions.includes(option) ? "default" : "outline"
-                      }
-                      className="h-auto py-4 px-6 text-lg justify-start"
-                      onClick={() => {
-                        if (election.bill_config.ballotType === "single") {
-                          setSelectedOptions([option]);
-                        } else {
-                          if (selectedOptions.includes(option)) {
-                            setSelectedOptions(selectedOptions.filter((o) => o !== option));
-                          } else {
-                            setSelectedOptions([...selectedOptions, option]);
-                          }
-                        }
-                      }}
-                    >
-                      {option}
-                    </Button>
-                  ))}
-                </div>
-              ) : (
-                <Textarea
-                  id="vote"
-                  placeholder="Enter your vote (Yes/No or your choice)"
-                  value={voteValue}
-                  onChange={(e) => setVoteValue(e.target.value)}
-                  required
-                  rows={4}
-                />
-              )}
-              {election?.bill_config?.ballotType === "multiple" && selectedOptions.length > 0 && (
-                <p className="text-sm text-muted-foreground">
-                  {selectedOptions.length} option{selectedOptions.length !== 1 ? 's' : ''} selected
-                </p>
-              )}
-            </div>
-
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={submitting}
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Submitting Vote...
-                </>
-              ) : (
-                <>
-                  <VoteIcon className="w-4 h-4 mr-2" />
-                  Cast Your Vote
-                </>
-              )}
-            </Button>
-          </form>
-
-          {election?.is_ongoing && Object.keys(voteResults).length > 0 && (
-            <div className="mt-8 p-6 bg-muted/30 rounded-lg border border-border">
-              <h4 className="font-semibold mb-4 text-lg">Live Results</h4>
-              <div className="space-y-3">
-                {Object.entries(voteResults)
-                  .sort(([, a], [, b]) => b - a)
-                  .map(([option, count]) => {
-                    const total = Object.values(voteResults).reduce((sum, val) => sum + val, 0);
-                    const percentage = ((count / total) * 100).toFixed(1);
-                    return (
-                      <div key={option} className="space-y-1">
-                        <div className="flex justify-between text-sm">
-                          <span className="font-medium">{option}</span>
-                          <span className="text-muted-foreground">{count} votes ({percentage}%)</span>
-                        </div>
-                        <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-primary transition-all duration-500 ease-out"
-                            style={{ width: `${percentage}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-          )}
-
-          <div className="mt-8 p-4 bg-muted/50 rounded-lg">
-            <h4 className="font-semibold mb-2 text-sm">{t('vote.shareElection')}</h4>
+          {/* Share Section */}
+          <div className="mt-6 p-5 rounded-xl bg-gradient-to-br from-accent/10 to-transparent border border-accent/20 backdrop-blur-sm">
+            <h4 className="font-semibold mb-3 text-sm uppercase tracking-wider flex items-center gap-2">
+              <div className="w-1 h-4 bg-accent rounded-full" />
+              {t('vote.shareElection')}
+            </h4>
             <div className="flex gap-2">
               <Input 
                 value={window.location.href} 
                 readOnly 
-                className="text-xs"
+                className="text-xs bg-background/50 backdrop-blur-sm border-border/50"
               />
               <Button
                 variant="outline"
                 size="sm"
+                className="bg-accent/10 hover:bg-accent/20 border-accent/30 hover:border-accent text-accent font-medium smooth-transition"
                 onClick={() => {
                   navigator.clipboard.writeText(window.location.href);
                   toast({
