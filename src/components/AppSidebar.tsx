@@ -56,29 +56,47 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border">
-        <div className={`flex items-center gap-2 p-2 ${state === "collapsed" ? "justify-center" : ""}`}>
+    <Sidebar collapsible="icon" className="border-r border-primary/10 bg-gradient-to-b from-background via-background to-primary/5">
+      <SidebarHeader className="border-b border-primary/20 backdrop-blur-xl bg-background/60">
+        <div className={`flex items-center gap-2 p-3 ${state === "collapsed" ? "justify-center" : ""}`}>
           {state !== "collapsed" && (
-            <span className="text-lg font-bold">Vote Platform</span>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
+                <Vote className="h-4 w-4 text-primary-foreground" />
+              </div>
+              <span className="text-lg font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
+                Democracy Earth
+              </span>
+            </div>
           )}
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="px-2 py-4">
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground/80 mb-2">
+            Navigation
+          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1">
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     onClick={() => navigate(item.url)}
                     isActive={location.pathname === item.url}
                     tooltip={state === "collapsed" ? item.title : undefined}
+                    className={`relative overflow-hidden transition-all duration-300 ${
+                      location.pathname === item.url 
+                        ? "bg-gradient-to-r from-primary/20 to-primary/10 border-l-2 border-primary text-primary shadow-md" 
+                        : "hover:bg-primary/5 hover:border-l-2 hover:border-primary/50"
+                    }`}
                   >
-                    <item.icon className="h-4 w-4" />
-                    {state !== "collapsed" && <span>{item.title}</span>}
+                    <item.icon className={`h-4 w-4 transition-transform duration-300 ${
+                      location.pathname === item.url ? "scale-110" : "group-hover:scale-110"
+                    }`} />
+                    {state !== "collapsed" && (
+                      <span className="font-medium">{item.title}</span>
+                    )}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -87,10 +105,10 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-2">
+      <SidebarFooter className="border-t border-primary/20 p-3 space-y-2 backdrop-blur-xl bg-background/60">
         <Button
           variant="outline"
-          className="w-full justify-start"
+          className="w-full justify-start bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-0 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
           onClick={handleCreateElection}
         >
           <PlusCircle className="mr-2 h-4 w-4" />
@@ -98,7 +116,7 @@ export function AppSidebar() {
         </Button>
         <Button
           variant="ghost"
-          className="w-full justify-start"
+          className="w-full justify-start hover:bg-destructive/10 hover:text-destructive transition-all duration-300"
           onClick={handleSignOut}
         >
           <LogOut className="mr-2 h-4 w-4" />

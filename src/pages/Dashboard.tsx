@@ -41,26 +41,32 @@ const Dashboard = () => {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen flex w-full aurora-bg">
+      <div className="min-h-screen flex w-full aurora-bg relative overflow-hidden">
+        {/* Futuristic background effects */}
+        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:50px_50px]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10" />
+        
         <AppSidebar />
         
-        <SidebarInset className="flex-1">
-          <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
-            <SidebarTrigger />
+        <SidebarInset className="flex-1 relative">
+          <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b border-primary/20 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 px-6 shadow-lg shadow-primary/5">
+            <SidebarTrigger className="hover:bg-primary/10 transition-colors duration-300" />
             <div className="flex-1" />
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <LanguageSelector />
               <ThemeToggle />
             </div>
           </header>
 
-          <main className="flex-1 p-6">
-            <Routes>
-              <Route path="/" element={<PublicElectionsFeed />} />
-              <Route path="/my-elections" element={<DashboardMyElections userId={user?.id} />} />
-              <Route path="/participated" element={<DashboardParticipated userId={user?.id} />} />
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
+          <main className="flex-1 p-8 relative">
+            <div className="max-w-7xl mx-auto">
+              <Routes>
+                <Route path="/" element={<PublicElectionsFeed />} />
+                <Route path="/my-elections" element={<DashboardMyElections userId={user?.id} />} />
+                <Route path="/participated" element={<DashboardParticipated userId={user?.id} />} />
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              </Routes>
+            </div>
           </main>
         </SidebarInset>
       </div>

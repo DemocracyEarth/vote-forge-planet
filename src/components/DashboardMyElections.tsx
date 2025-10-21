@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, Loader2 } from "lucide-react";
+import { ExternalLink, Loader2, Vote } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type Election = Database["public"]["Tables"]["elections"]["Row"];
@@ -65,60 +65,85 @@ export function DashboardMyElections({ userId }: DashboardMyElectionsProps) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold">My Elections</h2>
-        <span className="text-sm text-muted-foreground">{elections.length} total</span>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
+            My Elections
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Manage and monitor your created elections
+          </p>
+        </div>
+        <div className="px-4 py-2 rounded-full bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/30">
+          <span className="text-sm font-semibold text-primary">{elections.length} Total</span>
+        </div>
       </div>
 
       {elections.length === 0 ? (
-        <Card>
-          <CardContent className="pt-6 text-center text-muted-foreground">
-            <p>No elections created yet.</p>
-            <p className="text-sm mt-2">Create your first election to get started!</p>
+        <Card className="border-primary/20 bg-gradient-to-br from-background via-primary/5 to-background backdrop-blur-sm">
+          <CardContent className="pt-12 pb-12 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 mb-4">
+              <Vote className="h-8 w-8 text-primary" />
+            </div>
+            <p className="text-muted-foreground text-lg mb-2">No elections created yet</p>
+            <p className="text-sm text-muted-foreground/70">Create your first election to get started!</p>
           </CardContent>
         </Card>
       ) : (
-        elections.map((election) => (
-          <Card key={election.id}>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <CardTitle>{election.title}</CardTitle>
-                  <CardDescription className="mt-2">{election.description}</CardDescription>
+        <div className="grid gap-4">
+          {elections.map((election) => (
+            <Card 
+              key={election.id}
+              className="group border-primary/20 bg-gradient-to-br from-background via-primary/5 to-background hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 hover:border-primary/40 backdrop-blur-sm overflow-hidden relative"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              
+              <CardHeader className="relative">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 space-y-2">
+                    <CardTitle className="text-xl group-hover:text-primary transition-colors duration-300">
+                      {election.title}
+                    </CardTitle>
+                    <CardDescription className="text-base leading-relaxed">
+                      {election.description}
+                    </CardDescription>
+                  </div>
+                  <div
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap backdrop-blur-sm ${
+                      election.status === "active"
+                        ? "bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30 shadow-lg shadow-green-500/20"
+                        : "bg-gray-500/20 text-gray-600 dark:text-gray-400 border border-gray-500/30"
+                    }`}
+                  >
+                    {election.status}
+                  </div>
                 </div>
-                <span
-                  className={`px-2 py-1 rounded text-xs whitespace-nowrap ${
-                    election.status === "active"
-                      ? "bg-green-500/20 text-green-700 dark:text-green-300"
-                      : "bg-gray-500/20 text-gray-700 dark:text-gray-300"
-                  }`}
-                >
-                  {election.status}
-                </span>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate(`/vote/${election.id}`)}
-                >
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  View Election
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => copyElectionLink(election.id)}
-                >
-                  Copy Link
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))
+              </CardHeader>
+              <CardContent className="relative">
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(`/vote/${election.id}`)}
+                    className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/30 hover:from-primary/20 hover:to-primary/10 hover:border-primary/50 transition-all duration-300 hover:scale-105"
+                  >
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    View Election
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => copyElectionLink(election.id)}
+                    className="border-primary/20 hover:bg-primary/10 hover:border-primary/40 transition-all duration-300"
+                  >
+                    Copy Link
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       )}
     </div>
   );

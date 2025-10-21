@@ -135,64 +135,101 @@ export function PublicElectionsFeed() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold">Public Elections</h2>
-        <Badge variant="outline">{elections.length} Active</Badge>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
+            Public Elections
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Discover and participate in global democratic decisions
+          </p>
+        </div>
+        <div className="px-4 py-2 rounded-full bg-gradient-to-r from-green-500/20 to-green-500/10 border border-green-500/30">
+          <span className="text-sm font-semibold text-green-600 dark:text-green-400">{elections.length} Active</span>
+        </div>
       </div>
 
-      {elections.map((election) => (
-        <Card key={election.id} className="hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <CardTitle className="flex items-center gap-2">
-                  {election.title}
-                  {election.isEligible ? (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <XCircle className="h-5 w-5 text-red-500" />
-                  )}
-                </CardTitle>
-                <CardDescription className="mt-2">
-                  {election.description}
-                </CardDescription>
-              </div>
-              <Badge variant={election.isEligible ? "default" : "secondary"}>
-                {election.isEligible ? "Eligible" : "Not Eligible"}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {!election.isEligible && election.eligibilityReason && (
-                <div className="text-sm text-muted-foreground bg-muted p-3 rounded-md">
-                  <strong>Eligibility requirement:</strong> {election.eligibilityReason}
+      <div className="grid gap-4">
+        {elections.map((election) => (
+          <Card 
+            key={election.id} 
+            className="group border-primary/20 bg-gradient-to-br from-background via-primary/5 to-background hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 hover:border-primary/40 backdrop-blur-sm overflow-hidden relative"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            
+            <CardHeader className="relative">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 space-y-2">
+                  <CardTitle className="text-xl flex items-center gap-3 group-hover:text-primary transition-colors duration-300">
+                    {election.title}
+                    {election.isEligible ? (
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-500/20 border border-green-500/30">
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-500/20 border border-red-500/30">
+                        <XCircle className="h-4 w-4 text-red-500" />
+                      </span>
+                    )}
+                  </CardTitle>
+                  <CardDescription className="text-base leading-relaxed">
+                    {election.description}
+                  </CardDescription>
                 </div>
-              )}
-              
-              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                {election.start_date && (
-                  <span>Started: {new Date(election.start_date).toLocaleDateString()}</span>
-                )}
-                {election.end_date && (
-                  <span>• Ends: {new Date(election.end_date).toLocaleDateString()}</span>
-                )}
+                <div
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap backdrop-blur-sm ${
+                    election.isEligible 
+                      ? "bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30 shadow-lg shadow-green-500/20" 
+                      : "bg-gray-500/20 text-gray-600 dark:text-gray-400 border border-gray-500/30"
+                  }`}
+                >
+                  {election.isEligible ? "Eligible" : "Not Eligible"}
+                </div>
               </div>
+            </CardHeader>
+            <CardContent className="relative">
+              <div className="space-y-4">
+                {!election.isEligible && election.eligibilityReason && (
+                  <div className="p-4 rounded-lg bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20 backdrop-blur-sm">
+                    <p className="text-sm">
+                      <span className="font-semibold text-amber-600 dark:text-amber-400">Eligibility requirement:</span>{" "}
+                      <span className="text-muted-foreground">{election.eligibilityReason}</span>
+                    </p>
+                  </div>
+                )}
+                
+                <div className="flex flex-wrap gap-3 text-xs">
+                  {election.start_date && (
+                    <span className="px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                      Started: {new Date(election.start_date).toLocaleDateString()}
+                    </span>
+                  )}
+                  {election.end_date && (
+                    <span className="px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                      Ends: {new Date(election.end_date).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
 
-              <Button
-                variant={election.isEligible ? "default" : "outline"}
-                size="sm"
-                onClick={() => navigate(`/vote/${election.id}`)}
-                className="w-full sm:w-auto"
-              >
-                <ExternalLink className="mr-2 h-4 w-4" />
-                {election.isEligible ? "Vote Now" : "View Details"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+                <Button
+                  variant={election.isEligible ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => navigate(`/vote/${election.id}`)}
+                  className={`w-full sm:w-auto transition-all duration-300 hover:scale-105 ${
+                    election.isEligible 
+                      ? "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl" 
+                      : "bg-gradient-to-r from-primary/10 to-primary/5 border-primary/30 hover:from-primary/20 hover:to-primary/10 hover:border-primary/50"
+                  }`}
+                >
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  {election.isEligible ? "Vote Now" : "View Details"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 }
