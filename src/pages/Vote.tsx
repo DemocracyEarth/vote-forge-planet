@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ const Vote = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [election, setElection] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [voterIdentifier, setVoterIdentifier] = useState("");
   const [voteValue, setVoteValue] = useState("");
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
@@ -27,7 +29,13 @@ const Vote = () => {
 
   useEffect(() => {
     loadElection();
+    checkUser();
   }, [electionId]);
+
+  const checkUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setUser(user);
+  };
 
   const loadElection = async () => {
     try {
@@ -134,11 +142,11 @@ const Vote = () => {
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <Button 
           variant="outline" 
-          onClick={() => navigate('/')} 
+          onClick={() => navigate(user ? '/dashboard' : '/')} 
           className="mb-6"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Home
+          {user ? 'Back to Dashboard' : 'Back to Home'}
         </Button>
 
         <Card className="p-6 sm:p-8 card-glow">
