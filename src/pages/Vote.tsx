@@ -67,7 +67,7 @@ const Vote = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'votes',
+          table: 'anonymous_votes',
           filter: `election_id=eq.${electionId}`
         },
         () => {
@@ -89,7 +89,7 @@ const Vote = () => {
   const loadVoteResults = async () => {
     try {
       const { data: votes, error } = await supabase
-        .from('votes')
+        .from('anonymous_votes')
         .select('vote_value')
         .eq('election_id', electionId);
 
@@ -141,28 +141,62 @@ const Vote = () => {
       : voteValue;
 
     try {
-      const { error } = await supabase
-        .from('votes')
+      if (!user) {
+        toast({
+          title: t('auth.error'),
+          description: "You must be logged in to vote",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check if user has already voted
+      const { data: hasVoted } = await supabase.rpc('has_user_voted', { 
+        election_uuid: electionId 
+      });
+
+      if (hasVoted) {
+        toast({
+          title: t('vote.alreadyVoted'),
+          description: t('vote.alreadyVotedDesc'),
+          variant: "destructive",
+        });
+        setSubmitting(false);
+        return;
+      }
+
+      // Insert into voter_registry first (for duplicate prevention)
+      const { error: registryError } = await supabase
+        .from('voter_registry')
         .insert({
           election_id: electionId,
-          voter_identifier: voterIdentifier,
-          vote_value: finalVoteValue,
-          metadata: {
-            voted_at: new Date().toISOString(),
-          }
+          voter_id: user.id,
         });
 
-      if (error) {
-        if (error.code === '23505') {
+      if (registryError) {
+        if (registryError.code === '23505') {
           toast({
             title: t('vote.alreadyVoted'),
             description: t('vote.alreadyVotedDesc'),
             variant: "destructive",
           });
         } else {
-          throw error;
+          throw registryError;
         }
       } else {
+        // Insert anonymous vote
+        const { error: voteError } = await supabase
+          .from('anonymous_votes')
+          .insert({
+            election_id: electionId,
+            vote_value: finalVoteValue,
+            metadata: {
+              voted_at: new Date().toISOString(),
+            }
+          });
+
+        if (voteError) throw voteError;
+
         toast({
           title: t('vote.voteRecorded'),
           description: t('vote.voteRecordedDesc'),

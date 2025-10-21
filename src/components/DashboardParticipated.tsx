@@ -8,14 +8,14 @@ import { ExternalLink, Loader2, History as HistoryIcon } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type Election = Database["public"]["Tables"]["elections"]["Row"];
-type Vote = Database["public"]["Tables"]["votes"]["Row"] & { elections: Election };
+type VoterRegistry = Database["public"]["Tables"]["voter_registry"]["Row"] & { elections: Election };
 
 interface DashboardParticipatedProps {
   userId: string;
 }
 
 export function DashboardParticipated({ userId }: DashboardParticipatedProps) {
-  const [votedElections, setVotedElections] = useState<Vote[]>([]);
+  const [votedElections, setVotedElections] = useState<VoterRegistry[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -29,13 +29,13 @@ export function DashboardParticipated({ userId }: DashboardParticipatedProps) {
   const loadParticipatedElections = async () => {
     try {
       const { data, error } = await supabase
-        .from("votes")
+        .from("voter_registry")
         .select("*, elections(*)")
-        .eq("voter_identifier", userId)
+        .eq("voter_id", userId)
         .order("voted_at", { ascending: false });
 
       if (error) throw error;
-      setVotedElections((data || []) as Vote[]);
+      setVotedElections((data || []) as VoterRegistry[]);
     } catch (error) {
       console.error("Error loading participated elections:", error);
       toast({
@@ -84,11 +84,11 @@ export function DashboardParticipated({ userId }: DashboardParticipatedProps) {
         </Card>
       ) : (
         <div className="grid gap-4">
-          {votedElections.map((vote) => {
-            const election = vote.elections as Election;
+          {votedElections.map((record) => {
+            const election = record.elections as Election;
             return (
               <Card 
-                key={vote.id}
+                key={record.id}
                 className="group border-primary/20 bg-gradient-to-br from-background via-primary/5 to-background hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 hover:border-primary/40 backdrop-blur-sm overflow-hidden relative"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -99,20 +99,21 @@ export function DashboardParticipated({ userId }: DashboardParticipatedProps) {
                   </CardTitle>
                   <CardDescription className="flex items-center gap-2">
                     <span className="inline-flex items-center px-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
-                      Voted on {new Date(vote.voted_at).toLocaleDateString()}
+                      Voted on {new Date(record.voted_at).toLocaleDateString()}
                     </span>
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="relative">
                   <div className="space-y-4">
                     <div className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 backdrop-blur-sm">
-                      <p className="text-sm text-muted-foreground mb-1">Your vote:</p>
-                      <p className="font-semibold text-lg text-primary">{vote.vote_value}</p>
+                      <p className="text-sm text-muted-foreground mb-1">Status:</p>
+                      <p className="font-semibold text-lg text-primary">✓ Voted</p>
+                      <p className="text-xs text-muted-foreground mt-1">Your vote was cast anonymously</p>
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/vote/${vote.election_id}`)}
+                      onClick={() => navigate(`/vote/${record.election_id}`)}
                       className="w-full sm:w-auto bg-gradient-to-r from-primary/10 to-primary/5 border-primary/30 hover:from-primary/20 hover:to-primary/10 hover:border-primary/50 transition-all duration-300 hover:scale-105"
                     >
                       <ExternalLink className="mr-2 h-4 w-4" />

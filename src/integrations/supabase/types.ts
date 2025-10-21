@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      anonymous_votes: {
+        Row: {
+          election_id: string
+          id: string
+          metadata: Json | null
+          vote_value: string
+          vote_weight: number | null
+          voted_at: string
+        }
+        Insert: {
+          election_id: string
+          id?: string
+          metadata?: Json | null
+          vote_value: string
+          vote_weight?: number | null
+          voted_at?: string
+        }
+        Update: {
+          election_id?: string
+          id?: string
+          metadata?: Json | null
+          vote_value?: string
+          vote_weight?: number | null
+          voted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anonymous_votes_election_id_fkey"
+            columns: ["election_id"]
+            isOneToOne: false
+            referencedRelation: "elections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       elections: {
         Row: {
           bill_config: Json
@@ -92,6 +127,35 @@ export type Database = {
         }
         Relationships: []
       }
+      voter_registry: {
+        Row: {
+          election_id: string
+          id: string
+          voted_at: string
+          voter_id: string
+        }
+        Insert: {
+          election_id: string
+          id?: string
+          voted_at?: string
+          voter_id: string
+        }
+        Update: {
+          election_id?: string
+          id?: string
+          voted_at?: string
+          voter_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voter_registry_election_id_fkey"
+            columns: ["election_id"]
+            isOneToOne: false
+            referencedRelation: "elections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       votes: {
         Row: {
           election_id: string
@@ -142,6 +206,10 @@ export type Database = {
           vote_count: number
           vote_value: string
         }[]
+      }
+      has_user_voted: {
+        Args: { election_uuid: string }
+        Returns: boolean
       }
     }
     Enums: {
