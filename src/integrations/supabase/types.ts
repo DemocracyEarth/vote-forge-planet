@@ -135,7 +135,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_election_results: {
+        Args: { election_uuid: string }
+        Returns: {
+          total_votes: number
+          vote_count: number
+          vote_value: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
