@@ -28,15 +28,68 @@ const Vote = () => {
   const [voteValue, setVoteValue] = useState("");
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [voteResults, setVoteResults] = useState<Record<string, number>>({});
 
   useEffect(() => {
     loadElection();
     checkUser();
   }, [electionId]);
 
+  useEffect(() => {
+    if (!election?.is_ongoing) return;
+
+    // Load initial vote results
+    loadVoteResults();
+
+    // Set up realtime subscription for ongoing elections
+    const channel = supabase
+      .channel('vote-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'votes',
+          filter: `election_id=eq.${electionId}`
+        },
+        () => {
+          loadVoteResults();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [election?.is_ongoing, electionId]);
+
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     setUser(user);
+  };
+
+  const loadVoteResults = async () => {
+    try {
+      const { data: votes, error } = await supabase
+        .from('votes')
+        .select('vote_value')
+        .eq('election_id', electionId);
+
+      if (error) throw error;
+
+      // Aggregate vote results
+      const results: Record<string, number> = {};
+      votes?.forEach(vote => {
+        const values = vote.vote_value.split(', ');
+        values.forEach(value => {
+          results[value] = (results[value] || 0) + 1;
+        });
+      });
+
+      setVoteResults(results);
+    } catch (error) {
+      console.error('Error loading vote results:', error);
+    }
   };
 
   const loadElection = async () => {
@@ -99,6 +152,11 @@ const Vote = () => {
         setVoterIdentifier("");
         setVoteValue("");
         setSelectedOptions([]);
+        
+        // Redirect after successful vote
+        setTimeout(() => {
+          navigate(user ? '/dashboard' : '/');
+        }, 1500);
       }
     } catch (error) {
       console.error('Error submitting vote:', error);
@@ -266,8 +324,36 @@ const Vote = () => {
             </Button>
           </form>
 
+          {election?.is_ongoing && Object.keys(voteResults).length > 0 && (
+            <div className="mt-8 p-6 bg-muted/30 rounded-lg border border-border">
+              <h4 className="font-semibold mb-4 text-lg">Live Results</h4>
+              <div className="space-y-3">
+                {Object.entries(voteResults)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([option, count]) => {
+                    const total = Object.values(voteResults).reduce((sum, val) => sum + val, 0);
+                    const percentage = ((count / total) * 100).toFixed(1);
+                    return (
+                      <div key={option} className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span className="font-medium">{option}</span>
+                          <span className="text-muted-foreground">{count} votes ({percentage}%)</span>
+                        </div>
+                        <div className="h-2 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-primary transition-all duration-500 ease-out"
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+
           <div className="mt-8 p-4 bg-muted/50 rounded-lg">
-            <h4 className="font-semibold mb-2 text-sm">Share this election</h4>
+            <h4 className="font-semibold mb-2 text-sm">{t('vote.shareElection')}</h4>
             <div className="flex gap-2">
               <Input 
                 value={window.location.href} 
@@ -280,12 +366,12 @@ const Vote = () => {
                 onClick={() => {
                   navigator.clipboard.writeText(window.location.href);
                   toast({
-                    title: "Link Copied",
-                    description: "Election link copied to clipboard",
+                    title: t('vote.linkCopied'),
+                    description: t('vote.linkCopiedDesc'),
                   });
                 }}
               >
-                Copy
+                {t('vote.copy')}
               </Button>
             </div>
           </div>
