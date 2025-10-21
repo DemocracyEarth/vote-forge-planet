@@ -156,37 +156,19 @@ export type Database = {
           },
         ]
       }
-      votes: {
+    }
+    Views: {
+      election_vote_summary: {
         Row: {
-          election_id: string
-          id: string
-          metadata: Json | null
-          vote_value: string
-          vote_weight: number | null
-          voted_at: string
-          voter_identifier: string
-        }
-        Insert: {
-          election_id: string
-          id?: string
-          metadata?: Json | null
-          vote_value: string
-          vote_weight?: number | null
-          voted_at?: string
-          voter_identifier: string
-        }
-        Update: {
-          election_id?: string
-          id?: string
-          metadata?: Json | null
-          vote_value?: string
-          vote_weight?: number | null
-          voted_at?: string
-          voter_identifier?: string
+          election_id: string | null
+          first_vote_at: string | null
+          last_vote_at: string | null
+          total_votes: number | null
+          unique_options: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "votes_election_id_fkey"
+            foreignKeyName: "anonymous_votes_election_id_fkey"
             columns: ["election_id"]
             isOneToOne: false
             referencedRelation: "elections"
@@ -194,9 +176,6 @@ export type Database = {
           },
         ]
       }
-    }
-    Views: {
-      [_ in never]: never
     }
     Functions: {
       get_election_results: {
