@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import StepIdentity from "@/components/wizard/StepIdentity";
 import StepVotingLogic from "@/components/wizard/StepVotingLogic";
 import StepBill from "@/components/wizard/StepBill";
+import { z } from "zod";
 
 interface WizardStepsProps {
   onBack: () => void;
@@ -47,6 +48,47 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
   const handleDeploy = async () => {
     setIsDeploying(true);
     try {
+      // Client-side validation schema
+      const wizardSchema = z.object({
+        identityData: z.object({
+          authenticationType: z.string().min(1, "Authentication type is required").max(100),
+          requireLogin: z.boolean().optional()
+        }),
+        votingLogicData: z.object({
+          model: z.string().min(1, "Voting model is required").max(100),
+          aiPrompt: z.string().max(5000, "AI prompt must be less than 5000 characters").optional()
+        }),
+        billData: z.object({
+          title: z.string().min(1, "Title is required").max(500, "Title must be less than 500 characters"),
+          description: z.string().max(10000, "Description must be less than 10000 characters").optional(),
+          ballotOptions: z.array(z.string().min(1).max(200)).min(2, "At least 2 ballot options required").optional(),
+          startDate: z.string().optional(),
+          endDate: z.string().optional(),
+          isOngoing: z.boolean().optional(),
+          threshold: z.string().optional(),
+          customThreshold: z.string().optional(),
+          customOptions: z.record(z.string()).optional()
+        })
+      });
+
+      // Validate input before submission
+      const validation = wizardSchema.safeParse({
+        identityData,
+        votingLogicData,
+        billData
+      });
+
+      if (!validation.success) {
+        const firstError = validation.error.issues[0];
+        toast({
+          title: "Invalid Input",
+          description: firstError.message,
+          variant: "destructive",
+        });
+        setIsDeploying(false);
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('create-election', {
         body: {
           identityConfig: identityData,
