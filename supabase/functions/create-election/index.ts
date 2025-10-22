@@ -32,7 +32,6 @@ const requestSchema = z.object({
   identityConfig: identityConfigSchema,
   votingLogicConfig: votingLogicConfigSchema,
   billConfig: billConfigSchema,
-  userId: z.string().uuid().optional().nullable(),
 });
 
 serve(async (req) => {
@@ -41,6 +40,30 @@ serve(async (req) => {
   }
 
   try {
+    // Extract and verify JWT token
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      console.error("Authentication error:", authError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid authentication token' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const rawBody = await req.json();
     
     // Validate input
@@ -56,7 +79,8 @@ serve(async (req) => {
       );
     }
 
-    const { identityConfig, votingLogicConfig, billConfig, userId } = validationResult.data;
+    const { identityConfig, votingLogicConfig, billConfig } = validationResult.data;
+    const verifiedUserId = user.id; // Use authenticated user's ID
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
@@ -170,11 +194,6 @@ Create a comprehensive JSON configuration that captures all these rules and defi
       );
     }
 
-    // Save to database
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
     // Normalize dates
     const startDate = billConfig?.startDate ? new Date(billConfig.startDate).toISOString() : null;
     const endDate = billConfig?.isOngoing ? null : (billConfig?.endDate ? new Date(billConfig.endDate).toISOString() : null);
@@ -192,7 +211,7 @@ Create a comprehensive JSON configuration that captures all these rules and defi
         end_date: endDate,
         is_ongoing: !!billConfig?.isOngoing,
         is_public: billConfig?.isPublic ?? true, // Default to public
-        created_by: userId || null,
+        created_by: verifiedUserId,
       })
       .select()
       .single();
