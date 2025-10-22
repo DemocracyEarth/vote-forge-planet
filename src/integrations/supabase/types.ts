@@ -47,6 +47,13 @@ export type Database = {
             referencedRelation: "elections"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "anonymous_votes_election_id_fkey"
+            columns: ["election_id"]
+            isOneToOne: false
+            referencedRelation: "public_elections"
+            referencedColumns: ["id"]
+          },
         ]
       }
       elections: {
@@ -154,6 +161,13 @@ export type Database = {
             referencedRelation: "elections"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "voter_registry_election_id_fkey"
+            columns: ["election_id"]
+            isOneToOne: false
+            referencedRelation: "public_elections"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
@@ -174,7 +188,50 @@ export type Database = {
             referencedRelation: "elections"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "anonymous_votes_election_id_fkey"
+            columns: ["election_id"]
+            isOneToOne: false
+            referencedRelation: "public_elections"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      public_elections: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          id: string | null
+          is_ongoing: boolean | null
+          is_public: boolean | null
+          start_date: string | null
+          status: string | null
+          title: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string | null
+          is_ongoing?: boolean | null
+          is_public?: boolean | null
+          start_date?: string | null
+          status?: string | null
+          title?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string | null
+          is_ongoing?: boolean | null
+          is_public?: boolean | null
+          start_date?: string | null
+          status?: string | null
+          title?: string | null
+        }
+        Relationships: []
       }
     }
     Functions: {
@@ -186,10 +243,7 @@ export type Database = {
           vote_value: string
         }[]
       }
-      has_user_voted: {
-        Args: { election_uuid: string }
-        Returns: boolean
-      }
+      has_user_voted: { Args: { election_uuid: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
