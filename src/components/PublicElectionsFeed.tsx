@@ -2,22 +2,24 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
-import { Loader2, CheckCircle, XCircle, ExternalLink } from "lucide-react";
-import type { Database } from "@/integrations/supabase/types";
+import { Loader2, ExternalLink } from "lucide-react";
 
-type Election = Database["public"]["Tables"]["elections"]["Row"];
-
-interface ElectionWithEligibility extends Election {
-  isEligible: boolean;
-  eligibilityReason?: string;
+interface PublicElection {
+  id: string;
+  title: string;
+  description: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  is_ongoing: boolean | null;
+  is_public: boolean | null;
+  status: string | null;
+  created_at: string | null;
 }
 
 export function PublicElectionsFeed() {
-  const [elections, setElections] = useState<ElectionWithEligibility[]>([]);
+  const [elections, setElections] = useState<PublicElection[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userProfile, setUserProfile] = useState<any>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,18 +36,9 @@ export function PublicElectionsFeed() {
         return;
       }
 
-      // Load user profile
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", session.user.id)
-        .single();
-
-      setUserProfile(profile);
-
-      // Load public elections
+      // Load public elections using secure view (excludes sensitive configs)
       const { data: publicElections, error } = await supabase
-        .from("elections")
+        .from("public_elections")
         .select("*")
         .eq("is_public", true)
         .eq("status", "active")
@@ -53,17 +46,7 @@ export function PublicElectionsFeed() {
 
       if (error) throw error;
 
-      // Check eligibility for each election
-      const electionsWithEligibility = (publicElections || []).map((election) => {
-        const { isEligible, reason } = checkEligibility(election, session.user, profile);
-        return {
-          ...election,
-          isEligible,
-          eligibilityReason: reason,
-        };
-      });
-
-      setElections(electionsWithEligibility);
+      setElections(publicElections || []);
     } catch (error) {
       console.error("Error loading public elections:", error);
     } finally {
@@ -71,49 +54,6 @@ export function PublicElectionsFeed() {
     }
   };
 
-  const checkEligibility = (
-    election: Election,
-    user: any,
-    profile: any
-  ): { isEligible: boolean; reason?: string } => {
-    const config = election.identity_config as any;
-    
-    if (!config || !config.authenticationType) {
-      return { isEligible: true };
-    }
-
-    const authType = config.authenticationType;
-
-    // Check based on authentication type
-    switch (authType) {
-      case "email":
-        if (!user.email) {
-          return { isEligible: false, reason: "Email verification required" };
-        }
-        return { isEligible: true };
-
-      case "phone":
-        if (!user.phone) {
-          return { isEligible: false, reason: "Phone verification required" };
-        }
-        return { isEligible: true };
-
-      case "google":
-        const isGoogleAuth = user.app_metadata?.provider === "google";
-        if (!isGoogleAuth) {
-          return { isEligible: false, reason: "Google authentication required" };
-        }
-        return { isEligible: true };
-
-      case "worldid":
-        // For World ID, we'd need to check if user has World ID verification
-        // This is a placeholder - actual implementation would verify World ID
-        return { isEligible: false, reason: "World ID verification required" };
-
-      default:
-        return { isEligible: true };
-    }
-  };
 
   if (loading) {
     return (
@@ -161,44 +101,17 @@ export function PublicElectionsFeed() {
             <CardHeader className="relative">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 space-y-2">
-                  <CardTitle className="text-xl flex items-center gap-3 group-hover:text-primary transition-colors duration-300">
+                  <CardTitle className="text-xl group-hover:text-primary transition-colors duration-300">
                     {election.title}
-                    {election.isEligible ? (
-                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-500/20 border border-green-500/30">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-500/20 border border-red-500/30">
-                        <XCircle className="h-4 w-4 text-red-500" />
-                      </span>
-                    )}
                   </CardTitle>
                   <CardDescription className="text-base leading-relaxed">
                     {election.description}
                   </CardDescription>
                 </div>
-                <div
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap backdrop-blur-sm ${
-                    election.isEligible 
-                      ? "bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30 shadow-lg shadow-green-500/20" 
-                      : "bg-gray-500/20 text-gray-600 dark:text-gray-400 border border-gray-500/30"
-                  }`}
-                >
-                  {election.isEligible ? "Eligible" : "Not Eligible"}
-                </div>
               </div>
             </CardHeader>
             <CardContent className="relative">
               <div className="space-y-4">
-                {!election.isEligible && election.eligibilityReason && (
-                  <div className="p-4 rounded-lg bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20 backdrop-blur-sm">
-                    <p className="text-sm">
-                      <span className="font-semibold text-amber-600 dark:text-amber-400">Eligibility requirement:</span>{" "}
-                      <span className="text-muted-foreground">{election.eligibilityReason}</span>
-                    </p>
-                  </div>
-                )}
-                
                 <div className="flex flex-wrap gap-3 text-xs">
                   {election.start_date && (
                     <span className="px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20">
@@ -210,20 +123,21 @@ export function PublicElectionsFeed() {
                       Ends: {new Date(election.end_date).toLocaleDateString()}
                     </span>
                   )}
+                  {election.is_ongoing && (
+                    <span className="px-3 py-1.5 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 font-semibold">
+                      ● Live
+                    </span>
+                  )}
                 </div>
 
                 <Button
-                  variant={election.isEligible ? "default" : "outline"}
+                  variant="default"
                   size="sm"
                   onClick={() => navigate(`/vote/${election.id}`)}
-                  className={`w-full sm:w-auto transition-all duration-300 hover:scale-105 ${
-                    election.isEligible 
-                      ? "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl" 
-                      : "bg-gradient-to-r from-primary/10 to-primary/5 border-primary/30 hover:from-primary/20 hover:to-primary/10 hover:border-primary/50"
-                  }`}
+                  className="w-full sm:w-auto transition-all duration-300 hover:scale-105 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl"
                 >
                   <ExternalLink className="mr-2 h-4 w-4" />
-                  {election.isEligible ? "Vote Now" : "View Details"}
+                  View & Vote
                 </Button>
               </div>
             </CardContent>

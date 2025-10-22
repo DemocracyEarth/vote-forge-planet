@@ -112,9 +112,10 @@ const Vote = () => {
 
   const loadElection = async () => {
     try {
+      // Fetch only necessary fields to prevent sensitive config exposure
       const { data, error } = await supabase
         .from('elections')
-        .select('*')
+        .select('id, title, description, start_date, end_date, is_ongoing, status, is_public, identity_config, voting_logic_config, bill_config')
         .eq('id', electionId)
         .single();
 
