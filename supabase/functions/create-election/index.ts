@@ -1,10 +1,39 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Input validation schemas
+const identityConfigSchema = z.object({
+  authenticationType: z.string().min(1).max(100),
+  requireLogin: z.boolean().optional(),
+}).passthrough(); // Allow additional fields but validate core ones
+
+const votingLogicConfigSchema = z.object({
+  model: z.string().min(1).max(100),
+  useAI: z.boolean().optional(),
+  aiPrompt: z.string().max(5000).optional(),
+}).passthrough();
+
+const billConfigSchema = z.object({
+  title: z.string().min(1).max(500),
+  description: z.string().max(10000).optional(),
+  startDate: z.string().datetime().optional(),
+  endDate: z.string().datetime().optional(),
+  isOngoing: z.boolean().optional(),
+  isPublic: z.boolean().optional(),
+}).passthrough();
+
+const requestSchema = z.object({
+  identityConfig: identityConfigSchema,
+  votingLogicConfig: votingLogicConfigSchema,
+  billConfig: billConfigSchema,
+  userId: z.string().uuid().optional().nullable(),
+});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -12,7 +41,22 @@ serve(async (req) => {
   }
 
   try {
-    const { identityConfig, votingLogicConfig, billConfig, userId } = await req.json();
+    const rawBody = await req.json();
+    
+    // Validate input
+    const validationResult = requestSchema.safeParse(rawBody);
+    if (!validationResult.success) {
+      console.error("Validation error:", validationResult.error);
+      return new Response(
+        JSON.stringify({ 
+          error: "Invalid request parameters",
+          details: validationResult.error.issues.map(i => `${i.path.join('.')}: ${i.message}`)
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { identityConfig, votingLogicConfig, billConfig, userId } = validationResult.data;
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
