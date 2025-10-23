@@ -60,7 +60,7 @@ export type Database = {
         Row: {
           bill_config: Json
           created_at: string
-          created_by: string | null
+          created_by: string
           description: string | null
           end_date: string | null
           id: string
@@ -76,7 +76,7 @@ export type Database = {
         Insert: {
           bill_config: Json
           created_at?: string
-          created_by?: string | null
+          created_by: string
           description?: string | null
           end_date?: string | null
           id?: string
@@ -92,7 +92,7 @@ export type Database = {
         Update: {
           bill_config?: Json
           created_at?: string
-          created_by?: string | null
+          created_by?: string
           description?: string | null
           end_date?: string | null
           id?: string
