@@ -54,6 +54,8 @@
     "linkCopiedDesc": "Election link copied to clipboard",
     "alreadyVoted": "Already Voted",
     "alreadyVotedDesc": "You have already cast your vote in this election",
+    "updatingVote": "Updating Your Vote",
+    "updatingVoteDesc": "Your previous vote will be replaced with this new one.",
     "voteRecorded": "Vote Recorded",
     "voteRecordedDesc": "Your vote has been successfully recorded",
     "failedToLoad": "Failed to load election details",

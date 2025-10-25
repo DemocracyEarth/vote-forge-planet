@@ -157,13 +157,32 @@ const Vote = () => {
       });
 
       if (hasVoted) {
-        toast({
-          title: t('vote.alreadyVoted'),
-          description: t('vote.alreadyVotedDesc'),
-          variant: "destructive",
-        });
-        setSubmitting(false);
-        return;
+        // Allow vote override if election is ongoing
+        if (election.is_ongoing) {
+          // Delete previous vote from voter_registry to allow re-voting
+          const { error: deleteRegistryError } = await supabase
+            .from('voter_registry')
+            .delete()
+            .eq('election_id', electionId)
+            .eq('voter_id', user.id);
+
+          if (deleteRegistryError) {
+            console.error('Error deleting previous registry:', deleteRegistryError);
+          }
+
+          toast({
+            title: t('vote.updatingVote'),
+            description: t('vote.updatingVoteDesc'),
+          });
+        } else {
+          toast({
+            title: t('vote.alreadyVoted'),
+            description: t('vote.alreadyVotedDesc'),
+            variant: "destructive",
+          });
+          setSubmitting(false);
+          return;
+        }
       }
 
       // Insert into voter_registry first (for duplicate prevention)
