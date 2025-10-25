@@ -51,6 +51,19 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
   const handleDeploy = async () => {
     setIsDeploying(true);
     try {
+      // Check if user is authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication Required",
+          description: "Please sign in to create an election",
+          variant: "destructive",
+        });
+        setIsDeploying(false);
+        navigate("/auth");
+        return;
+      }
+
       // Client-side validation schema
       const wizardSchema = z.object({
         identityData: z.object({
