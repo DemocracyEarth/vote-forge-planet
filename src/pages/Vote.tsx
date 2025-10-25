@@ -15,6 +15,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import Footer from "@/components/Footer";
 import { useTranslation } from "react-i18next";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const Vote = () => {
   const { t } = useTranslation();
@@ -29,6 +30,7 @@ const Vote = () => {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [voteResults, setVoteResults] = useState<Record<string, number>>({});
+  const [creator, setCreator] = useState<any>(null);
 
   useEffect(() => {
     loadElection();
@@ -115,12 +117,25 @@ const Vote = () => {
       // Fetch only necessary fields to prevent sensitive config exposure
       const { data, error } = await supabase
         .from('elections')
-        .select('id, title, description, start_date, end_date, is_ongoing, status, is_public, identity_config, voting_logic_config, bill_config')
+        .select('id, title, description, start_date, end_date, is_ongoing, status, is_public, identity_config, voting_logic_config, bill_config, created_by')
         .eq('id', electionId)
         .single();
 
       if (error) throw error;
       setElection(data);
+
+      // Load creator profile if available
+      if (data?.created_by) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("full_name, avatar_url")
+          .eq("id", data.created_by)
+          .single();
+        
+        if (profileData) {
+          setCreator(profileData);
+        }
+      }
     } catch (error) {
       console.error('Error loading election:', error);
       toast({
@@ -394,6 +409,19 @@ const Vote = () => {
                   <h1 className="text-3xl sm:text-4xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
                     {election.title}
                   </h1>
+                  {creator && (
+                    <div className="flex items-center gap-3 mb-3">
+                      <Avatar className="h-8 w-8 border-2 border-primary/20">
+                        <AvatarImage src={creator.avatar_url} alt={creator.full_name} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                          {creator.full_name?.charAt(0) || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="text-sm text-muted-foreground">
+                        Created by <span className="font-semibold text-foreground">{creator.full_name}</span>
+                      </div>
+                    </div>
+                  )}
                   {election.description && (
                     <p className="text-muted-foreground text-lg leading-relaxed">{election.description}</p>
                   )}

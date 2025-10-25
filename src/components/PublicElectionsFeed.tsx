@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
 import { Loader2, ExternalLink, Users, Calendar, TrendingUp, Mail, Phone, Chrome, Globe } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface PublicElection {
   id: string;
@@ -17,12 +18,11 @@ interface PublicElection {
   is_public: boolean | null;
   status: string | null;
   created_at: string | null;
-  identity_config?: {
-    authenticationType: string;
-    restrictions?: {
-      restrictionType?: string;
-      allowedCountries?: string[];
-    };
+  created_by: string;
+  identity_config?: any;
+  profiles?: {
+    full_name: string;
+    avatar_url: string | null;
   };
 }
 
@@ -55,17 +55,30 @@ export function PublicElectionsFeed() {
       // Load public elections with identity_config
       const { data: publicElections, error } = await supabase
         .from("elections")
-        .select("id, title, description, start_date, end_date, is_ongoing, is_public, status, created_at, identity_config")
+        .select("id, title, description, start_date, end_date, is_ongoing, is_public, status, created_at, identity_config, created_by")
         .eq("is_public", true)
         .eq("status", "active")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      setElections(publicElections as PublicElection[] || []);
-
-      // Load results for each election
+      // Fetch creator profiles for all elections
       if (publicElections && publicElections.length > 0) {
+        const creatorIds = [...new Set(publicElections.map(e => e.created_by))];
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url")
+          .in("id", creatorIds);
+        
+        const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+        const electionsWithProfiles = publicElections.map(election => ({
+          ...election,
+          profiles: profilesMap.get(election.created_by)
+        }));
+        
+        setElections(electionsWithProfiles as PublicElection[]);
+
+        // Load results for each election
         const resultsPromises = publicElections.map(async (election) => {
           const { data } = await supabase.rpc('get_election_results', {
             election_uuid: election.id
@@ -218,6 +231,19 @@ export function PublicElectionsFeed() {
                     <CardTitle className="text-2xl font-bold group-hover:text-primary transition-colors duration-300 mb-3">
                       {election.title}
                     </CardTitle>
+                    {election.profiles && (
+                      <div className="flex items-center gap-2 mb-3">
+                        <Avatar className="h-6 w-6 border border-primary/20">
+                          <AvatarImage src={election.profiles.avatar_url || undefined} alt={election.profiles.full_name} />
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                            {election.profiles.full_name?.charAt(0) || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-xs text-muted-foreground">
+                          by <span className="font-semibold text-foreground">{election.profiles.full_name}</span>
+                        </span>
+                      </div>
+                    )}
                     <div className="flex flex-wrap items-center gap-2 text-sm">
                       {election.is_ongoing && (
                         <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 border border-green-500/30 font-semibold">

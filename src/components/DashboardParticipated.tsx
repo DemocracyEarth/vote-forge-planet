@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ExternalLink, Loader2, History as HistoryIcon, Share2, CheckCircle2, TrendingUp, Users, Calendar } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +32,10 @@ interface ParticipatedElection {
   elections: Election;
   userVote?: string;
   results?: VoteResult[];
+  creator?: {
+    full_name: string;
+    avatar_url: string | null;
+  };
 }
 
 interface DashboardParticipatedProps {
@@ -85,6 +90,20 @@ export function DashboardParticipated({ userId }: DashboardParticipatedProps) {
             results = resultsData || [];
           }
 
+          // Fetch creator profile
+          let creator = undefined;
+          if (election.created_by) {
+            const { data: profileData } = await supabase
+              .from("profiles")
+              .select("full_name, avatar_url")
+              .eq("id", election.created_by)
+              .single();
+            
+            if (profileData) {
+              creator = profileData;
+            }
+          }
+
           return {
             id: record.id,
             election_id: record.election_id,
@@ -92,7 +111,8 @@ export function DashboardParticipated({ userId }: DashboardParticipatedProps) {
             voted_at: record.voted_at,
             elections: election,
             userVote: votes && votes.length > 0 ? votes[0].vote_value : undefined,
-            results
+            results,
+            creator
           };
         })
       );
@@ -195,6 +215,19 @@ export function DashboardParticipated({ userId }: DashboardParticipatedProps) {
                       <CardTitle className="text-2xl font-bold group-hover:text-primary transition-colors duration-300 mb-3">
                         {election.title}
                       </CardTitle>
+                      {record.creator && (
+                        <div className="flex items-center gap-2 mb-3">
+                          <Avatar className="h-6 w-6 border border-primary/20">
+                            <AvatarImage src={record.creator.avatar_url || undefined} alt={record.creator.full_name} />
+                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                              {record.creator.full_name?.charAt(0) || "U"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-xs text-muted-foreground">
+                            by <span className="font-semibold text-foreground">{record.creator.full_name}</span>
+                          </span>
+                        </div>
+                      )}
                       <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1.5">
                           <Calendar className="h-4 w-4" />

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { 
   ExternalLink, 
   Loader2, 
@@ -56,6 +57,7 @@ export function DashboardMyElections({ userId }: DashboardMyElectionsProps) {
   const [electionResults, setElectionResults] = useState<Record<string, ElectionResults[]>>({});
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -67,6 +69,17 @@ export function DashboardMyElections({ userId }: DashboardMyElectionsProps) {
 
   const loadMyElections = async () => {
     try {
+      // Load user profile
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url")
+        .eq("id", userId)
+        .single();
+      
+      if (profileData) {
+        setUserProfile(profileData);
+      }
+
       const { data, error } = await supabase
         .from("elections")
         .select("*")
@@ -293,6 +306,19 @@ export function DashboardMyElections({ userId }: DashboardMyElectionsProps) {
                       <CardTitle className="text-2xl font-bold group-hover:text-primary transition-colors duration-300 mb-2">
                         {election.title}
                       </CardTitle>
+                      {userProfile && (
+                        <div className="flex items-center gap-2 mb-3">
+                          <Avatar className="h-6 w-6 border border-primary/20">
+                            <AvatarImage src={userProfile.avatar_url || undefined} alt={userProfile.full_name} />
+                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                              {userProfile.full_name?.charAt(0) || "U"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-xs text-muted-foreground">
+                            by <span className="font-semibold text-foreground">{userProfile.full_name}</span>
+                          </span>
+                        </div>
+                      )}
                       <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                         {election.is_ongoing && (
                           <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 border border-green-500/30 font-semibold">
