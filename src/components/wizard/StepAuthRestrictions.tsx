@@ -230,6 +230,20 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
     );
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'email' | 'phone') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const text = await file.text();
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+    
+    if (type === 'email') {
+      setAllowedEmails(lines.join('\n'));
+    } else {
+      setAllowedPhones(lines.join('\n'));
+    }
+  };
+
   const filteredCountries = COUNTRIES.filter(country =>
     country.name.toLowerCase().includes(countrySearch.toLowerCase()) ||
     country.code.toLowerCase().includes(countrySearch.toLowerCase()) ||
@@ -291,6 +305,23 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
           </div>
           {restrictionType === "email-list" && (
             <div className="mt-4 ml-8">
+              <div className="flex items-center gap-2 mb-3">
+                <Input
+                  type="file"
+                  accept=".csv,.txt"
+                  onChange={(e) => handleFileUpload(e, 'email')}
+                  className="hidden"
+                  id="email-csv-upload"
+                />
+                <Label
+                  htmlFor="email-csv-upload"
+                  className="flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-md cursor-pointer transition-colors"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span className="text-sm font-medium">Upload CSV/TXT</span>
+                </Label>
+                <span className="text-xs text-muted-foreground">or enter manually below</span>
+              </div>
               <Textarea
                 placeholder="Enter email addresses (one per line)&#10;example@domain.com&#10;another@example.org"
                 value={allowedEmails}
@@ -299,7 +330,7 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
                 className="font-mono text-sm"
               />
               <p className="text-xs text-muted-foreground mt-2">
-                Enter one email address per line
+                Enter one email address per line, or upload a CSV/TXT file with one email per line
               </p>
             </div>
           )}
@@ -362,6 +393,23 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
           </div>
           {restrictionType === "phone-list" && (
             <div className="mt-4 ml-8">
+              <div className="flex items-center gap-2 mb-3">
+                <Input
+                  type="file"
+                  accept=".csv,.txt"
+                  onChange={(e) => handleFileUpload(e, 'phone')}
+                  className="hidden"
+                  id="phone-csv-upload"
+                />
+                <Label
+                  htmlFor="phone-csv-upload"
+                  className="flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-md cursor-pointer transition-colors"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span className="text-sm font-medium">Upload CSV/TXT</span>
+                </Label>
+                <span className="text-xs text-muted-foreground">or enter manually below</span>
+              </div>
               <Textarea
                 placeholder="Enter phone numbers with country code (one per line)&#10;+1234567890&#10;+9876543210"
                 value={allowedPhones}
@@ -370,7 +418,7 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
                 className="font-mono text-sm"
               />
               <p className="text-xs text-muted-foreground mt-2">
-                Enter one phone number per line with country code (e.g., +1234567890)
+                Enter one phone number per line with country code (e.g., +1234567890), or upload a CSV/TXT file
               </p>
             </div>
           )}
