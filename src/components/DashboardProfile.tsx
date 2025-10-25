@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Mail, Phone, Chrome, Globe, CheckCircle2, XCircle, ExternalLink } from "lucide-react";
+import { Loader2, Mail, Phone, Chrome, Globe, CheckCircle2, XCircle, ExternalLink, Upload, Video, Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 interface AuthProvider {
   id: string;
@@ -21,6 +23,10 @@ export function DashboardProfile() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [providers, setProviders] = useState<AuthProvider[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [bio, setBio] = useState("");
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadUserData();
@@ -49,6 +55,7 @@ export function DashboardProfile() {
         .single();
 
       setProfile(profileData);
+      setBio(profileData?.bio || "");
 
       // Parse authentication providers from user identities
       const authProviders: AuthProvider[] = [];
@@ -104,6 +111,123 @@ export function DashboardProfile() {
     });
   };
 
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/avatar.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      await loadUserData();
+      toast({
+        title: "Success",
+        description: "Profile picture updated successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleVideoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    if (file.size > 50 * 1024 * 1024) {
+      toast({
+        title: "Error",
+        description: "Video must be less than 50MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/profile-video.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('profile-videos')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-videos')
+        .getPublicUrl(fileName);
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ profile_video_url: publicUrl })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      await loadUserData();
+      toast({
+        title: "Success",
+        description: "Profile video uploaded successfully. This will help others decide on vote delegation.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleBioSave = async () => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ bio })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Bio updated successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -127,32 +251,115 @@ export function DashboardProfile() {
       <Card className="border-primary/20 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
         <CardHeader>
           <CardTitle>Profile Information</CardTitle>
-          <CardDescription>Your account details and verification status</CardDescription>
+          <CardDescription>Your public profile helps others decide on vote delegation</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-20 w-20 border-2 border-primary/20">
-              <AvatarImage src={profile?.avatar_url || user?.user_metadata?.avatar_url} />
-              <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-2xl">
-                {profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || '?'}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <h3 className="text-xl font-semibold">{profile?.full_name || 'Anonymous User'}</h3>
-              <p className="text-sm text-muted-foreground">{user?.email}</p>
-              <Badge variant="outline" className="mt-2">
-                {user?.email_confirmed_at ? (
-                  <span className="flex items-center gap-1">
-                    <CheckCircle2 className="h-3 w-3 text-green-500" />
-                    Email Verified
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-1">
-                    <XCircle className="h-3 w-3 text-yellow-500" />
-                    Email Pending
-                  </span>
-                )}
-              </Badge>
+          <div className="flex items-start gap-6">
+            <div className="flex flex-col items-center gap-2">
+              <Avatar className="h-24 w-24 border-2 border-primary/20">
+                <AvatarImage src={profile?.avatar_url || user?.user_metadata?.avatar_url} />
+                <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-2xl">
+                  {profile?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || '?'}
+                </AvatarFallback>
+              </Avatar>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                className="hidden"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={uploading}
+              >
+                <Camera className="h-4 w-4 mr-2" />
+                Upload Photo
+              </Button>
+            </div>
+            
+            <div className="flex-1 space-y-4">
+              <div>
+                <h3 className="text-xl font-semibold">{profile?.full_name || 'Anonymous User'}</h3>
+                <p className="text-sm text-muted-foreground">{user?.email}</p>
+                <Badge variant="outline" className="mt-2">
+                  {user?.email_confirmed_at ? (
+                    <span className="flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3 text-green-500" />
+                      Email Verified
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1">
+                      <XCircle className="h-3 w-3 text-yellow-500" />
+                      Email Pending
+                    </span>
+                  )}
+                </Badge>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bio">Bio (visible to others for delegation decisions)</Label>
+                <Textarea
+                  id="bio"
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="Tell others about yourself and why they should delegate their vote to you..."
+                  className="min-h-[100px]"
+                  maxLength={500}
+                />
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-muted-foreground">{bio.length}/500</span>
+                  <Button size="sm" onClick={handleBioSave}>
+                    Save Bio
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Profile Video Section */}
+          <div className="border-t pt-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <Video className="h-5 w-5 text-primary" />
+                    Profile Video
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    Introduce yourself to help others decide on vote delegation (max 50MB)
+                  </p>
+                </div>
+                <input
+                  ref={videoInputRef}
+                  type="file"
+                  accept="video/mp4,video/webm,video/quicktime"
+                  onChange={handleVideoUpload}
+                  className="hidden"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => videoInputRef.current?.click()}
+                  disabled={uploading}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {profile?.profile_video_url ? "Replace Video" : "Upload Video"}
+                </Button>
+              </div>
+              
+              {profile?.profile_video_url && (
+                <div className="rounded-lg overflow-hidden border border-primary/20">
+                  <video
+                    controls
+                    className="w-full max-h-[400px]"
+                    src={profile.profile_video_url}
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
