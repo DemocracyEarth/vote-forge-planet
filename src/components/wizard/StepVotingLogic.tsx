@@ -1,16 +1,14 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
-import { Vote, Users2, Scale, Network, Star } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Vote, Scale, Star, Coins } from "lucide-react";
 
 const votingModels = [
   {
     id: "direct",
     icon: Vote,
-  },
-  {
-    id: "liquid",
-    icon: Network,
   },
   {
     id: "quadratic",
@@ -19,6 +17,10 @@ const votingModels = [
   {
     id: "weighted",
     icon: Star,
+  },
+  {
+    id: "token",
+    icon: Coins,
   },
 ];
 
@@ -30,14 +32,16 @@ interface StepVotingLogicProps {
 
 const StepVotingLogic = ({ selectedModel, onModelChange, onDataChange }: StepVotingLogicProps) => {
   const { t } = useTranslation();
+  const [allowLiquidDelegation, setAllowLiquidDelegation] = useState(false);
 
   useEffect(() => {
     if (onDataChange) {
       onDataChange({
         model: selectedModel,
+        allowLiquidDelegation,
       });
     }
-  }, [selectedModel, onDataChange]);
+  }, [selectedModel, allowLiquidDelegation, onDataChange]);
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -78,6 +82,25 @@ const StepVotingLogic = ({ selectedModel, onModelChange, onDataChange }: StepVot
             </Card>
           );
         })}
+      </div>
+
+      {/* Liquid Delegation Toggle */}
+      <div className="mt-6 p-5 rounded-xl bg-gradient-to-br from-accent/10 to-transparent border border-accent/20 backdrop-blur-sm">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <Label htmlFor="liquid-delegation" className="text-base font-semibold cursor-pointer">
+              {t('steps.voting.liquidDelegation.title')}
+            </Label>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t('steps.voting.liquidDelegation.description')}
+            </p>
+          </div>
+          <Switch
+            id="liquid-delegation"
+            checked={allowLiquidDelegation}
+            onCheckedChange={setAllowLiquidDelegation}
+          />
+        </div>
       </div>
 
       {/* Output preview */}

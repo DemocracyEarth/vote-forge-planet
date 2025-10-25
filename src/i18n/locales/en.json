@@ -153,6 +153,11 @@
           "title": "Reputation-Based",
           "description": "Your contribution = your voice. Meritocracy mode activated. ⭐",
           "prompt": "Create a reputation-weighted voting system where voting power is proportional to the voter's contribution or reputation score. Define clear metrics for reputation (e.g., participation history, contribution quality, tenure). Higher reputation = more voting weight. Include mechanisms to prevent plutocracy and ensure new members can gain influence."
+        },
+        "token": {
+          "title": "Token Voting",
+          "description": "Web3-powered voting using blockchain tokens. On-chain governance. 🪙",
+          "prompt": "Implement token-based voting where voting power is determined by the number of governance tokens held by each voter. Integrate with Web3 wallets for authentication. Each token represents one vote. Support delegation and on-chain vote recording for transparency and immutability."
         }
       },
       "exampleList": [
@@ -160,6 +165,10 @@
         "Delegative democracy with liquid vote transfers",
         "Reputation-weighted voting based on contribution history"
       ],
+      "liquidDelegation": {
+        "title": "Allow Liquid Delegation",
+        "description": "Enable voters to delegate their voting power to trusted representatives who can vote on their behalf."
+      },
       "output": "Output:",
       "outputDesc": "Smart contract ABI or JSON logic definition will be generated based on your selection."
     },
