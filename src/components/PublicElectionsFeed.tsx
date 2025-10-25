@@ -207,21 +207,18 @@ export function PublicElectionsFeed() {
           return (
             <Card 
               key={election.id} 
-              className="group border-primary/30 bg-gradient-to-br from-background via-background to-primary/5 hover:shadow-2xl hover:shadow-primary/20 transition-all duration-500 hover:border-primary/50 backdrop-blur-sm overflow-hidden relative"
+              className="group border-primary/30 bg-gradient-to-br from-background via-background to-primary/5 hover:shadow-xl transition-all duration-300 hover:border-primary/40 backdrop-blur-sm overflow-hidden"
             >
-              {/* Animated gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              {/* Subtle glow on hover */}
+              <div className="absolute -inset-px bg-gradient-to-r from-primary/0 via-primary/20 to-primary/0 rounded-lg opacity-0 group-hover:opacity-100 blur transition-opacity duration-300 -z-10" />
               
-              {/* Glow effect on hover */}
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/0 via-primary/50 to-primary/0 rounded-lg opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-500" />
-              
-              <CardHeader className="relative pb-4">
+              <CardHeader className="relative pb-6">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <CardTitle className="text-2xl font-bold group-hover:text-primary transition-colors duration-300 mb-2">
+                    <CardTitle className="text-2xl font-bold group-hover:text-primary transition-colors duration-300 mb-3">
                       {election.title}
                     </CardTitle>
-                    <div className="flex flex-wrap items-center gap-3 text-sm">
+                    <div className="flex flex-wrap items-center gap-2 text-sm">
                       {election.is_ongoing && (
                         <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 border border-green-500/30 font-semibold">
                           <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-2 animate-pulse" />
@@ -234,7 +231,7 @@ export function PublicElectionsFeed() {
                     </div>
                   </div>
                   {totalVotes > 0 && (
-                    <div className="flex flex-col items-end gap-1 px-4 py-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30">
+                    <div className="flex flex-col items-end gap-1 px-4 py-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30">
                       <div className="flex items-center gap-1.5">
                         <Users className="h-4 w-4 text-primary" />
                         <span className="text-2xl font-bold text-primary">{totalVotes}</span>
@@ -245,7 +242,7 @@ export function PublicElectionsFeed() {
                 </div>
               </CardHeader>
               
-              <CardContent className="relative space-y-4">
+              <CardContent className="relative space-y-5">
                 {/* Date Information */}
                 <div className="flex flex-wrap gap-2 text-xs">
                   <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20">
@@ -307,12 +304,12 @@ export function PublicElectionsFeed() {
                 {/* Results Preview */}
                 {totalVotes > 0 && (
                   <div className="space-y-4">
-                    <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-2.5">
                       <div className="p-2 rounded-lg bg-primary/20">
                         <TrendingUp className="h-5 w-5 text-primary" />
                       </div>
                       <div>
-                        <p className="font-bold text-lg">Live Results</p>
+                        <p className="font-bold text-base">Live Results</p>
                         <p className="text-xs text-muted-foreground">Real-time voting statistics</p>
                       </div>
                     </div>

@@ -384,12 +384,12 @@ export function DashboardMyElections({ userId }: DashboardMyElectionsProps) {
                   {/* Results Preview */}
                   {totalVotes > 0 && (
                     <div className="space-y-4">
-                      <div className="flex items-center gap-2 mb-3">
+                      <div className="flex items-center gap-2.5">
                         <div className="p-2 rounded-lg bg-primary/20">
                           <TrendingUp className="h-5 w-5 text-primary" />
                         </div>
                         <div>
-                          <p className="font-bold text-lg">Live Results</p>
+                          <p className="font-bold text-base">Live Results</p>
                           <p className="text-xs text-muted-foreground">Real-time voting statistics</p>
                         </div>
                       </div>
