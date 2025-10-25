@@ -159,7 +159,20 @@ const Vote = () => {
       if (hasVoted) {
         // Allow vote override if election is ongoing
         if (election.is_ongoing) {
-          // Delete previous vote from voter_registry to allow re-voting
+          toast({
+            title: t('vote.updatingVote'),
+            description: t('vote.updatingVoteDesc'),
+          });
+
+          // Get the user's previous vote timestamp from voter_registry
+          const { data: previousVote } = await supabase
+            .from('voter_registry')
+            .select('voted_at')
+            .eq('election_id', electionId)
+            .eq('voter_id', user.id)
+            .single();
+
+          // Delete previous vote from voter_registry
           const { error: deleteRegistryError } = await supabase
             .from('voter_registry')
             .delete()
@@ -168,12 +181,28 @@ const Vote = () => {
 
           if (deleteRegistryError) {
             console.error('Error deleting previous registry:', deleteRegistryError);
+            throw deleteRegistryError;
           }
 
-          toast({
-            title: t('vote.updatingVote'),
-            description: t('vote.updatingVoteDesc'),
-          });
+          // Delete previous anonymous vote (using timestamp window to find it)
+          if (previousVote) {
+            const votedDate = new Date(previousVote.voted_at);
+            const timeWindow = 5000; // 5 second window
+            const startTime = new Date(votedDate.getTime() - timeWindow).toISOString();
+            const endTime = new Date(votedDate.getTime() + timeWindow).toISOString();
+
+            const { error: deleteVoteError } = await supabase
+              .from('anonymous_votes')
+              .delete()
+              .eq('election_id', electionId)
+              .gte('voted_at', startTime)
+              .lte('voted_at', endTime)
+              .limit(1);
+
+            if (deleteVoteError) {
+              console.error('Error deleting previous vote:', deleteVoteError);
+            }
+          }
         } else {
           toast({
             title: t('vote.alreadyVoted'),
