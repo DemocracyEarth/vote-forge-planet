@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import Footer from "@/components/Footer";
 import { useTranslation } from "react-i18next";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { DiscussionThread } from "@/components/DiscussionThread";
 
 const Vote = () => {
   const { t } = useTranslation();
@@ -672,6 +673,14 @@ const Vote = () => {
                 {t('vote.copy')}
               </Button>
             </div>
+          </div>
+        </Card>
+
+        {/* Discussion Section */}
+        <Card className="relative overflow-hidden border-border/50 bg-card/40 backdrop-blur-xl mt-8">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+          <div className="relative p-6 sm:p-8">
+            <DiscussionThread electionId={electionId!} userId={user?.id || null} />
           </div>
         </Card>
       </div>
