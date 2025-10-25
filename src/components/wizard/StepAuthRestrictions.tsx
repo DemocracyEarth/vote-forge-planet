@@ -53,6 +53,7 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
   const [allowedDomains, setAllowedDomains] = useState<string>("");
   const [allowedPhones, setAllowedPhones] = useState<string>("");
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
+  const [countrySearch, setCountrySearch] = useState<string>("");
   const [worldIdConfig, setWorldIdConfig] = useState<string>("");
 
   const toggleCountry = (countryCode: string) => {
@@ -62,6 +63,11 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
         : [...prev, countryCode]
     );
   };
+
+  const filteredCountries = COUNTRIES.filter(country =>
+    country.name.toLowerCase().includes(countrySearch.toLowerCase()) ||
+    country.code.toLowerCase().includes(countrySearch.toLowerCase())
+  );
 
   useEffect(() => {
     if (onDataChange) {
@@ -231,19 +237,25 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
                   </Button>
                 )}
               </div>
+              <Input
+                placeholder="Search countries..."
+                value={countrySearch}
+                onChange={(e) => setCountrySearch(e.target.value)}
+                className="mb-2"
+              />
               <Card className="border-2">
                 <ScrollArea className="h-[280px] w-full">
-                  <div className="p-4 space-y-2">
-                    {COUNTRIES.map((country) => {
+                  <div className="p-2 space-y-1">
+                    {filteredCountries.map((country) => {
                       const isSelected = selectedCountries.includes(country.code);
                       return (
                         <div
                           key={country.code}
                           onClick={() => toggleCountry(country.code)}
-                          className={`flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                          className={`flex items-center space-x-2 p-2 rounded-md cursor-pointer transition-colors ${
                             isSelected
-                              ? 'bg-primary/10 border-2 border-primary'
-                              : 'hover:bg-muted border-2 border-transparent'
+                              ? 'bg-primary/10 border border-primary'
+                              : 'hover:bg-muted border border-transparent'
                           }`}
                         >
                           <Checkbox
@@ -251,15 +263,20 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
                             onCheckedChange={() => toggleCountry(country.code)}
                             className="pointer-events-none"
                           />
-                          <span className="text-2xl">{country.flag}</span>
-                          <div className="flex-1">
-                            <div className="font-medium">{country.name}</div>
+                          <span className="text-xl">{country.flag}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-sm truncate">{country.name}</div>
                             <div className="text-xs text-muted-foreground">{country.code}</div>
                           </div>
-                          {isSelected && <Check className="w-4 h-4 text-primary" />}
+                          {isSelected && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
                         </div>
                       );
                     })}
+                    {filteredCountries.length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground text-sm">
+                        No countries found
+                      </div>
+                    )}
                   </div>
                 </ScrollArea>
               </Card>
