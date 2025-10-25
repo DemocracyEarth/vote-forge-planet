@@ -1,22 +1,18 @@
-import { MessageSquarePlus } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
 
 const BetaBadge = () => {
   const { t } = useTranslation();
   
   return (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={() => window.open('https://github.com/DemocracyEarth/vote-forge-planet/issues', '_blank')}
-      className="fixed top-4 left-4 z-50 gap-2 px-3 py-1.5 h-auto rounded-full bg-primary/5 hover:bg-primary/10 backdrop-blur-sm border border-primary/20 shadow-sm transition-all"
-    >
-      <MessageSquarePlus className="w-3 h-3 text-primary" />
-      <span className="text-xs font-medium text-primary/80">
-        {t('beta.feedback', 'Beta - Send Feedback')}
-      </span>
-    </Button>
+    <div className="fixed top-0 left-0 z-50 overflow-hidden pointer-events-none">
+      <div className="relative w-32 h-32">
+        <div className="absolute -left-12 top-8 w-48 py-1.5 bg-accent/80 backdrop-blur-sm shadow-lg transform -rotate-45 origin-center">
+          <p className="text-center text-xs font-semibold text-accent-foreground tracking-wider">
+            {t('beta.version', 'BETA VERSION')}
+          </p>
+        </div>
+      </div>
+    </div>
   );
 };
 

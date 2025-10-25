@@ -5,6 +5,7 @@ import WizardSteps from "@/components/WizardSteps";
 import Footer from "@/components/Footer";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import FeedbackButton from "@/components/FeedbackButton";
 
 const Index = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -20,6 +21,7 @@ const Index = () => {
     <div className="min-h-screen aurora-bg">
       {/* Controls positioned top right */}
       <div className="fixed top-3 right-3 sm:top-4 sm:right-4 z-50 flex items-center gap-2 sm:gap-3">
+        <FeedbackButton />
         <LanguageSelector />
         <ThemeToggle />
       </div>

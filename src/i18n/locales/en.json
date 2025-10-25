@@ -81,7 +81,8 @@
   },
   "beta": {
     "label": "Beta",
-    "feedback": "Beta - Send Feedback"
+    "version": "BETA VERSION",
+    "feedback": "Send Feedback"
   },
   "footer": {
     "tagline": "From Earth, with love 🌎",
