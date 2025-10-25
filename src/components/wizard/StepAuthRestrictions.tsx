@@ -221,20 +221,6 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [countrySearch, setCountrySearch] = useState<string>("");
   const [worldIdConfig, setWorldIdConfig] = useState<string>("");
-  const [userCountryCode, setUserCountryCode] = useState<string | null>(null);
-
-  // Detect user's country from browser locale
-  useEffect(() => {
-    try {
-      const locale = navigator.language;
-      const countryCode = locale.split('-')[1]?.toUpperCase();
-      if (countryCode && COUNTRIES.find(c => c.code === countryCode)) {
-        setUserCountryCode(countryCode);
-      }
-    } catch (e) {
-      // Fallback: no detection
-    }
-  }, []);
 
   const toggleCountry = (countryCode: string) => {
     setSelectedCountries(prev => 
@@ -261,13 +247,8 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
   // Popular countries that should appear first
   const popularCountryCodes = ['US', 'GB', 'CA', 'AU', 'DE', 'FR', 'ES', 'IT', 'BR', 'MX', 'AR', 'IN', 'JP', 'CN', 'KR', 'SG', 'NL', 'SE', 'NO', 'DK'];
   
-  // Sort countries: user's country first, then popular countries, then rest alphabetically
+  // Sort countries: popular countries first, then rest alphabetically
   const sortedCountries = [...COUNTRIES].sort((a, b) => {
-    // User's country always first
-    if (a.code === userCountryCode) return -1;
-    if (b.code === userCountryCode) return 1;
-    
-    // Then popular countries
     const aIsPopular = popularCountryCodes.includes(a.code);
     const bIsPopular = popularCountryCodes.includes(b.code);
     
@@ -495,44 +476,31 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
               <Card className="border-2">
                 <ScrollArea className="h-[280px] w-full">
                   <div className="p-2 space-y-1">
-                    {filteredCountries.map((country, index) => {
+                    {filteredCountries.map((country) => {
                       const isSelected = selectedCountries.includes(country.code);
-                      const isUserCountry = country.code === userCountryCode;
-                      const showDivider = index > 0 && filteredCountries[index - 1]?.code === userCountryCode;
                       
                       return (
-                        <>
-                          {showDivider && (
-                            <div className="py-1">
-                              <div className="border-t border-border" />
-                              <p className="text-xs text-muted-foreground text-center py-1">Other Countries</p>
-                            </div>
-                          )}
-                          <div
-                            key={country.code}
-                            onClick={() => toggleCountry(country.code)}
-                            className={`flex items-center space-x-2 p-2 rounded-md cursor-pointer transition-colors ${
-                              isSelected
-                                ? 'bg-primary/10 border border-primary'
-                                : 'hover:bg-muted border border-transparent'
-                            } ${isUserCountry ? 'ring-2 ring-primary/30' : ''}`}
-                          >
-                            <Checkbox
-                              checked={isSelected}
-                              onCheckedChange={() => toggleCountry(country.code)}
-                              className="pointer-events-none"
-                            />
-                            <span className="text-xl">{country.flag}</span>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-sm truncate flex items-center gap-2">
-                                {country.name}
-                                {isUserCountry && <span className="text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded">Your Location</span>}
-                              </div>
-                              <div className="text-xs text-muted-foreground">{country.code} • {country.phone}</div>
-                            </div>
-                            {isSelected && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
+                        <div
+                          key={country.code}
+                          onClick={() => toggleCountry(country.code)}
+                          className={`flex items-center space-x-2 p-2 rounded-md cursor-pointer transition-colors ${
+                            isSelected
+                              ? 'bg-primary/10 border border-primary'
+                              : 'hover:bg-muted border border-transparent'
+                          }`}
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleCountry(country.code)}
+                            className="pointer-events-none"
+                          />
+                          <span className="text-xl">{country.flag}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-sm truncate">{country.name}</div>
+                            <div className="text-xs text-muted-foreground">{country.code} • {country.phone}</div>
                           </div>
-                        </>
+                          {isSelected && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
+                        </div>
                       );
                     })}
                     {filteredCountries.length === 0 && (
