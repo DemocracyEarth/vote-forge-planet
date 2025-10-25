@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import Hero from "@/components/Hero";
 import WizardSteps from "@/components/WizardSteps";
 import Footer from "@/components/Footer";
@@ -6,7 +7,14 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageSelector } from "@/components/LanguageSelector";
 
 const Index = () => {
-  const [showWizard, setShowWizard] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [showWizard, setShowWizard] = useState(searchParams.get("wizard") === "true");
+
+  useEffect(() => {
+    if (searchParams.get("wizard") === "true") {
+      setShowWizard(true);
+    }
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen aurora-bg">
@@ -17,10 +25,16 @@ const Index = () => {
       </div>
 
       {!showWizard ? (
-        <Hero onStartWizard={() => setShowWizard(true)} />
+        <Hero onStartWizard={() => {
+          setShowWizard(true);
+          setSearchParams({ wizard: "true" });
+        }} />
       ) : (
         <div className="container mx-auto px-4 py-8">
-          <WizardSteps onBack={() => setShowWizard(false)} />
+          <WizardSteps onBack={() => {
+            setShowWizard(false);
+            setSearchParams({});
+          }} />
         </div>
       )}
       <Footer />

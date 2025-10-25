@@ -59,7 +59,7 @@ export function AppSidebar() {
   };
 
   const handleCreateElection = () => {
-    navigate("/");
+    navigate("/?wizard=true");
   };
 
   return (
