@@ -224,6 +224,8 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
   const [worldIdConfig, setWorldIdConfig] = useState<string>("");
   const [emailValidationErrors, setEmailValidationErrors] = useState<string[]>([]);
   const [isValidatingEmails, setIsValidatingEmails] = useState<boolean>(false);
+  const [domainValidationErrors, setDomainValidationErrors] = useState<string[]>([]);
+  const [isValidatingDomains, setIsValidatingDomains] = useState<boolean>(false);
 
   const toggleCountry = (countryCode: string) => {
     setSelectedCountries(prev => 
@@ -247,6 +249,51 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
     emails.forEach((email, index) => {
       if (!validateEmail(email)) {
         errors.push(`Line ${index + 1}: "${email}" is not a valid email address`);
+      }
+    });
+    
+    return errors;
+  };
+
+  // Domain validation function
+  const validateDomain = (domain: string): boolean => {
+    // Remove protocol if present
+    const cleanDomain = domain.replace(/^https?:\/\//, '').replace(/^www\./, '');
+    
+    // Basic domain validation regex
+    const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    
+    // Check if it's a valid domain format
+    if (!domainRegex.test(cleanDomain)) {
+      return false;
+    }
+    
+    // Check if it has at least one dot (TLD)
+    if (!cleanDomain.includes('.')) {
+      return false;
+    }
+    
+    // Check if it doesn't start or end with a dot
+    if (cleanDomain.startsWith('.') || cleanDomain.endsWith('.')) {
+      return false;
+    }
+    
+    // Check if it doesn't have consecutive dots
+    if (cleanDomain.includes('..')) {
+      return false;
+    }
+    
+    return true;
+  };
+
+  // Validate all domains in the input
+  const validateAllDomains = (domainText: string): string[] => {
+    const domains = domainText.split(',').map(domain => domain.trim()).filter(domain => domain);
+    const errors: string[] = [];
+    
+    domains.forEach((domain, index) => {
+      if (!validateDomain(domain)) {
+        errors.push(`Domain ${index + 1}: "${domain}" is not a valid domain name`);
       }
     });
     
@@ -280,6 +327,19 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
       const errors = validateAllEmails(value);
       setEmailValidationErrors(errors);
       setIsValidatingEmails(false);
+    }, 500);
+  };
+
+  // Handle domain input changes with validation
+  const handleDomainChange = (value: string) => {
+    setAllowedDomains(value);
+    
+    // Debounce validation to avoid excessive validation on every keystroke
+    setIsValidatingDomains(true);
+    setTimeout(() => {
+      const errors = validateAllDomains(value);
+      setDomainValidationErrors(errors);
+      setIsValidatingDomains(false);
     }, 500);
   };
 
@@ -317,6 +377,8 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
           data.isEmailValidationValid = emailValidationErrors.length === 0 && !isValidatingEmails;
         } else if (restrictionType === "domain") {
           data.allowedDomains = allowedDomains.split(",").map(d => d.trim()).filter(d => d);
+          data.domainValidationErrors = domainValidationErrors;
+          data.isDomainValidationValid = domainValidationErrors.length === 0 && !isValidatingDomains;
         }
       } else if (authenticationType === "phone") {
         if (restrictionType === "phone-list") {
@@ -330,7 +392,7 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
 
       onDataChange(data);
     }
-  }, [restrictionType, allowedEmails, allowedDomains, allowedPhones, selectedCountries, worldIdConfig, authenticationType, onDataChange, emailValidationErrors, isValidatingEmails]);
+  }, [restrictionType, allowedEmails, allowedDomains, allowedPhones, selectedCountries, worldIdConfig, authenticationType, onDataChange, emailValidationErrors, isValidatingEmails, domainValidationErrors, isValidatingDomains]);
 
   const renderEmailGoogleRestrictions = () => (
     <div className="space-y-6">
@@ -451,10 +513,54 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
               <Input
                 placeholder="example.com, company.org"
                 value={allowedDomains}
-                onChange={(e) => setAllowedDomains(e.target.value)}
+                onChange={(e) => handleDomainChange(e.target.value)}
+                className={`${
+                  domainValidationErrors.length > 0 ? 'border-destructive' : 
+                  allowedDomains && domainValidationErrors.length === 0 ? 'border-green-500' : ''
+                }`}
               />
+              
+              {/* Domain Validation Status */}
+              {allowedDomains && (
+                <div className="mt-2">
+                  {isValidatingDomains ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      Validating domains...
+                    </div>
+                  ) : domainValidationErrors.length > 0 ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm text-destructive">
+                        <AlertCircle className="w-4 h-4" />
+                        {domainValidationErrors.length} validation error{domainValidationErrors.length === 1 ? '' : 's'} found
+                      </div>
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          <div className="space-y-1">
+                            {domainValidationErrors.slice(0, 3).map((error, index) => (
+                              <div key={index} className="text-xs">{error}</div>
+                            ))}
+                            {domainValidationErrors.length > 3 && (
+                              <div className="text-xs font-medium">
+                                ... and {domainValidationErrors.length - 3} more errors
+                              </div>
+                            )}
+                          </div>
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-sm text-green-600">
+                      <CheckCircle2 className="w-4 h-4" />
+                      All domains are valid
+                    </div>
+                  )}
+                </div>
+              )}
+              
               <p className="text-xs text-muted-foreground mt-2">
-                Enter domain names separated by commas
+                Enter domain names separated by commas (e.g., example.com, company.org)
               </p>
             </div>
           )}
