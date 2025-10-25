@@ -4,10 +4,11 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Upload, Globe, List, Lock, Check } from "lucide-react";
+import { Upload, Globe, List, Lock, Check, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface StepAuthRestrictionsProps {
   authenticationType: string;
@@ -221,6 +222,8 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [countrySearch, setCountrySearch] = useState<string>("");
   const [worldIdConfig, setWorldIdConfig] = useState<string>("");
+  const [emailValidationErrors, setEmailValidationErrors] = useState<string[]>([]);
+  const [isValidatingEmails, setIsValidatingEmails] = useState<boolean>(false);
 
   const toggleCountry = (countryCode: string) => {
     setSelectedCountries(prev => 
@@ -228,6 +231,26 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
         ? prev.filter(c => c !== countryCode)
         : [...prev, countryCode]
     );
+  };
+
+  // Email validation function
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    return emailRegex.test(email.trim());
+  };
+
+  // Validate all emails in the textarea
+  const validateAllEmails = (emailText: string): string[] => {
+    const emails = emailText.split('\n').map(line => line.trim()).filter(line => line);
+    const errors: string[] = [];
+    
+    emails.forEach((email, index) => {
+      if (!validateEmail(email)) {
+        errors.push(`Line ${index + 1}: "${email}" is not a valid email address`);
+      }
+    });
+    
+    return errors;
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'email' | 'phone') => {
@@ -239,9 +262,25 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
     
     if (type === 'email') {
       setAllowedEmails(lines.join('\n'));
+      // Validate emails after upload
+      const errors = validateAllEmails(lines.join('\n'));
+      setEmailValidationErrors(errors);
     } else {
       setAllowedPhones(lines.join('\n'));
     }
+  };
+
+  // Handle email input changes with validation
+  const handleEmailChange = (value: string) => {
+    setAllowedEmails(value);
+    
+    // Debounce validation to avoid excessive validation on every keystroke
+    setIsValidatingEmails(true);
+    setTimeout(() => {
+      const errors = validateAllEmails(value);
+      setEmailValidationErrors(errors);
+      setIsValidatingEmails(false);
+    }, 500);
   };
 
   // Popular countries that should appear first
@@ -274,6 +313,8 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
       if (authenticationType === "email" || authenticationType === "google") {
         if (restrictionType === "email-list") {
           data.allowedEmails = allowedEmails.split("\n").filter(e => e.trim());
+          data.emailValidationErrors = emailValidationErrors;
+          data.isEmailValidationValid = emailValidationErrors.length === 0 && !isValidatingEmails;
         } else if (restrictionType === "domain") {
           data.allowedDomains = allowedDomains.split(",").map(d => d.trim()).filter(d => d);
         }
@@ -289,7 +330,7 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
 
       onDataChange(data);
     }
-  }, [restrictionType, allowedEmails, allowedDomains, allowedPhones, selectedCountries, worldIdConfig, authenticationType, onDataChange]);
+  }, [restrictionType, allowedEmails, allowedDomains, allowedPhones, selectedCountries, worldIdConfig, authenticationType, onDataChange, emailValidationErrors, isValidatingEmails]);
 
   const renderEmailGoogleRestrictions = () => (
     <div className="space-y-6">
@@ -340,10 +381,53 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
               <Textarea
                 placeholder="Enter email addresses (one per line)&#10;example@domain.com&#10;another@example.org"
                 value={allowedEmails}
-                onChange={(e) => setAllowedEmails(e.target.value)}
+                onChange={(e) => handleEmailChange(e.target.value)}
                 rows={6}
-                className="font-mono text-sm"
+                className={`font-mono text-sm ${
+                  emailValidationErrors.length > 0 ? 'border-destructive' : 
+                  allowedEmails && emailValidationErrors.length === 0 ? 'border-green-500' : ''
+                }`}
               />
+              
+              {/* Validation Status */}
+              {allowedEmails && (
+                <div className="mt-2">
+                  {isValidatingEmails ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                      Validating emails...
+                    </div>
+                  ) : emailValidationErrors.length > 0 ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm text-destructive">
+                        <AlertCircle className="w-4 h-4" />
+                        {emailValidationErrors.length} validation error{emailValidationErrors.length === 1 ? '' : 's'} found
+                      </div>
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          <div className="space-y-1">
+                            {emailValidationErrors.slice(0, 3).map((error, index) => (
+                              <div key={index} className="text-xs">{error}</div>
+                            ))}
+                            {emailValidationErrors.length > 3 && (
+                              <div className="text-xs font-medium">
+                                ... and {emailValidationErrors.length - 3} more errors
+                              </div>
+                            )}
+                          </div>
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-sm text-green-600">
+                      <CheckCircle2 className="w-4 h-4" />
+                      All emails are valid
+                    </div>
+                  )}
+                </div>
+              )}
+              
               <p className="text-xs text-muted-foreground mt-2">
                 Enter one email address per line, or upload a CSV/TXT file with one email per line
               </p>
