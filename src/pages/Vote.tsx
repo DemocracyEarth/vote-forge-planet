@@ -652,7 +652,7 @@ const Vote = () => {
             </h4>
             <div className="flex gap-2">
               <Input 
-                value={window.location.href} 
+                value={`https://ai.democracy.earth/vote/${electionId}`} 
                 readOnly 
                 className="text-xs bg-background/50 backdrop-blur-sm border-border/50"
               />
@@ -661,7 +661,7 @@ const Vote = () => {
                 size="sm"
                 className="bg-accent/10 hover:bg-accent/20 border-accent/30 hover:border-accent text-accent font-medium smooth-transition"
                 onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
+                  navigator.clipboard.writeText(`https://ai.democracy.earth/vote/${electionId}`);
                   toast({
                     title: t('vote.linkCopied'),
                     description: t('vote.linkCopiedDesc'),
