@@ -105,11 +105,22 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
         return;
       }
 
+      // Format dates to ISO 8601 with timezone
+      const formattedBillData = {
+        ...billData,
+        startDate: billData.startDate && billData.startDate.trim() !== '' 
+          ? new Date(billData.startDate).toISOString() 
+          : "",
+        endDate: billData.endDate && billData.endDate.trim() !== '' 
+          ? new Date(billData.endDate).toISOString() 
+          : "",
+      };
+
       const { data, error } = await supabase.functions.invoke('create-election', {
         body: {
           identityConfig: { ...identityData, restrictions: authRestrictions },
           votingLogicConfig: votingLogicData,
-          billConfig: billData,
+          billConfig: formattedBillData,
         }
       });
 
