@@ -92,20 +92,15 @@ const Vote = () => {
 
   const loadVoteResults = async () => {
     try {
-      const { data: votes, error } = await supabase
-        .from('anonymous_votes')
-        .select('vote_value')
-        .eq('election_id', electionId);
+      const { data, error } = await supabase
+        .rpc('get_election_results', { election_uuid: electionId });
 
       if (error) throw error;
 
-      // Aggregate vote results
+      // Convert RPC results to the format expected by LiveResults
       const results: Record<string, number> = {};
-      votes?.forEach(vote => {
-        const values = vote.vote_value.split(', ');
-        values.forEach(value => {
-          results[value] = (results[value] || 0) + 1;
-        });
+      data?.forEach((item: any) => {
+        results[item.vote_value] = item.vote_count;
       });
 
       setVoteResults(results);
