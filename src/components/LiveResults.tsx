@@ -1,8 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { Trophy, TrendingUp } from "lucide-react";
+import { Trophy, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
 
 interface LiveResultsProps {
   voteResults: Record<string, number>;
@@ -12,6 +12,7 @@ interface LiveResultsProps {
 
 export const LiveResults = ({ voteResults, votingLogicConfig, ballotOptions }: LiveResultsProps) => {
   const { t } = useTranslation();
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const chartData = useMemo(() => {
     const options = ballotOptions || Object.keys(voteResults);
@@ -106,9 +107,9 @@ export const LiveResults = ({ voteResults, votingLogicConfig, ballotOptions }: L
           </div>
         </div>
 
-        {/* Potential Winner */}
+        {/* Potential Winner - Always Visible */}
         {potentialWinner && (
-          <div className={`mb-6 p-4 rounded-xl border ${
+          <div className={`p-4 rounded-xl border ${
             potentialWinner.isCertain 
               ? 'bg-primary/10 border-primary/30' 
               : 'bg-muted/50 border-border/50'
@@ -117,7 +118,7 @@ export const LiveResults = ({ voteResults, votingLogicConfig, ballotOptions }: L
               <Trophy className={`w-5 h-5 mt-0.5 ${
                 potentialWinner.isCertain ? 'text-primary' : 'text-muted-foreground'
               }`} />
-              <div>
+              <div className="flex-1">
                 <h3 className="font-semibold mb-1">
                   {potentialWinner.isCertain ? 'Current Winner' : 'Leading Choice'}
                 </h3>
@@ -128,77 +129,65 @@ export const LiveResults = ({ voteResults, votingLogicConfig, ballotOptions }: L
           </div>
         )}
 
-        {/* Vote Distribution Chart */}
-        <div className="mb-6">
-          <h3 className="text-sm font-semibold mb-4 uppercase tracking-wider text-muted-foreground">
-            Vote Distribution
-          </h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
-              <XAxis 
-                dataKey="name" 
-                angle={-45}
-                textAnchor="end"
-                height={80}
-                tick={{ fill: 'hsl(var(--foreground))', fontSize: 12 }}
-              />
-              <YAxis tick={{ fill: 'hsl(var(--foreground))' }} />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                }}
-                labelStyle={{ color: 'hsl(var(--foreground))' }}
-              />
-              <Bar dataKey="votes" radius={[8, 8, 0, 0]}>
-                {chartData.map((entry, index) => (
-                  <Cell 
-                    key={`cell-${index}`}
-                    fill={index === 0 ? 'hsl(var(--primary))' : 'hsl(var(--accent))'}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+        {/* Toggle Button */}
+        <div className="mt-6 flex justify-center">
+          <Button
+            variant="ghost"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="gap-2"
+          >
+            {isExpanded ? (
+              <>
+                Hide Details
+                <ChevronUp className="w-4 h-4" />
+              </>
+            ) : (
+              <>
+                Show More Details
+                <ChevronDown className="w-4 h-4" />
+              </>
+            )}
+          </Button>
         </div>
 
-        {/* Detailed Results Table */}
-        <div className="space-y-2">
-          <h3 className="text-sm font-semibold mb-3 uppercase tracking-wider text-muted-foreground">
-            Detailed Breakdown
-          </h3>
-          {chartData.map((item, index) => {
-            const percentage = totalVotes > 0 ? (item.votes / totalVotes) * 100 : 0;
-            return (
-              <div 
-                key={item.name}
-                className="p-3 rounded-lg bg-muted/20 hover:bg-muted/30 smooth-transition"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    {index === 0 && <Trophy className="w-4 h-4 text-primary" />}
-                    <span className="font-medium">{item.name}</span>
+        {/* Detailed Results Table - Collapsible */}
+        {isExpanded && (
+          <div className="space-y-2 mt-6 animate-accordion-down">
+            <h3 className="text-sm font-semibold mb-3 uppercase tracking-wider text-muted-foreground">
+              Detailed Breakdown
+            </h3>
+            {chartData.map((item, index) => {
+              const percentage = totalVotes > 0 ? (item.votes / totalVotes) * 100 : 0;
+              return (
+                <div 
+                  key={item.name}
+                  className="p-3 rounded-lg bg-muted/20 hover:bg-muted/30 smooth-transition"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      {index === 0 && <Trophy className="w-4 h-4 text-primary" />}
+                      <span className="font-medium">{item.name}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-bold">{item.votes}</span>
+                      <span className="text-muted-foreground text-sm ml-2">
+                        ({percentage.toFixed(1)}%)
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <span className="font-bold">{item.votes}</span>
-                    <span className="text-muted-foreground text-sm ml-2">
-                      ({percentage.toFixed(1)}%)
-                    </span>
+                  <div className="w-full bg-muted/50 rounded-full h-2 overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full smooth-transition ${
+                        index === 0 ? 'bg-primary' : 'bg-accent'
+                      }`}
+                      style={{ width: `${percentage}%` }}
+                    />
                   </div>
                 </div>
-                <div className="w-full bg-muted/50 rounded-full h-2 overflow-hidden">
-                  <div 
-                    className={`h-full rounded-full smooth-transition ${
-                      index === 0 ? 'bg-primary' : 'bg-accent'
-                    }`}
-                    style={{ width: `${percentage}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </Card>
   );
