@@ -21,9 +21,9 @@ const Footer = () => {
           </div>
 
           <div className="flex gap-4 text-xs text-muted-foreground">
-            <a href="#" className="hover:text-primary smooth-transition">{t('footer.openSource')}</a>
+            <a href="https://github.com/DemocracyEarth/vote-forge-planet" target="_blank" rel="noopener noreferrer" className="hover:text-primary smooth-transition">{t('footer.openSource')}</a>
             <a href="#" className="hover:text-primary smooth-transition">{t('footer.docs')}</a>
-            <a href="#" className="hover:text-primary smooth-transition">{t('footer.github')}</a>
+            <a href="http://democracy.earth" target="_blank" rel="noopener noreferrer" className="hover:text-primary smooth-transition">{t('footer.foundation', 'Foundation')}</a>
           </div>
         </div>
       </div>
