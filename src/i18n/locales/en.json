@@ -80,7 +80,8 @@
     "startVoting": "Start voting to see your participation history!"
   },
   "beta": {
-    "label": "Beta"
+    "label": "Beta",
+    "feedback": "Beta - Send Feedback"
   },
   "footer": {
     "tagline": "From Earth, with love 🌎",
