@@ -54,6 +54,8 @@
     "linkCopiedDesc": "Link da eleição copiado para a área de transferência",
     "alreadyVoted": "Já votou",
     "alreadyVotedDesc": "Você já registrou seu voto nesta eleição",
+    "updatingVote": "Atualizando seu voto",
+    "updatingVoteDesc": "Seu voto anterior será substituído por este novo.",
     "voteRecorded": "Voto registrado",
     "voteRecordedDesc": "Seu voto foi registrado com sucesso",
     "failedToLoad": "Falha ao carregar detalhes da eleição",
@@ -91,6 +93,7 @@
     "nextStep": "Próximo passo",
     "next": "Próx.",
     "deploy": "Implantar na Terra 🌎",
+    "deploying": "Implantando...",
     "deploySuccess": "🌎 Voto implantado! A democracia está ao vivo. Compartilhe em todos os lugares. 🚀"
   },
   "steps": {

@@ -54,6 +54,8 @@
     "linkCopiedDesc": "Lien de l'élection copié dans le presse-papiers",
     "alreadyVoted": "Déjà voté",
     "alreadyVotedDesc": "Vous avez déjà voté pour cette élection",
+    "updatingVote": "Mise à jour de votre vote",
+    "updatingVoteDesc": "Votre vote précédent sera remplacé par ce nouveau.",
     "voteRecorded": "Vote enregistré",
     "voteRecordedDesc": "Votre vote a été enregistré avec succès",
     "failedToLoad": "Échec du chargement des détails de l'élection",
@@ -91,6 +93,7 @@
     "nextStep": "Étape suivante",
     "next": "Suiv.",
     "deploy": "Déployer sur Terre 🌎",
+    "deploying": "Déploiement...",
     "deploySuccess": "🌎 Vote déployé! La démocratie est en direct. Partagez-le partout. 🚀"
   },
   "steps": {

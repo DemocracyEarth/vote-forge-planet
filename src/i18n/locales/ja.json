@@ -54,6 +54,8 @@
     "linkCopiedDesc": "選挙リンクがクリップボードにコピーされました",
     "alreadyVoted": "すでに投票済み",
     "alreadyVotedDesc": "この選挙ではすでに投票しています",
+    "updatingVote": "投票を更新中",
+    "updatingVoteDesc": "以前の投票はこの新しい投票に置き換えられます。",
     "voteRecorded": "投票が記録されました",
     "voteRecordedDesc": "あなたの投票が正常に記録されました",
     "failedToLoad": "選挙の詳細の読み込みに失敗しました",
@@ -91,6 +93,7 @@
     "nextStep": "次のステップ",
     "next": "次",
     "deploy": "地球にデプロイ 🌎",
+    "deploying": "デプロイ中...",
     "deploySuccess": "🌎 投票がデプロイされました！民主主義がライブです。どこでも共有してください。🚀"
   },
   "steps": {
