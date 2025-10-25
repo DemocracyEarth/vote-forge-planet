@@ -1,21 +1,24 @@
 import { MessageSquarePlus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { useSidebar } from "@/components/ui/sidebar";
 
-const FeedbackButton = () => {
+interface FeedbackButtonProps {
+  collapsed?: boolean;
+  isInSidebar?: boolean;
+}
+
+const FeedbackButton = ({ collapsed = false, isInSidebar = false }: FeedbackButtonProps) => {
   const { t } = useTranslation();
-  const { state } = useSidebar();
   
   return (
     <Button
       variant="outline"
       size="sm"
       onClick={() => window.open('https://github.com/DemocracyEarth/vote-forge-planet/issues', '_blank')}
-      className={`w-full ${state === "collapsed" ? "justify-center px-2" : "justify-start"}`}
+      className={`${isInSidebar ? 'w-full' : ''} ${collapsed ? "justify-center px-2" : "justify-start"} ${!isInSidebar ? 'gap-2' : ''}`}
     >
-      <MessageSquarePlus className={`w-4 h-4 ${state !== "collapsed" ? "mr-2" : ""}`} />
-      {state !== "collapsed" && (
+      <MessageSquarePlus className={`w-4 h-4 ${!collapsed && isInSidebar ? "mr-2" : ""}`} />
+      {!collapsed && (
         <span className="text-sm font-medium">
           {t('beta.feedback', 'Send Feedback')}
         </span>
