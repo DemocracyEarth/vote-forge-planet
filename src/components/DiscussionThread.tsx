@@ -32,6 +32,133 @@ interface DiscussionThreadProps {
   userId: string | null;
 }
 
+interface CommentItemProps {
+  comment: Comment;
+  depth?: number;
+  replyingTo: string | null;
+  setReplyingTo: (id: string | null) => void;
+  replyContent: Record<string, string>;
+  setReplyContent: (content: Record<string, string>) => void;
+  handleSubmitComment: (parentId: string | null) => Promise<void>;
+  submitting: boolean;
+}
+
+const CommentItem = ({ 
+  comment, 
+  depth = 0, 
+  replyingTo, 
+  setReplyingTo, 
+  replyContent, 
+  setReplyContent, 
+  handleSubmitComment, 
+  submitting 
+}: CommentItemProps) => {
+  const [isOpen, setIsOpen] = useState(depth < 2);
+  const hasReplies = comment.replies && comment.replies.length > 0;
+
+  return (
+    <div className={`${depth > 0 ? 'ml-6 border-l-2 border-border/30 pl-4' : ''}`}>
+      <Card className="p-4 mb-3 bg-card/60 backdrop-blur-sm border-border/50 hover:border-primary/30 smooth-transition">
+        <div className="flex gap-3">
+          <Avatar className="h-10 w-10 border-2 border-primary/20">
+            <AvatarImage src={comment.profile?.avatar_url || undefined} />
+            <AvatarFallback className="bg-primary/10 text-primary text-sm">
+              {comment.profile?.full_name?.charAt(0) || "?"}
+            </AvatarFallback>
+          </Avatar>
+          
+          <div className="flex-1 space-y-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-semibold text-sm">{comment.profile?.full_name || "Anonymous"}</p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(comment.created_at).toLocaleString()}
+                </p>
+              </div>
+            </div>
+            
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">{comment.content}</p>
+            
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                className="h-7 text-xs"
+              >
+                <MessageSquare className="w-3 h-3 mr-1" />
+                Reply
+              </Button>
+              
+              {hasReplies && (
+                <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-7 text-xs">
+                      {isOpen ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
+                      {comment.replies?.length} {comment.replies?.length === 1 ? 'reply' : 'replies'}
+                    </Button>
+                  </CollapsibleTrigger>
+                </Collapsible>
+              )}
+            </div>
+
+            {replyingTo === comment.id && (
+              <div className="mt-3 space-y-2">
+                <Textarea
+                  placeholder="Write your reply..."
+                  value={replyContent[comment.id] || ""}
+                  onChange={(e) => setReplyContent({ ...replyContent, [comment.id]: e.target.value })}
+                  className="min-h-[80px] text-sm"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => handleSubmitComment(comment.id)}
+                    disabled={submitting || !replyContent[comment.id]?.trim()}
+                  >
+                    {submitting ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Send className="w-3 h-3 mr-1" />}
+                    Post Reply
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setReplyingTo(null);
+                      setReplyContent({ ...replyContent, [comment.id]: "" });
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </Card>
+
+      {hasReplies && (
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <CollapsibleContent className="space-y-2">
+            {comment.replies?.map(reply => (
+              <CommentItem 
+                key={reply.id} 
+                comment={reply} 
+                depth={depth + 1}
+                replyingTo={replyingTo}
+                setReplyingTo={setReplyingTo}
+                replyContent={replyContent}
+                setReplyContent={setReplyContent}
+                handleSubmitComment={handleSubmitComment}
+                submitting={submitting}
+              />
+            ))}
+          </CollapsibleContent>
+        </Collapsible>
+      )}
+    </div>
+  );
+};
+
 export const DiscussionThread = ({ electionId, userId }: DiscussionThreadProps) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -175,103 +302,6 @@ export const DiscussionThread = ({ electionId, userId }: DiscussionThreadProps) 
     }
   };
 
-  const CommentItem = ({ comment, depth = 0 }: { comment: Comment; depth?: number }) => {
-    const [isOpen, setIsOpen] = useState(depth < 2);
-    const hasReplies = comment.replies && comment.replies.length > 0;
-
-    return (
-      <div className={`${depth > 0 ? 'ml-6 border-l-2 border-border/30 pl-4' : ''}`}>
-        <Card className="p-4 mb-3 bg-card/60 backdrop-blur-sm border-border/50 hover:border-primary/30 smooth-transition">
-          <div className="flex gap-3">
-            <Avatar className="h-10 w-10 border-2 border-primary/20">
-              <AvatarImage src={comment.profile?.avatar_url || undefined} />
-              <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                {comment.profile?.full_name?.charAt(0) || "?"}
-              </AvatarFallback>
-            </Avatar>
-            
-            <div className="flex-1 space-y-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-semibold text-sm">{comment.profile?.full_name || "Anonymous"}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(comment.created_at).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-              
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">{comment.content}</p>
-              
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-                  className="h-7 text-xs"
-                >
-                  <MessageSquare className="w-3 h-3 mr-1" />
-                  Reply
-                </Button>
-                
-                {hasReplies && (
-                  <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-7 text-xs">
-                        {isOpen ? <ChevronUp className="w-3 h-3 mr-1" /> : <ChevronDown className="w-3 h-3 mr-1" />}
-                        {comment.replies?.length} {comment.replies?.length === 1 ? 'reply' : 'replies'}
-                      </Button>
-                    </CollapsibleTrigger>
-                  </Collapsible>
-                )}
-              </div>
-
-              {replyingTo === comment.id && (
-                <div className="mt-3 space-y-2">
-                  <Textarea
-                    placeholder="Write your reply..."
-                    value={replyContent[comment.id] || ""}
-                    onChange={(e) => setReplyContent({ ...replyContent, [comment.id]: e.target.value })}
-                    className="min-h-[80px] text-sm"
-                  />
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => handleSubmitComment(comment.id)}
-                      disabled={submitting || !replyContent[comment.id]?.trim()}
-                    >
-                      {submitting ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Send className="w-3 h-3 mr-1" />}
-                      Post Reply
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        setReplyingTo(null);
-                        setReplyContent({ ...replyContent, [comment.id]: "" });
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </Card>
-
-        {hasReplies && (
-          <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-            <CollapsibleContent className="space-y-2">
-              {comment.replies?.map(reply => (
-                <CommentItem key={reply.id} comment={reply} depth={depth + 1} />
-              ))}
-            </CollapsibleContent>
-          </Collapsible>
-        )}
-      </div>
-    );
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -323,7 +353,16 @@ export const DiscussionThread = ({ electionId, userId }: DiscussionThreadProps) 
           </Card>
         ) : (
           comments.map(comment => (
-            <CommentItem key={comment.id} comment={comment} />
+            <CommentItem 
+              key={comment.id} 
+              comment={comment}
+              replyingTo={replyingTo}
+              setReplyingTo={setReplyingTo}
+              replyContent={replyContent}
+              setReplyContent={setReplyContent}
+              handleSubmitComment={handleSubmitComment}
+              submitting={submitting}
+            />
           ))
         )}
       </div>
