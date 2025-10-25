@@ -79,6 +79,9 @@
     "noParticipated": "You haven't participated in any elections yet",
     "startVoting": "Start voting to see your participation history!"
   },
+  "beta": {
+    "label": "Beta"
+  },
   "footer": {
     "tagline": "From Earth, with love 🌎",
     "quote": "Democracy isn't a place you visit—it's a protocol you run.",
