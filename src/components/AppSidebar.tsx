@@ -73,7 +73,10 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-primary/20 backdrop-blur-xl bg-background/60">
         <div className={`flex items-center gap-2 p-3 ${state === "collapsed" ? "justify-center" : ""}`}>
           {state !== "collapsed" && (
-            <div className="flex items-center gap-2">
+            <div 
+              className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => navigate("/")}
+            >
               <div className="w-8 h-8 rounded-lg flex items-center justify-center">
                 <img src={logo} alt="Democracy Earth" className="w-8 h-8 object-contain" />
               </div>
