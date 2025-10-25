@@ -76,9 +76,14 @@ export function AppSidebar() {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
                 <Vote className="h-4 w-4 text-primary-foreground" />
               </div>
-              <span className="text-lg font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
-                Democracy Earth
-              </span>
+              <div className="flex flex-col">
+                <span className="text-lg font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
+                  Democracy Earth
+                </span>
+                <span className="text-[10px] text-muted-foreground/50 -mt-1">
+                  {t('beta.version', 'beta version')}
+                </span>
+              </div>
             </div>
           )}
         </div>
