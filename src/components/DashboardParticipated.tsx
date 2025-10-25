@@ -204,9 +204,8 @@ export function DashboardParticipated({ userId }: DashboardParticipatedProps) {
                           <span>Voted {new Date(record.voted_at).toLocaleDateString()}</span>
                         </div>
                         {election.is_ongoing && (
-                          <Badge className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-700 dark:text-green-300 border-green-500/30 animate-pulse">
-                            <div className="w-2 h-2 rounded-full bg-green-500 mr-1.5 animate-ping absolute" />
-                            <div className="w-2 h-2 rounded-full bg-green-500 mr-1.5" />
+                          <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 border border-green-500/30 font-semibold">
+                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-2 animate-pulse" />
                             Live
                           </Badge>
                         )}
@@ -308,12 +307,12 @@ export function DashboardParticipated({ userId }: DashboardParticipatedProps) {
                   )}
 
                   {/* Action Buttons */}
-                  <div className="flex flex-wrap gap-3 pt-4 border-t border-primary/10">
+                  <div className="flex flex-wrap gap-3 pt-4 border-t border-border">
                     <Button
-                      variant="outline"
+                      variant="default"
                       size="sm"
                       onClick={() => navigate(`/vote/${record.election_id}`)}
-                      className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/30 hover:from-primary/20 hover:to-primary/10 hover:border-primary/50 transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-300"
                     >
                       <ExternalLink className="mr-2 h-4 w-4" />
                       View Full Details
@@ -324,7 +323,7 @@ export function DashboardParticipated({ userId }: DashboardParticipatedProps) {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="border-primary/20 hover:bg-primary/10 hover:border-primary/40 transition-all duration-300 hover:shadow-lg"
+                          className="bg-background border-border hover:bg-muted hover:border-border transition-all duration-300"
                         >
                           <Share2 className="mr-2 h-4 w-4" />
                           Share
