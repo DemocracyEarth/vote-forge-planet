@@ -118,6 +118,47 @@ export function PublicElectionsFeed() {
     return text.substring(0, maxLength) + "...";
   };
 
+  const getCountryFlag = (countryCode: string) => {
+    const code = countryCode.toUpperCase();
+    return String.fromCodePoint(...[...code].map(c => c.charCodeAt(0) + 127397));
+  };
+
+  const getCountryName = (countryCode: string) => {
+    const countryNames: Record<string, string> = {
+      'US': 'United States',
+      'GB': 'United Kingdom',
+      'CA': 'Canada',
+      'AU': 'Australia',
+      'DE': 'Germany',
+      'FR': 'France',
+      'ES': 'Spain',
+      'IT': 'Italy',
+      'JP': 'Japan',
+      'CN': 'China',
+      'IN': 'India',
+      'BR': 'Brazil',
+      'MX': 'Mexico',
+      'RU': 'Russia',
+      'KR': 'South Korea',
+      'NL': 'Netherlands',
+      'SE': 'Sweden',
+      'NO': 'Norway',
+      'DK': 'Denmark',
+      'FI': 'Finland',
+      'PL': 'Poland',
+      'BE': 'Belgium',
+      'CH': 'Switzerland',
+      'AT': 'Austria',
+      'IE': 'Ireland',
+      'NZ': 'New Zealand',
+      'SG': 'Singapore',
+      'ZA': 'South Africa',
+      'AR': 'Argentina',
+      'CL': 'Chile',
+    };
+    return countryNames[countryCode.toUpperCase()] || countryCode;
+  };
+
 
   if (loading) {
     return (
@@ -224,12 +265,17 @@ export function PublicElectionsFeed() {
                     )}
                     {election.identity_config?.restrictions?.allowedCountries && 
                      election.identity_config.restrictions.allowedCountries.length > 0 && (
-                      <Badge variant="outline" className="flex items-center gap-1">
-                        <Globe className="h-3 w-3" />
-                        {election.identity_config.restrictions.allowedCountries.length === 1 
-                          ? election.identity_config.restrictions.allowedCountries[0]
-                          : `${election.identity_config.restrictions.allowedCountries.length} countries`}
-                      </Badge>
+                      election.identity_config.restrictions.allowedCountries.length === 1 ? (
+                        <Badge variant="outline" className="flex items-center gap-1">
+                          <span>{getCountryFlag(election.identity_config.restrictions.allowedCountries[0])}</span>
+                          {getCountryName(election.identity_config.restrictions.allowedCountries[0])}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="flex items-center gap-1">
+                          <Globe className="h-3 w-3" />
+                          {election.identity_config.restrictions.allowedCountries.length} countries
+                        </Badge>
+                      )
                     )}
                     {!election.identity_config?.restrictions?.allowedCountries && (
                       <Badge variant="outline" className="flex items-center gap-1">
