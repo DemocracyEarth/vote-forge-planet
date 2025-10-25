@@ -1,5 +1,6 @@
-import { Home, Vote, PlusCircle, History } from "lucide-react";
+import { Home, Vote, PlusCircle, History, User } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Sidebar,
   SidebarContent,
@@ -18,35 +19,41 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { LogOut } from "lucide-react";
 
-const navItems = [
-  {
-    title: "Public Feed",
-    url: "/dashboard",
-    icon: Home,
-  },
-  {
-    title: "My Elections",
-    url: "/dashboard/my-elections",
-    icon: Vote,
-  },
-  {
-    title: "Participated",
-    url: "/dashboard/participated",
-    icon: History,
-  },
-];
-
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
+
+  const navItems = [
+    {
+      title: t('dashboard.publicFeed'),
+      url: "/dashboard",
+      icon: Home,
+    },
+    {
+      title: t('dashboard.myElections'),
+      url: "/dashboard/my-elections",
+      icon: Vote,
+    },
+    {
+      title: t('dashboard.participated'),
+      url: "/dashboard/participated",
+      icon: History,
+    },
+    {
+      title: t('dashboard.profile'),
+      url: "/dashboard/profile",
+      icon: User,
+    },
+  ];
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/auth");
     toast({
-      title: "Signed out",
+      title: t('dashboard.signOut'),
       description: "You have been signed out successfully.",
     });
   };
@@ -75,7 +82,7 @@ export function AppSidebar() {
       <SidebarContent className="px-2 py-4">
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-semibold text-muted-foreground/80 mb-2">
-            Navigation
+            {t('dashboard.navigation') || 'Navigation'}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
@@ -112,7 +119,7 @@ export function AppSidebar() {
           onClick={handleCreateElection}
         >
           <PlusCircle className="mr-2 h-4 w-4" />
-          {state !== "collapsed" && "Create Election"}
+          {state !== "collapsed" && t('dashboard.createElection')}
         </Button>
         <Button
           variant="ghost"
@@ -120,7 +127,7 @@ export function AppSidebar() {
           onClick={handleSignOut}
         >
           <LogOut className="mr-2 h-4 w-4" />
-          {state !== "collapsed" && "Sign Out"}
+          {state !== "collapsed" && t('dashboard.signOut')}
         </Button>
       </SidebarFooter>
     </Sidebar>

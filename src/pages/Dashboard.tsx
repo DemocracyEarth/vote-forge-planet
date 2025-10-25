@@ -9,6 +9,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { PublicElectionsFeed } from "@/components/PublicElectionsFeed";
 import { DashboardMyElections } from "@/components/DashboardMyElections";
 import { DashboardParticipated } from "@/components/DashboardParticipated";
+import { DashboardProfile } from "@/components/DashboardProfile";
 
 const Dashboard = () => {
   const [user, setUser] = useState<any>(null);
@@ -64,6 +65,7 @@ const Dashboard = () => {
                 <Route path="/" element={<PublicElectionsFeed />} />
                 <Route path="/my-elections" element={<DashboardMyElections userId={user?.id} />} />
                 <Route path="/participated" element={<DashboardParticipated userId={user?.id} />} />
+                <Route path="/profile" element={<DashboardProfile />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
             </div>

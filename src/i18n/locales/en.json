@@ -67,6 +67,8 @@
     "participated": "Participated",
     "signOut": "Sign Out",
     "profile": "Profile",
+    "navigation": "Navigation",
+    "createElection": "Create Election",
     "loading": "Loading...",
     "noPublicElections": "No public elections available",
     "eligible": "Eligible",

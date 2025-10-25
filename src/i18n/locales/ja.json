@@ -67,6 +67,8 @@
     "participated": "参加した",
     "signOut": "サインアウト",
     "profile": "プロフィール",
+    "navigation": "ナビゲーション",
+    "createElection": "選挙を作成",
     "loading": "読み込み中...",
     "noPublicElections": "公開選挙はありません",
     "eligible": "資格あり",

@@ -67,6 +67,8 @@
     "participated": "已参与",
     "signOut": "退出登录",
     "profile": "个人资料",
+    "navigation": "导航",
+    "createElection": "创建选举",
     "loading": "加载中...",
     "noPublicElections": "没有可用的公共选举",
     "eligible": "符合条件",
