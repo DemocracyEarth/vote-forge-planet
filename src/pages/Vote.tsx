@@ -164,28 +164,20 @@ const Vote = () => {
             description: t('vote.updatingVoteDesc'),
           });
 
-          // Get the user's previous vote timestamp from voter_registry (to find the anon vote)
+          // Get the user's previous vote reference from voter_registry
           const { data: previousVote } = await supabase
             .from('voter_registry')
-            .select('voted_at')
+            .select('vote_id')
             .eq('election_id', electionId)
             .eq('voter_id', user.id)
             .single();
 
-          // Delete previous anonymous vote (using small timestamp window to locate it)
-          if (previousVote) {
-            const votedDate = new Date(previousVote.voted_at);
-            const timeWindow = 5000; // 5 second window
-            const startTime = new Date(votedDate.getTime() - timeWindow).toISOString();
-            const endTime = new Date(votedDate.getTime() + timeWindow).toISOString();
-
+          // Delete previous anonymous vote using the foreign key reference
+          if (previousVote?.vote_id) {
             const { error: deleteVoteError } = await supabase
               .from('anonymous_votes')
               .delete()
-              .eq('election_id', electionId)
-              .gte('voted_at', startTime)
-              .lte('voted_at', endTime)
-              .limit(1);
+              .eq('id', previousVote.vote_id);
 
             if (deleteVoteError) {
               console.error('Error deleting previous vote:', deleteVoteError);
@@ -194,7 +186,7 @@ const Vote = () => {
           }
 
           // Insert the new anonymous vote
-          const { error: voteError } = await supabase
+          const { data: newVote, error: voteError } = await supabase
             .from('anonymous_votes')
             .insert({
               election_id: electionId,
@@ -202,9 +194,22 @@ const Vote = () => {
               metadata: {
                 voted_at: new Date().toISOString(),
               }
-            });
+            })
+            .select('id')
+            .single();
 
           if (voteError) throw voteError;
+
+          // Update voter registry with new vote_id
+          const { error: updateError } = await supabase
+            .from('voter_registry')
+            .update({ vote_id: newVote.id })
+            .eq('election_id', electionId)
+            .eq('voter_id', user.id);
+
+          if (updateError) {
+            console.error('Error updating voter registry:', updateError);
+          }
 
           toast({
             title: t('vote.voteRecorded'),
@@ -230,12 +235,28 @@ const Vote = () => {
         }
       }
 
-      // Not previously voted: register voter then record vote
+      // Insert the anonymous vote first
+      const { data: newVote, error: voteError } = await supabase
+        .from('anonymous_votes')
+        .insert({
+          election_id: electionId,
+          vote_value: finalVoteValue,
+          metadata: {
+            voted_at: new Date().toISOString(),
+          }
+        })
+        .select('id')
+        .single();
+
+      if (voteError) throw voteError;
+
+      // Register voter with reference to the vote
       const { error: registryError } = await supabase
         .from('voter_registry')
         .insert({
           election_id: electionId,
           voter_id: user.id,
+          vote_id: newVote.id,
         });
 
       if (registryError) {
@@ -247,39 +268,29 @@ const Vote = () => {
               description: t('vote.updatingVoteDesc'),
             });
 
-            // Try to find previous vote timestamp to remove the old anon vote
+            // Get existing vote reference to delete it
             const { data: existingReg } = await supabase
               .from('voter_registry')
-              .select('voted_at')
+              .select('vote_id')
               .eq('election_id', electionId)
               .eq('voter_id', user.id)
               .single();
 
-            if (existingReg) {
-              const votedDate = new Date(existingReg.voted_at);
-              const timeWindow = 5000;
-              const startTime = new Date(votedDate.getTime() - timeWindow).toISOString();
-              const endTime = new Date(votedDate.getTime() + timeWindow).toISOString();
+            if (existingReg?.vote_id) {
               await supabase
                 .from('anonymous_votes')
                 .delete()
-                .eq('election_id', electionId)
-                .gte('voted_at', startTime)
-                .lte('voted_at', endTime)
-                .limit(1);
+                .eq('id', existingReg.vote_id);
             }
 
-            // Insert the new anonymous vote
-            const { error: voteError2 } = await supabase
-              .from('anonymous_votes')
-              .insert({
-                election_id: electionId,
-                vote_value: finalVoteValue,
-                metadata: {
-                  voted_at: new Date().toISOString(),
-                }
-              });
-            if (voteError2) throw voteError2;
+            // Update voter registry with new vote_id
+            const { error: updateError } = await supabase
+              .from('voter_registry')
+              .update({ vote_id: newVote.id })
+              .eq('election_id', electionId)
+              .eq('voter_id', user.id);
+
+            if (updateError) throw updateError;
 
             toast({
               title: t('vote.voteRecorded'),
@@ -303,33 +314,20 @@ const Vote = () => {
         } else {
           throw registryError;
         }
-      } else {
-        // Insert anonymous vote
-        const { error: voteError } = await supabase
-          .from('anonymous_votes')
-          .insert({
-            election_id: electionId,
-            vote_value: finalVoteValue,
-            metadata: {
-              voted_at: new Date().toISOString(),
-            }
-          });
-
-        if (voteError) throw voteError;
-
-        toast({
-          title: t('vote.voteRecorded'),
-          description: t('vote.voteRecordedDesc'),
-        });
-        setVoterIdentifier("");
-        setVoteValue("");
-        setSelectedOptions([]);
-        
-        // Redirect after successful vote
-        setTimeout(() => {
-          navigate(user ? '/dashboard' : '/');
-        }, 1500);
       }
+
+      toast({
+        title: t('vote.voteRecorded'),
+        description: t('vote.voteRecordedDesc'),
+      });
+      setVoterIdentifier("");
+      setVoteValue("");
+      setSelectedOptions([]);
+      
+      // Redirect after successful vote
+      setTimeout(() => {
+        navigate(user ? '/dashboard' : '/');
+      }, 1500);
     } catch (error) {
       console.error('Error submitting vote:', error);
       toast({

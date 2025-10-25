@@ -4,4 +4,4 @@ project_id = "qwmgzbgcpypwjenchfei"
 verify_jwt = true
 
 [functions.polish-proposal]
-verify_jwt = false
+verify_jwt = true

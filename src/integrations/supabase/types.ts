@@ -144,18 +144,21 @@ export type Database = {
         Row: {
           election_id: string
           id: string
+          vote_id: string | null
           voted_at: string
           voter_id: string
         }
         Insert: {
           election_id: string
           id?: string
+          vote_id?: string | null
           voted_at?: string
           voter_id: string
         }
         Update: {
           election_id?: string
           id?: string
+          vote_id?: string | null
           voted_at?: string
           voter_id?: string
         }
@@ -172,6 +175,13 @@ export type Database = {
             columns: ["election_id"]
             isOneToOne: false
             referencedRelation: "public_elections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voter_registry_vote_id_fkey"
+            columns: ["vote_id"]
+            isOneToOne: false
+            referencedRelation: "anonymous_votes"
             referencedColumns: ["id"]
           },
         ]
