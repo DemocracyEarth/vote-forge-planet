@@ -5,16 +5,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, Loader2, History as HistoryIcon, Share2, CheckCircle2 } from "lucide-react";
+import { ExternalLink, Loader2, History as HistoryIcon, Share2, CheckCircle2, TrendingUp, Users, Calendar } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Progress } from "@/components/ui/progress";
 import type { Database } from "@/integrations/supabase/types";
 
 type Election = Database["public"]["Tables"]["elections"]["Row"];
+
+interface VoteResult {
+  vote_value: string;
+  vote_count: number;
+  total_votes: number;
+}
 
 interface ParticipatedElection {
   id: string;
@@ -23,6 +30,7 @@ interface ParticipatedElection {
   voted_at: string;
   elections: Election;
   userVote?: string;
+  results?: VoteResult[];
 }
 
 interface DashboardParticipatedProps {
@@ -51,7 +59,7 @@ export function DashboardParticipated({ userId }: DashboardParticipatedProps) {
 
       if (error) throw error;
       
-      // Fetch user votes for each election
+      // Fetch user votes and results for each election
       const electionsWithVotes: ParticipatedElection[] = await Promise.all(
         (data || []).map(async (record): Promise<ParticipatedElection> => {
           // Try to find the vote by matching election and approximate timestamp
@@ -68,13 +76,23 @@ export function DashboardParticipated({ userId }: DashboardParticipatedProps) {
             .lte("voted_at", endTime)
             .limit(1);
 
+          // Fetch live results for ongoing elections
+          let results: VoteResult[] = [];
+          const election = record.elections as Election;
+          if (election.is_ongoing) {
+            const { data: resultsData } = await supabase
+              .rpc('get_election_results', { election_uuid: record.election_id });
+            results = resultsData || [];
+          }
+
           return {
             id: record.id,
             election_id: record.election_id,
             voter_id: record.voter_id,
             voted_at: record.voted_at,
-            elections: record.elections as Election,
-            userVote: votes && votes.length > 0 ? votes[0].vote_value : undefined
+            elections: election,
+            userVote: votes && votes.length > 0 ? votes[0].vote_value : undefined,
+            results
           };
         })
       );
@@ -150,104 +168,186 @@ export function DashboardParticipated({ userId }: DashboardParticipatedProps) {
       {votedElections.length === 0 ? (
         <Card className="border-primary/20 bg-gradient-to-br from-background via-primary/5 to-background backdrop-blur-sm">
           <CardContent className="pt-12 pb-12 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 mb-4">
-              <HistoryIcon className="h-8 w-8 text-primary" />
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent mb-6 shadow-lg shadow-primary/20">
+              <HistoryIcon className="h-10 w-10 text-primary" />
             </div>
-            <p className="text-muted-foreground text-lg mb-2">No participation history yet</p>
+            <p className="text-muted-foreground text-lg mb-2 font-semibold">No participation history yet</p>
             <p className="text-sm text-muted-foreground/70">Browse the public feed to find elections to participate in!</p>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-6">
           {votedElections.map((record) => {
             const election = record.elections as Election;
+            const totalVotes = record.results?.reduce((acc, r) => acc + r.vote_count, 0) || 0;
+            
             return (
               <Card 
                 key={record.id}
-                className="group border-primary/20 bg-gradient-to-br from-background via-primary/5 to-background hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 hover:border-primary/40 backdrop-blur-sm overflow-hidden relative"
+                className="group border-primary/30 bg-gradient-to-br from-background via-background to-primary/5 hover:shadow-2xl hover:shadow-primary/20 transition-all duration-500 hover:border-primary/50 backdrop-blur-sm overflow-hidden relative"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                {/* Animated gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
-                <CardHeader className="relative">
-                  <CardTitle className="text-xl group-hover:text-primary transition-colors duration-300">
-                    {election.title}
-                  </CardTitle>
-                  <CardDescription className="flex items-center gap-2">
-                    <span className="inline-flex items-center px-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
-                      Voted on {new Date(record.voted_at).toLocaleDateString()}
-                    </span>
-                  </CardDescription>
+                {/* Glow effect on hover */}
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/0 via-primary/50 to-primary/0 rounded-lg opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-500" />
+                
+                <CardHeader className="relative pb-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <CardTitle className="text-2xl font-bold group-hover:text-primary transition-colors duration-300 mb-2">
+                        {election.title}
+                      </CardTitle>
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="h-4 w-4" />
+                          <span>Voted {new Date(record.voted_at).toLocaleDateString()}</span>
+                        </div>
+                        {election.is_ongoing && (
+                          <Badge className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-700 dark:text-green-300 border-green-500/30 animate-pulse">
+                            <div className="w-2 h-2 rounded-full bg-green-500 mr-1.5 animate-ping absolute" />
+                            <div className="w-2 h-2 rounded-full bg-green-500 mr-1.5" />
+                            Live
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    {totalVotes > 0 && (
+                      <div className="flex flex-col items-end gap-1 px-4 py-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30">
+                        <div className="flex items-center gap-1.5">
+                          <Users className="h-4 w-4 text-primary" />
+                          <span className="text-2xl font-bold text-primary">{totalVotes}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">Total Votes</span>
+                      </div>
+                    )}
+                  </div>
                 </CardHeader>
-                <CardContent className="relative">
-                  <div className="space-y-4">
-                    {/* Vote Information */}
-                    <div className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 backdrop-blur-sm space-y-3">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                        <p className="font-semibold text-lg text-primary">Voted</p>
+                
+                <CardContent className="relative space-y-6">
+                  {/* Your Vote Section */}
+                  {record.userVote && (
+                    <div className="p-5 rounded-xl bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-transparent border border-green-500/20 backdrop-blur-sm space-y-3 shadow-lg">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="p-2 rounded-lg bg-green-500/20">
+                          <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-lg">Your Vote</p>
+                          <p className="text-xs text-muted-foreground">Cast anonymously and secured</p>
+                        </div>
                       </div>
                       
-                      {record.userVote && (
-                        <div className="space-y-2">
-                          <p className="text-sm text-muted-foreground">Your vote:</p>
-                          <Badge 
-                            variant="outline" 
-                            className="text-base px-4 py-2 bg-gradient-to-r from-green-500/20 to-green-500/10 border-green-500/30 text-green-700 dark:text-green-300 font-semibold"
-                          >
-                            {record.userVote}
-                          </Badge>
-                        </div>
-                      )}
-                      
-                      <p className="text-xs text-muted-foreground">
-                        {record.userVote 
-                          ? "Your vote was cast anonymously and is stored securely" 
-                          : "Your vote was cast anonymously"}
-                      </p>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex flex-wrap gap-3">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate(`/vote/${record.election_id}`)}
-                        className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/30 hover:from-primary/20 hover:to-primary/10 hover:border-primary/50 transition-all duration-300 hover:scale-105"
+                      <Badge 
+                        variant="outline" 
+                        className="text-lg px-5 py-2.5 bg-gradient-to-r from-green-500/20 to-emerald-500/10 border-green-500/40 text-green-700 dark:text-green-300 font-bold shadow-md hover:shadow-lg transition-shadow"
                       >
-                        <ExternalLink className="mr-2 h-4 w-4" />
-                        View Election
-                      </Button>
-
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="border-primary/20 hover:bg-primary/10 hover:border-primary/40 transition-all duration-300"
-                          >
-                            <Share2 className="mr-2 h-4 w-4" />
-                            Share
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start">
-                          <DropdownMenuItem onClick={() => copyElectionLink(record.election_id)}>
-                            Copy Link
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => shareToTwitter(election)}>
-                            Share on Twitter
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => shareToFacebook(election)}>
-                            Share on Facebook
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => shareToLinkedIn(election)}>
-                            Share on LinkedIn
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => shareToWhatsApp(election)}>
-                            Share on WhatsApp
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                        {record.userVote}
+                      </Badge>
                     </div>
+                  )}
+
+                  {/* Live Results Section */}
+                  {election.is_ongoing && record.results && record.results.length > 0 && (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="p-2 rounded-lg bg-primary/20">
+                          <TrendingUp className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-lg">Live Results</p>
+                          <p className="text-xs text-muted-foreground">Real-time voting statistics</p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {record.results
+                          .sort((a, b) => b.vote_count - a.vote_count)
+                          .map((result, idx) => {
+                            const percentage = totalVotes > 0 ? (result.vote_count / totalVotes) * 100 : 0;
+                            const isUserVote = result.vote_value === record.userVote;
+                            
+                            return (
+                              <div 
+                                key={result.vote_value}
+                                className={`p-4 rounded-xl border transition-all duration-300 ${
+                                  isUserVote 
+                                    ? 'bg-gradient-to-r from-primary/20 to-primary/10 border-primary/40 shadow-lg' 
+                                    : 'bg-muted/50 border-muted hover:border-muted-foreground/20'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    {idx === 0 && (
+                                      <Badge className="bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30">
+                                        Leading
+                                      </Badge>
+                                    )}
+                                    <span className={`font-semibold ${isUserVote ? 'text-primary' : ''}`}>
+                                      {result.vote_value}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-3">
+                                    <span className="text-2xl font-bold">{result.vote_count}</span>
+                                    <span className={`text-sm font-semibold min-w-[3.5rem] text-right ${
+                                      isUserVote ? 'text-primary' : 'text-muted-foreground'
+                                    }`}>
+                                      {percentage.toFixed(1)}%
+                                    </span>
+                                  </div>
+                                </div>
+                                <Progress 
+                                  value={percentage} 
+                                  className={`h-2 ${isUserVote ? 'bg-primary/20' : ''}`}
+                                />
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-wrap gap-3 pt-4 border-t border-primary/10">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/vote/${record.election_id}`)}
+                      className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/30 hover:from-primary/20 hover:to-primary/10 hover:border-primary/50 transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                    >
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      View Full Details
+                    </Button>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-primary/20 hover:bg-primary/10 hover:border-primary/40 transition-all duration-300 hover:shadow-lg"
+                        >
+                          <Share2 className="mr-2 h-4 w-4" />
+                          Share
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-56">
+                        <DropdownMenuItem onClick={() => copyElectionLink(record.election_id)}>
+                          Copy Link
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => shareToTwitter(election)}>
+                          Share on Twitter
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => shareToFacebook(election)}>
+                          Share on Facebook
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => shareToLinkedIn(election)}>
+                          Share on LinkedIn
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => shareToWhatsApp(election)}>
+                          Share on WhatsApp
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </CardContent>
               </Card>
