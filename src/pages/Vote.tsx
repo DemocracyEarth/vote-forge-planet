@@ -58,32 +58,34 @@ const Vote = () => {
   }, [user, election]);
 
   useEffect(() => {
-    if (!election?.is_ongoing) return;
+    if (!election) return;
 
-    // Load initial vote results
+    // Load initial vote results for all elections
     loadVoteResults();
 
-    // Set up realtime subscription for ongoing elections
-    const channel = supabase
-      .channel('vote-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'anonymous_votes',
-          filter: `election_id=eq.${electionId}`
-        },
-        () => {
-          loadVoteResults();
-        }
-      )
-      .subscribe();
+    // Set up realtime subscription only for ongoing elections
+    if (election.is_ongoing) {
+      const channel = supabase
+        .channel('vote-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'anonymous_votes',
+            filter: `election_id=eq.${electionId}`
+          },
+          () => {
+            loadVoteResults();
+          }
+        )
+        .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [election?.is_ongoing, electionId]);
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [election, electionId]);
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
