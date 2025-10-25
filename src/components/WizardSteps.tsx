@@ -190,7 +190,7 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
         {currentStep === 1 && <StepIdentity onDataChange={setIdentityData} />}
         {currentStep === 2 && <StepAuthRestrictions authenticationType={identityData.authenticationType} onDataChange={setAuthRestrictions} />}
         {currentStep === 3 && <StepVotingLogic selectedModel={selectedVotingModel} onModelChange={setSelectedVotingModel} onDataChange={setVotingLogicData} />}
-        {currentStep === 4 && <StepBill votingModel={selectedVotingModel} onDataChange={setBillData} />}
+        {currentStep === 4 && <StepBill votingModel={selectedVotingModel} votingLogicData={votingLogicData} onDataChange={setBillData} />}
       </div>
 
       {/* Navigation */}

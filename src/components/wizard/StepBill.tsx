@@ -5,17 +5,18 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Calendar, FileText, Shield, Target, Percent, Plus, X, List, Sparkles } from "lucide-react";
+import { Calendar, FileText, Shield, Plus, X, List, Sparkles, Settings, Coins, Scale, Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface StepBillProps {
   votingModel: string;
+  votingLogicData?: any;
   onDataChange?: (data: any) => void;
 }
 
-const StepBill = ({ votingModel, onDataChange }: StepBillProps) => {
+const StepBill = ({ votingModel, votingLogicData, onDataChange }: StepBillProps) => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [title, setTitle] = useState("");
@@ -25,12 +26,19 @@ const StepBill = ({ votingModel, onDataChange }: StepBillProps) => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [isOngoing, setIsOngoing] = useState(false);
-  const [threshold, setThreshold] = useState("simple");
-  const [customThreshold, setCustomThreshold] = useState("50");
-  const [customOptions, setCustomOptions] = useState({
-    delegationWeight: "1.0",
-    voteCost: "1",
-    reputationMinimum: "100",
+  // Voting model-specific settings
+  const [tokenSettings, setTokenSettings] = useState({
+    blockchain: "ethereum",
+    contractAddress: "",
+    tokenStandard: "ERC20",
+  });
+  const [quadraticSettings, setQuadraticSettings] = useState({
+    creditsPerVoter: "100",
+    voteCostFormula: "quadratic",
+  });
+  const [reputationSettings, setReputationSettings] = useState({
+    minimumReputation: "100",
+    weightFormula: "linear",
   });
   const [isPolishing, setIsPolishing] = useState(false);
 
@@ -89,6 +97,14 @@ const StepBill = ({ votingModel, onDataChange }: StepBillProps) => {
 
   useEffect(() => {
     if (onDataChange) {
+      const modelSettings = votingModel === "token" 
+        ? { tokenSettings }
+        : votingModel === "quadratic"
+        ? { quadraticSettings }
+        : votingModel === "weighted"
+        ? { reputationSettings }
+        : {};
+
       onDataChange({
         title,
         description,
@@ -97,12 +113,10 @@ const StepBill = ({ votingModel, onDataChange }: StepBillProps) => {
         startDate,
         endDate,
         isOngoing,
-        threshold,
-        customThreshold: threshold === "custom" ? customThreshold : undefined,
-        customOptions: threshold === "custom_logic" ? customOptions : undefined,
+        ...modelSettings,
       });
     }
-  }, [title, description, ballotType, ballotOptions, startDate, endDate, isOngoing, threshold, customThreshold, customOptions, onDataChange]);
+  }, [title, description, ballotType, ballotOptions, startDate, endDate, isOngoing, votingModel, tokenSettings, quadraticSettings, reputationSettings, onDataChange]);
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -292,229 +306,156 @@ const StepBill = ({ votingModel, onDataChange }: StepBillProps) => {
           </div>
         </Card>
 
-        {/* Outcome threshold */}
-        <Card className="p-3 sm:p-4 space-y-3 sm:space-y-4">
-          <div className="flex items-center gap-2 text-xs sm:text-sm font-medium">
-            <Target className="w-4 h-4 text-primary" />
-            Outcome Threshold
-          </div>
-          <div className="space-y-3">
-            {[
-              { id: "simple", label: "Simple Majority", value: "50" },
-              { id: "supermajority", label: "Supermajority", value: "66" },
-              { id: "unanimous", label: "Unanimous", value: "100" },
-              { id: "custom", label: "Custom Logic" },
-            ].map((option) => (
-              <div key={option.id} className="space-y-2">
-                <label
-                  className="flex items-center gap-3 cursor-pointer group"
-                  onClick={() => setThreshold(option.id)}
-                >
-                  <div
-                    className={`w-4 h-4 rounded-full border-2 flex items-center justify-center smooth-transition ${
-                      threshold === option.id
-                        ? "border-primary bg-primary"
-                        : "border-muted-foreground/30 group-hover:border-primary/50"
-                    }`}
-                  >
-                    {threshold === option.id && (
-                      <div className="w-2 h-2 rounded-full bg-primary-foreground" />
-                    )}
-                  </div>
-                  <span className="text-xs sm:text-sm flex items-center gap-2">
-                    {option.label}
-                    {option.value && option.id !== "custom" && (
-                      <span className="text-muted-foreground">({option.value}%)</span>
-                    )}
-                  </span>
-                </label>
-                
-                {/* Editable percentage for non-custom options */}
-                {threshold === option.id && option.id !== "custom" && (
-                  <div className="ml-7 flex items-center gap-2">
-                    <Input
-                      type="number"
-                      min="1"
-                      max="100"
-                      value={option.value}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        if (parseInt(value) >= 1 && parseInt(value) <= 100) {
-                          // Update the threshold value
-                        }
-                      }}
-                      className="w-20 text-xs"
-                    />
-                    <Percent className="w-3 h-3 text-muted-foreground" />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Custom Logic Options based on Voting Model */}
-          {threshold === "custom" && (
-            <div className="mt-4 pt-4 border-t border-border space-y-4">
-              <p className="text-xs text-muted-foreground">
-                Custom options for <span className="font-semibold text-foreground capitalize">{votingModel}</span> voting model:
-              </p>
-
-              {votingModel === "direct" && (
-                <div className="space-y-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="customThreshold" className="text-xs">Custom Threshold (%)</Label>
-                    <Input
-                      id="customThreshold"
-                      type="number"
-                      min="1"
-                      max="100"
-                      value={customThreshold}
-                      onChange={(e) => setCustomThreshold(e.target.value)}
-                      className="text-xs"
-                      placeholder="e.g., 75"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="quorum" className="text-xs">Minimum Quorum (%)</Label>
-                    <Input
-                      id="quorum"
-                      type="number"
-                      min="1"
-                      max="100"
-                      defaultValue="20"
-                      className="text-xs"
-                      placeholder="e.g., 20"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {votingModel === "liquid" && (
-                <div className="space-y-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="delegationWeight" className="text-xs">Delegation Weight Multiplier</Label>
-                    <Input
-                      id="delegationWeight"
-                      type="number"
-                      step="0.1"
-                      min="0.1"
-                      max="10"
-                      value={customOptions.delegationWeight}
-                      onChange={(e) => setCustomOptions({...customOptions, delegationWeight: e.target.value})}
-                      className="text-xs"
-                      placeholder="e.g., 1.5"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="maxDelegations" className="text-xs">Max Delegation Chain Length</Label>
-                    <Input
-                      id="maxDelegations"
-                      type="number"
-                      min="1"
-                      max="10"
-                      defaultValue="3"
-                      className="text-xs"
-                      placeholder="e.g., 3"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="liquidThreshold" className="text-xs">Approval Threshold (%)</Label>
-                    <Input
-                      id="liquidThreshold"
-                      type="number"
-                      min="1"
-                      max="100"
-                      value={customThreshold}
-                      onChange={(e) => setCustomThreshold(e.target.value)}
-                      className="text-xs"
-                      placeholder="e.g., 60"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {votingModel === "quadratic" && (
-                <div className="space-y-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="voteCost" className="text-xs">Vote Cost (Credits per Vote)</Label>
-                    <Input
-                      id="voteCost"
-                      type="number"
-                      min="1"
-                      value={customOptions.voteCost}
-                      onChange={(e) => setCustomOptions({...customOptions, voteCost: e.target.value})}
-                      className="text-xs"
-                      placeholder="e.g., 1"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="maxCredits" className="text-xs">Max Credits per Voter</Label>
-                    <Input
-                      id="maxCredits"
-                      type="number"
-                      min="1"
-                      defaultValue="100"
-                      className="text-xs"
-                      placeholder="e.g., 100"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="quadraticThreshold" className="text-xs">Approval Threshold (Total √Credits)</Label>
-                    <Input
-                      id="quadraticThreshold"
-                      type="number"
-                      min="1"
-                      value={customThreshold}
-                      onChange={(e) => setCustomThreshold(e.target.value)}
-                      className="text-xs"
-                      placeholder="e.g., 500"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {votingModel === "weighted" && (
-                <div className="space-y-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="reputationMinimum" className="text-xs">Minimum Reputation Score</Label>
-                    <Input
-                      id="reputationMinimum"
-                      type="number"
-                      min="0"
-                      value={customOptions.reputationMinimum}
-                      onChange={(e) => setCustomOptions({...customOptions, reputationMinimum: e.target.value})}
-                      className="text-xs"
-                      placeholder="e.g., 100"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="weightFormula" className="text-xs">Weight Calculation Formula</Label>
-                    <Input
-                      id="weightFormula"
-                      type="text"
-                      defaultValue="reputation * 0.01"
-                      className="text-xs font-mono"
-                      placeholder="e.g., reputation * 0.01"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="weightedThreshold" className="text-xs">Approval Threshold (Weighted %)</Label>
-                    <Input
-                      id="weightedThreshold"
-                      type="number"
-                      min="1"
-                      max="100"
-                      value={customThreshold}
-                      onChange={(e) => setCustomThreshold(e.target.value)}
-                      className="text-xs"
-                      placeholder="e.g., 55"
-                    />
-                  </div>
-                </div>
-              )}
+        {/* Voting Model Specific Settings */}
+        {votingModel === "token" && (
+          <Card className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+            <div className="flex items-center gap-2 text-xs sm:text-sm font-medium">
+              <Coins className="w-4 h-4 text-primary" />
+              Token Voting Settings
             </div>
-          )}
-        </Card>
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="blockchain" className="text-xs">Blockchain</Label>
+                <select
+                  id="blockchain"
+                  value={tokenSettings.blockchain}
+                  onChange={(e) => setTokenSettings({...tokenSettings, blockchain: e.target.value})}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <option value="ethereum">Ethereum</option>
+                  <option value="polygon">Polygon</option>
+                  <option value="arbitrum">Arbitrum</option>
+                  <option value="optimism">Optimism</option>
+                  <option value="base">Base</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="tokenStandard" className="text-xs">Token Standard</Label>
+                <select
+                  id="tokenStandard"
+                  value={tokenSettings.tokenStandard}
+                  onChange={(e) => setTokenSettings({...tokenSettings, tokenStandard: e.target.value})}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <option value="ERC20">ERC-20</option>
+                  <option value="ERC721">ERC-721 (NFT)</option>
+                  <option value="ERC1155">ERC-1155</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="contractAddress" className="text-xs">Smart Contract Address</Label>
+                <Input
+                  id="contractAddress"
+                  type="text"
+                  value={tokenSettings.contractAddress}
+                  onChange={(e) => setTokenSettings({...tokenSettings, contractAddress: e.target.value})}
+                  className="text-xs font-mono"
+                  placeholder="0x..."
+                />
+                <p className="text-xs text-muted-foreground">
+                  Token holders of this contract will be eligible to vote
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {votingModel === "quadratic" && (
+          <Card className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+            <div className="flex items-center gap-2 text-xs sm:text-sm font-medium">
+              <Scale className="w-4 h-4 text-primary" />
+              Quadratic Voting Settings
+            </div>
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="creditsPerVoter" className="text-xs">Credits Per Voter</Label>
+                <Input
+                  id="creditsPerVoter"
+                  type="number"
+                  min="1"
+                  value={quadraticSettings.creditsPerVoter}
+                  onChange={(e) => setQuadraticSettings({...quadraticSettings, creditsPerVoter: e.target.value})}
+                  className="text-xs"
+                  placeholder="100"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Each voter receives this many credits to distribute
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="voteCostFormula" className="text-xs">Vote Cost Formula</Label>
+                <select
+                  id="voteCostFormula"
+                  value={quadraticSettings.voteCostFormula}
+                  onChange={(e) => setQuadraticSettings({...quadraticSettings, voteCostFormula: e.target.value})}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <option value="quadratic">Quadratic (n²)</option>
+                  <option value="linear">Linear (n)</option>
+                  <option value="exponential">Exponential (2ⁿ)</option>
+                </select>
+                <p className="text-xs text-muted-foreground">
+                  Determines how voting power scales with credits spent
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {votingModel === "weighted" && (
+          <Card className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+            <div className="flex items-center gap-2 text-xs sm:text-sm font-medium">
+              <Star className="w-4 h-4 text-primary" />
+              Reputation-Based Voting Settings
+            </div>
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="minimumReputation" className="text-xs">Minimum Reputation Score</Label>
+                <Input
+                  id="minimumReputation"
+                  type="number"
+                  min="0"
+                  value={reputationSettings.minimumReputation}
+                  onChange={(e) => setReputationSettings({...reputationSettings, minimumReputation: e.target.value})}
+                  className="text-xs"
+                  placeholder="100"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Minimum reputation required to participate
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="weightFormula" className="text-xs">Weight Calculation</Label>
+                <select
+                  id="weightFormula"
+                  value={reputationSettings.weightFormula}
+                  onChange={(e) => setReputationSettings({...reputationSettings, weightFormula: e.target.value})}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <option value="linear">Linear (reputation × 1)</option>
+                  <option value="sqrt">Square Root (√reputation)</option>
+                  <option value="log">Logarithmic (log₂ reputation)</option>
+                </select>
+                <p className="text-xs text-muted-foreground">
+                  How reputation translates to voting weight
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Liquid Delegation Status */}
+        {votingLogicData?.allowLiquidDelegation && (
+          <Card className="p-3 sm:p-4 bg-accent/10 border-accent/20">
+            <div className="flex items-center gap-2 text-xs sm:text-sm">
+              <Settings className="w-4 h-4 text-accent" />
+              <span className="font-medium">Liquid Delegation Enabled</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Voters can delegate their voting power to trusted representatives
+            </p>
+          </Card>
+        )}
 
         {/* Certification */}
         <Card className="p-3 sm:p-4 space-y-2 sm:space-y-3">
