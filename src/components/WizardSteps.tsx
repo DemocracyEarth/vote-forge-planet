@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import StepIdentity from "@/components/wizard/StepIdentity";
+import StepAuthRestrictions from "@/components/wizard/StepAuthRestrictions";
 import StepVotingLogic from "@/components/wizard/StepVotingLogic";
 import StepBill from "@/components/wizard/StepBill";
 import { z } from "zod";
@@ -21,18 +22,20 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedVotingModel, setSelectedVotingModel] = useState<string>("direct");
   const [identityData, setIdentityData] = useState<any>({});
+  const [authRestrictions, setAuthRestrictions] = useState<any>({});
   const [votingLogicData, setVotingLogicData] = useState<any>({});
   const [billData, setBillData] = useState<any>({});
   const [isDeploying, setIsDeploying] = useState(false);
 
   const steps = [
     { id: 1, title: t('steps.identity.title'), description: t('steps.identity.description') },
-    { id: 2, title: t('steps.voting.title'), description: t('steps.voting.description') },
-    { id: 3, title: t('steps.bill.title'), description: t('steps.bill.description') },
+    { id: 2, title: "Access Control", description: "Configure restrictions" },
+    { id: 3, title: t('steps.voting.title'), description: t('steps.voting.description') },
+    { id: 4, title: t('steps.bill.title'), description: t('steps.bill.description') },
   ];
 
   const handleNext = () => {
-    if (currentStep < 3) {
+    if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -91,7 +94,7 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
 
       const { data, error } = await supabase.functions.invoke('create-election', {
         body: {
-          identityConfig: identityData,
+          identityConfig: { ...identityData, restrictions: authRestrictions },
           votingLogicConfig: votingLogicData,
           billConfig: billData,
         }
@@ -161,8 +164,9 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
       {/* Step content */}
       <div className="bg-card/50 backdrop-blur-sm rounded-lg p-4 sm:p-6 md:p-8 card-glow smooth-transition min-h-[400px] sm:min-h-[500px]">
         {currentStep === 1 && <StepIdentity onDataChange={setIdentityData} />}
-        {currentStep === 2 && <StepVotingLogic selectedModel={selectedVotingModel} onModelChange={setSelectedVotingModel} onDataChange={setVotingLogicData} />}
-        {currentStep === 3 && <StepBill votingModel={selectedVotingModel} onDataChange={setBillData} />}
+        {currentStep === 2 && <StepAuthRestrictions authenticationType={identityData.authenticationType} onDataChange={setAuthRestrictions} />}
+        {currentStep === 3 && <StepVotingLogic selectedModel={selectedVotingModel} onModelChange={setSelectedVotingModel} onDataChange={setVotingLogicData} />}
+        {currentStep === 4 && <StepBill votingModel={selectedVotingModel} onDataChange={setBillData} />}
       </div>
 
       {/* Navigation */}
@@ -178,7 +182,7 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
           <span className="xs:hidden">{currentStep === 1 ? t('wizard.back') : t('wizard.prev')}</span>
         </Button>
 
-        {currentStep < 3 ? (
+        {currentStep < 4 ? (
           <Button
             onClick={handleNext}
             className="bg-primary hover:bg-primary/90 text-primary-foreground smooth-transition text-xs sm:text-sm"
