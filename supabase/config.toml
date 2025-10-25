@@ -2,3 +2,6 @@ project_id = "qwmgzbgcpypwjenchfei"
 
 [functions.create-election]
 verify_jwt = true
+
+[functions.polish-proposal]
+verify_jwt = false

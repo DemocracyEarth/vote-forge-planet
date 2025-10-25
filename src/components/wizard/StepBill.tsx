@@ -5,8 +5,10 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Calendar, FileText, Shield, Target, Percent, Plus, X, List } from "lucide-react";
+import { Calendar, FileText, Shield, Target, Percent, Plus, X, List, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface StepBillProps {
   votingModel: string;
@@ -15,6 +17,7 @@ interface StepBillProps {
 
 const StepBill = ({ votingModel, onDataChange }: StepBillProps) => {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [ballotType, setBallotType] = useState<"single" | "multiple">("single");
@@ -29,6 +32,7 @@ const StepBill = ({ votingModel, onDataChange }: StepBillProps) => {
     voteCost: "1",
     reputationMinimum: "100",
   });
+  const [isPolishing, setIsPolishing] = useState(false);
 
   const handleAddOption = () => {
     setBallotOptions([...ballotOptions, ""]);
@@ -44,6 +48,43 @@ const StepBill = ({ votingModel, onDataChange }: StepBillProps) => {
     const newOptions = [...ballotOptions];
     newOptions[index] = value;
     setBallotOptions(newOptions);
+  };
+
+  const handlePolishProposal = async () => {
+    if (!title && !description) {
+      toast({
+        title: "Nothing to polish",
+        description: "Please add a title or description first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsPolishing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("polish-proposal", {
+        body: { title, description },
+      });
+
+      if (error) throw error;
+
+      if (data.polishedTitle) setTitle(data.polishedTitle);
+      if (data.polishedDescription) setDescription(data.polishedDescription);
+
+      toast({
+        title: "Proposal polished! ✨",
+        description: "Your text has been made more neutral and objective.",
+      });
+    } catch (error: any) {
+      console.error("Error polishing proposal:", error);
+      toast({
+        title: "Failed to polish",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPolishing(false);
+    }
   };
 
   useEffect(() => {
@@ -90,7 +131,20 @@ const StepBill = ({ votingModel, onDataChange }: StepBillProps) => {
 
         {/* Description */}
         <div className="space-y-2">
-          <Label htmlFor="description" className="text-sm sm:text-base">The Full Story</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="description" className="text-sm sm:text-base">The Full Story</Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handlePolishProposal}
+              disabled={isPolishing || (!title && !description)}
+              className="text-xs"
+            >
+              <Sparkles className="w-3 h-3 mr-1" />
+              {isPolishing ? "Polishing..." : "Polish with AI"}
+            </Button>
+          </div>
           <Textarea
             id="description"
             placeholder="Tell us everything. Use markdown, get fancy, make your case. This is your moment. ✍️"
@@ -99,6 +153,9 @@ const StepBill = ({ votingModel, onDataChange }: StepBillProps) => {
             rows={6}
             className="resize-none font-mono text-xs sm:text-sm"
           />
+          <p className="text-xs text-muted-foreground">
+            Use the Polish button to make your text more neutral and objective.
+          </p>
         </div>
 
         {/* Ballot Options */}
