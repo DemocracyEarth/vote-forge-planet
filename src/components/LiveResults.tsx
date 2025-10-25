@@ -1,0 +1,205 @@
+import { useMemo } from "react";
+import { Card } from "@/components/ui/card";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { Trophy, TrendingUp } from "lucide-react";
+import { useTranslation } from "react-i18next";
+
+interface LiveResultsProps {
+  voteResults: Record<string, number>;
+  votingLogicConfig: any;
+  ballotOptions?: string[];
+}
+
+export const LiveResults = ({ voteResults, votingLogicConfig, ballotOptions }: LiveResultsProps) => {
+  const { t } = useTranslation();
+
+  const chartData = useMemo(() => {
+    const options = ballotOptions || Object.keys(voteResults);
+    return options.map(option => ({
+      name: option,
+      votes: voteResults[option] || 0,
+    })).sort((a, b) => b.votes - a.votes);
+  }, [voteResults, ballotOptions]);
+
+  const totalVotes = useMemo(() => {
+    return Object.values(voteResults).reduce((sum, votes) => sum + votes, 0);
+  }, [voteResults]);
+
+  const potentialWinner = useMemo(() => {
+    if (chartData.length === 0) return null;
+
+    const winningCriteria = votingLogicConfig?.winningCriteria || 'plurality';
+    const topChoice = chartData[0];
+
+    switch (winningCriteria) {
+      case 'majority':
+        // Need more than 50% of votes
+        if (topChoice.votes > totalVotes / 2) {
+          return {
+            choice: topChoice.name,
+            reason: `Has ${topChoice.votes} votes (${((topChoice.votes / totalVotes) * 100).toFixed(1)}% - Majority)`,
+            isCertain: true,
+          };
+        } else {
+          return {
+            choice: topChoice.name,
+            reason: `Leading with ${topChoice.votes} votes (${((topChoice.votes / totalVotes) * 100).toFixed(1)}% - Needs majority)`,
+            isCertain: false,
+          };
+        }
+      
+      case 'supermajority':
+        // Need 2/3 or more of votes
+        if (topChoice.votes >= (totalVotes * 2) / 3) {
+          return {
+            choice: topChoice.name,
+            reason: `Has ${topChoice.votes} votes (${((topChoice.votes / totalVotes) * 100).toFixed(1)}% - Supermajority)`,
+            isCertain: true,
+          };
+        } else {
+          return {
+            choice: topChoice.name,
+            reason: `Leading with ${topChoice.votes} votes (${((topChoice.votes / totalVotes) * 100).toFixed(1)}% - Needs supermajority)`,
+            isCertain: false,
+          };
+        }
+      
+      case 'plurality':
+      default:
+        // Most votes wins
+        return {
+          choice: topChoice.name,
+          reason: `Leading with ${topChoice.votes} votes (${((topChoice.votes / totalVotes) * 100).toFixed(1)}%)`,
+          isCertain: topChoice.votes > 0,
+        };
+    }
+  }, [chartData, totalVotes, votingLogicConfig]);
+
+  if (totalVotes === 0) {
+    return (
+      <Card className="p-8 text-center border-border/50 bg-card/40 backdrop-blur-xl">
+        <div className="flex flex-col items-center gap-4">
+          <div className="p-4 rounded-full bg-muted/50">
+            <TrendingUp className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold mb-2">No Votes Yet</h3>
+            <p className="text-muted-foreground">Results will appear here once voting begins</p>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="relative overflow-hidden border-border/50 bg-card/40 backdrop-blur-xl">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+      
+      <div className="relative p-6 sm:p-8">
+        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border/50">
+          <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20">
+            <TrendingUp className="w-6 h-6 text-primary" />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-2xl font-bold">Live Results</h2>
+            <p className="text-sm text-muted-foreground">{totalVotes} {totalVotes === 1 ? 'vote' : 'votes'} cast</p>
+          </div>
+        </div>
+
+        {/* Potential Winner */}
+        {potentialWinner && (
+          <div className={`mb-6 p-4 rounded-xl border ${
+            potentialWinner.isCertain 
+              ? 'bg-primary/10 border-primary/30' 
+              : 'bg-muted/50 border-border/50'
+          }`}>
+            <div className="flex items-start gap-3">
+              <Trophy className={`w-5 h-5 mt-0.5 ${
+                potentialWinner.isCertain ? 'text-primary' : 'text-muted-foreground'
+              }`} />
+              <div>
+                <h3 className="font-semibold mb-1">
+                  {potentialWinner.isCertain ? 'Current Winner' : 'Leading Choice'}
+                </h3>
+                <p className="text-lg font-bold text-primary mb-1">{potentialWinner.choice}</p>
+                <p className="text-sm text-muted-foreground">{potentialWinner.reason}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Vote Distribution Chart */}
+        <div className="mb-6">
+          <h3 className="text-sm font-semibold mb-4 uppercase tracking-wider text-muted-foreground">
+            Vote Distribution
+          </h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+              <XAxis 
+                dataKey="name" 
+                angle={-45}
+                textAnchor="end"
+                height={80}
+                tick={{ fill: 'hsl(var(--foreground))', fontSize: 12 }}
+              />
+              <YAxis tick={{ fill: 'hsl(var(--foreground))' }} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                }}
+                labelStyle={{ color: 'hsl(var(--foreground))' }}
+              />
+              <Bar dataKey="votes" radius={[8, 8, 0, 0]}>
+                {chartData.map((entry, index) => (
+                  <Cell 
+                    key={`cell-${index}`}
+                    fill={index === 0 ? 'hsl(var(--primary))' : 'hsl(var(--accent))'}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Detailed Results Table */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold mb-3 uppercase tracking-wider text-muted-foreground">
+            Detailed Breakdown
+          </h3>
+          {chartData.map((item, index) => {
+            const percentage = totalVotes > 0 ? (item.votes / totalVotes) * 100 : 0;
+            return (
+              <div 
+                key={item.name}
+                className="p-3 rounded-lg bg-muted/20 hover:bg-muted/30 smooth-transition"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    {index === 0 && <Trophy className="w-4 h-4 text-primary" />}
+                    <span className="font-medium">{item.name}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-bold">{item.votes}</span>
+                    <span className="text-muted-foreground text-sm ml-2">
+                      ({percentage.toFixed(1)}%)
+                    </span>
+                  </div>
+                </div>
+                <div className="w-full bg-muted/50 rounded-full h-2 overflow-hidden">
+                  <div 
+                    className={`h-full rounded-full smooth-transition ${
+                      index === 0 ? 'bg-primary' : 'bg-accent'
+                    }`}
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </Card>
+  );
+};

@@ -17,6 +17,7 @@ import Footer from "@/components/Footer";
 import { useTranslation } from "react-i18next";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { DiscussionThread } from "@/components/DiscussionThread";
+import { LiveResults } from "@/components/LiveResults";
 
 const Vote = () => {
   const { t } = useTranslation();
@@ -675,6 +676,15 @@ const Vote = () => {
             </div>
           </div>
         </Card>
+
+        {/* Live Results Section */}
+        <div className="mt-8">
+          <LiveResults 
+            voteResults={voteResults}
+            votingLogicConfig={election.voting_logic_config}
+            ballotOptions={election.bill_config?.ballotOptions}
+          />
+        </div>
 
         {/* Discussion Section */}
         <Card className="relative overflow-hidden border-border/50 bg-card/40 backdrop-blur-xl mt-8">
