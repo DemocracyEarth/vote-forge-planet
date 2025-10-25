@@ -131,18 +131,18 @@ export function AppSidebar() {
         <FeedbackButton />
         <Button
           variant="outline"
-          className="w-full justify-start bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-0 hover:from-primary hover:to-primary/90 hover:brightness-110 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+          className={`w-full ${state === "collapsed" ? "justify-center px-2" : "justify-start"} bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-0 hover:from-primary hover:to-primary/90 hover:brightness-110 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]`}
           onClick={handleCreateElection}
         >
-          <PlusCircle className="mr-2 h-4 w-4" />
+          <PlusCircle className={`h-4 w-4 ${state !== "collapsed" ? "mr-2" : ""}`} />
           {state !== "collapsed" && t('dashboard.createElection')}
         </Button>
         <Button
           variant="ghost"
-          className="w-full justify-start hover:bg-destructive/10 hover:text-destructive transition-all duration-300"
+          className={`w-full ${state === "collapsed" ? "justify-center px-2" : "justify-start"} hover:bg-destructive/10 hover:text-destructive transition-all duration-300`}
           onClick={handleSignOut}
         >
-          <LogOut className="mr-2 h-4 w-4" />
+          <LogOut className={`h-4 w-4 ${state !== "collapsed" ? "mr-2" : ""}`} />
           {state !== "collapsed" && t('dashboard.signOut')}
         </Button>
       </SidebarFooter>

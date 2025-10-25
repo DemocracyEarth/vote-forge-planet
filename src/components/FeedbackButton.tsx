@@ -14,7 +14,7 @@ const FeedbackButton = () => {
       onClick={() => window.open('https://github.com/DemocracyEarth/vote-forge-planet/issues', '_blank')}
       className={`w-full ${state === "collapsed" ? "justify-center px-2" : "justify-start"}`}
     >
-      <MessageSquarePlus className="w-4 h-4" />
+      <MessageSquarePlus className={`w-4 h-4 ${state !== "collapsed" ? "mr-2" : ""}`} />
       {state !== "collapsed" && (
         <span className="text-sm font-medium">
           {t('beta.feedback', 'Send Feedback')}
