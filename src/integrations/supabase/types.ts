@@ -47,13 +47,6 @@ export type Database = {
             referencedRelation: "elections"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "anonymous_votes_election_id_fkey"
-            columns: ["election_id"]
-            isOneToOne: false
-            referencedRelation: "public_elections"
-            referencedColumns: ["id"]
-          },
         ]
       }
       delegations: {
@@ -195,13 +188,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "voter_registry_election_id_fkey"
-            columns: ["election_id"]
-            isOneToOne: false
-            referencedRelation: "public_elections"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "voter_registry_vote_id_fkey"
             columns: ["vote_id"]
             isOneToOne: false
@@ -212,67 +198,7 @@ export type Database = {
       }
     }
     Views: {
-      election_vote_summary: {
-        Row: {
-          election_id: string | null
-          first_vote_at: string | null
-          last_vote_at: string | null
-          total_votes: number | null
-          unique_options: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "anonymous_votes_election_id_fkey"
-            columns: ["election_id"]
-            isOneToOne: false
-            referencedRelation: "elections"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "anonymous_votes_election_id_fkey"
-            columns: ["election_id"]
-            isOneToOne: false
-            referencedRelation: "public_elections"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      public_elections: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          end_date: string | null
-          id: string | null
-          is_ongoing: boolean | null
-          is_public: boolean | null
-          start_date: string | null
-          status: string | null
-          title: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          end_date?: string | null
-          id?: string | null
-          is_ongoing?: boolean | null
-          is_public?: boolean | null
-          start_date?: string | null
-          status?: string | null
-          title?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          end_date?: string | null
-          id?: string | null
-          is_ongoing?: boolean | null
-          is_public?: boolean | null
-          start_date?: string | null
-          status?: string | null
-          title?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       get_election_results: {

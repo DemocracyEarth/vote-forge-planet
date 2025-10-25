@@ -1,4 +1,4 @@
-import { Home, Vote, PlusCircle, History, User } from "lucide-react";
+import { Home, Vote, PlusCircle, History, User, Users } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -41,6 +41,11 @@ export function AppSidebar() {
       title: t('dashboard.participated'),
       url: "/dashboard/participated",
       icon: History,
+    },
+    {
+      title: "Community",
+      url: "/dashboard/community",
+      icon: Users,
     },
     {
       title: t('dashboard.profile'),
