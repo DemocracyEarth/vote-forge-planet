@@ -56,6 +56,30 @@ export type Database = {
           },
         ]
       }
+      delegations: {
+        Row: {
+          active: boolean
+          created_at: string
+          delegate_id: string
+          delegator_id: string
+          id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          delegate_id: string
+          delegator_id: string
+          id?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          delegate_id?: string
+          delegator_id?: string
+          id?: string
+        }
+        Relationships: []
+      }
       elections: {
         Row: {
           bill_config: Json
@@ -246,6 +270,33 @@ export type Database = {
           start_date?: string | null
           status?: string | null
           title?: string | null
+        }
+        Relationships: []
+      }
+      public_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          delegation_count: number | null
+          full_name: string | null
+          id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          delegation_count?: never
+          full_name?: string | null
+          id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          delegation_count?: never
+          full_name?: string | null
+          id?: string | null
         }
         Relationships: []
       }
