@@ -278,7 +278,7 @@ export function DashboardParticipated({ userId }: DashboardParticipatedProps) {
                                 <div className="flex items-center justify-between mb-2">
                                   <div className="flex items-center gap-2">
                                     {idx === 0 && (
-                                      <Badge className="bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30">
+                                      <Badge className="bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/30 font-semibold">
                                         Leading
                                       </Badge>
                                     )}
