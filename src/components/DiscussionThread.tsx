@@ -170,12 +170,9 @@ export const DiscussionThread = ({ electionId, userId }: DiscussionThreadProps) 
 
   useEffect(() => {
     loadComments();
-    subscribeToComments();
-  }, [electionId]);
 
-  const subscribeToComments = () => {
     const channel = supabase
-      .channel('discussion-changes')
+      .channel(`discussion-${electionId}`)
       .on(
         'postgres_changes',
         {
@@ -193,7 +190,7 @@ export const DiscussionThread = ({ electionId, userId }: DiscussionThreadProps) 
     return () => {
       supabase.removeChannel(channel);
     };
-  };
+  }, [electionId]);
 
   const loadComments = async () => {
     try {
