@@ -22,8 +22,8 @@ const votingLogicConfigSchema = z.object({
 const billConfigSchema = z.object({
   title: z.string().min(1).max(500),
   description: z.string().max(10000).optional(),
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
+  startDate: z.union([z.string().datetime(), z.literal("")]).optional(),
+  endDate: z.union([z.string().datetime(), z.literal("")]).optional(),
   isOngoing: z.boolean().optional(),
   isPublic: z.boolean().optional(),
 }).passthrough();
