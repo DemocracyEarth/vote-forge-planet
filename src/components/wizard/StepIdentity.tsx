@@ -27,13 +27,15 @@ const StepIdentity = ({ onDataChange }: StepIdentityProps) => {
       description: t('steps.identity.emailDesc'),
       icon: Shield,
       badge: t('steps.identity.recommended'),
+      disabled: false,
     },
     {
       id: "phone",
       title: t('steps.identity.phone'),
       description: t('steps.identity.phoneDesc'),
       icon: Lock,
-      badge: null,
+      badge: "Under Development",
+      disabled: true,
     },
     {
       id: "google",
@@ -41,13 +43,15 @@ const StepIdentity = ({ onDataChange }: StepIdentityProps) => {
       description: t('steps.identity.googleDesc'),
       icon: Users,
       badge: null,
+      disabled: false,
     },
     {
       id: "worldid",
       title: t('steps.identity.worldId'),
       description: t('steps.identity.worldIdDesc'),
       icon: Key,
-      badge: t('steps.identity.crypto'),
+      badge: "Under Development",
+      disabled: true,
     },
   ];
 
@@ -64,21 +68,28 @@ const StepIdentity = ({ onDataChange }: StepIdentityProps) => {
         {identityOptionsTranslated.map((option) => {
           const Icon = option.icon;
           const isSelected = selected === option.id;
+          const isDisabled = option.disabled;
 
           return (
             <Card
               key={option.id}
-              onClick={() => setSelected(option.id)}
-              className={`p-6 cursor-pointer smooth-transition relative overflow-hidden ${
-                isSelected
-                  ? "border-primary bg-primary/5 glow-border"
-                  : "border-border hover:border-primary/50"
+              onClick={() => !isDisabled && setSelected(option.id)}
+              className={`p-6 smooth-transition relative overflow-hidden ${
+                isDisabled 
+                  ? "opacity-60 cursor-not-allowed border-border/50" 
+                  : isSelected
+                    ? "border-primary bg-primary/5 glow-border cursor-pointer"
+                    : "border-border hover:border-primary/50 cursor-pointer"
               }`}
             >
               {/* Badge */}
               {option.badge && (
                 <div className="absolute top-4 right-4">
-                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-primary/20 text-primary">
+                  <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                    isDisabled 
+                      ? "bg-muted text-muted-foreground" 
+                      : "bg-primary/20 text-primary"
+                  }`}>
                     {option.badge}
                   </span>
                 </div>
