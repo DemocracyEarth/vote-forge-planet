@@ -92,7 +92,7 @@ const Hero = ({ onStartWizard }: HeroProps) => {
             size="lg"
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 sm:px-8 py-5 sm:py-6 text-base sm:text-lg glow-border smooth-transition"
           >
-            {t('hero.cta')}
+            Start a Vote
           </Button>
           {user ? (
           <Button
