@@ -2,6 +2,7 @@ import { Home, Vote, PlusCircle, History, User, Users } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import logo from "@/assets/logo.png";
+import FeedbackButton from "@/components/FeedbackButton";
 import {
   Sidebar,
   SidebarContent,
@@ -127,6 +128,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-primary/20 p-3 space-y-2 backdrop-blur-xl bg-background/60">
+        <FeedbackButton />
         <Button
           variant="outline"
           className="w-full justify-start bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-0 hover:from-primary hover:to-primary/90 hover:brightness-110 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"

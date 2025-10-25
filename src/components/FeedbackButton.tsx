@@ -7,13 +7,13 @@ const FeedbackButton = () => {
   
   return (
     <Button
-      variant="ghost"
+      variant="outline"
       size="sm"
       onClick={() => window.open('https://github.com/DemocracyEarth/vote-forge-planet/issues', '_blank')}
-      className="gap-2"
+      className="gap-2 w-full justify-start"
     >
       <MessageSquarePlus className="w-4 h-4" />
-      <span className="text-sm font-medium hidden sm:inline">
+      <span className="text-sm font-medium">
         {t('beta.feedback', 'Send Feedback')}
       </span>
     </Button>
