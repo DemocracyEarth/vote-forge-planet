@@ -115,7 +115,7 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-primary/20 p-3 space-y-2 backdrop-blur-xl bg-background/60">
         <Button
           variant="outline"
-          className="w-full justify-start bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-0 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+          className="w-full justify-start bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-0 hover:from-primary hover:to-primary/90 hover:brightness-110 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
           onClick={handleCreateElection}
         >
           <PlusCircle className="mr-2 h-4 w-4" />
