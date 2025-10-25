@@ -56,7 +56,7 @@ export function DashboardParticipated({ userId }: DashboardParticipatedProps) {
         (data || []).map(async (record): Promise<ParticipatedElection> => {
           // Try to find the vote by matching election and approximate timestamp
           const votedDate = new Date(record.voted_at);
-          const timeWindow = 5000; // 5 second window
+          const timeWindow = 60000; // 60 second window to account for timing differences
           const startTime = new Date(votedDate.getTime() - timeWindow).toISOString();
           const endTime = new Date(votedDate.getTime() + timeWindow).toISOString();
           
