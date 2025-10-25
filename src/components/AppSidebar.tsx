@@ -1,6 +1,7 @@
 import { Home, Vote, PlusCircle, History, User, Users } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import logo from "@/assets/logo.png";
 import {
   Sidebar,
   SidebarContent,
@@ -73,8 +74,8 @@ export function AppSidebar() {
         <div className={`flex items-center gap-2 p-3 ${state === "collapsed" ? "justify-center" : ""}`}>
           {state !== "collapsed" && (
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-                <Vote className="h-4 w-4 text-primary-foreground" />
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center">
+                <img src={logo} alt="Democracy Earth" className="w-8 h-8 object-contain" />
               </div>
               <div className="flex flex-col">
                 <span className="text-lg font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
