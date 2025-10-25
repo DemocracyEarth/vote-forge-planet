@@ -172,6 +172,33 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          comment_id: string
+          created_at: string
+          election_id: string
+          id: string
+          is_read: boolean
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          election_id: string
+          id?: string
+          is_read?: boolean
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          election_id?: string
+          id?: string
+          is_read?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

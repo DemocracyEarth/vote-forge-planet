@@ -11,6 +11,7 @@ import { DashboardMyElections } from "@/components/DashboardMyElections";
 import { DashboardParticipated } from "@/components/DashboardParticipated";
 import { DashboardProfile } from "@/components/DashboardProfile";
 import { DashboardUsersFeed } from "@/components/DashboardUsersFeed";
+import { DashboardDiscussions } from "@/components/DashboardDiscussions";
 
 const Dashboard = () => {
   const [user, setUser] = useState<any>(null);
@@ -66,6 +67,7 @@ const Dashboard = () => {
                 <Route path="/" element={<PublicElectionsFeed />} />
                 <Route path="/my-elections" element={<DashboardMyElections userId={user?.id} />} />
                 <Route path="/participated" element={<DashboardParticipated userId={user?.id} />} />
+                <Route path="/discussions" element={<DashboardDiscussions userId={user?.id} />} />
                 <Route path="/community" element={<DashboardUsersFeed />} />
                 <Route path="/profile" element={<DashboardProfile />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -1,8 +1,10 @@
-import { Home, Vote, PlusCircle, History, User, Users } from "lucide-react";
+import { Home, Vote, PlusCircle, History, User, Users, MessageSquare } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useState, useEffect } from "react";
 import logo from "@/assets/logo.png";
 import FeedbackButton from "@/components/FeedbackButton";
+import { useUnreadNotifications } from "@/hooks/useUnreadNotifications";
 import {
   Sidebar,
   SidebarContent,
@@ -27,6 +29,14 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const [userId, setUserId] = useState<string>();
+  const unreadCount = useUnreadNotifications(userId);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUserId(session?.user?.id);
+    });
+  }, []);
 
   const navItems = [
     {
@@ -43,6 +53,12 @@ export function AppSidebar() {
       title: t('dashboard.participated'),
       url: "/dashboard/participated",
       icon: History,
+    },
+    {
+      title: "Discussions",
+      url: "/dashboard/discussions",
+      icon: MessageSquare,
+      badge: unreadCount > 0 ? unreadCount : undefined,
     },
     {
       title: "Community",
@@ -117,7 +133,19 @@ export function AppSidebar() {
                       location.pathname === item.url ? "scale-110" : "group-hover:scale-110"
                     }`} />
                     {state !== "collapsed" && (
-                      <span className="font-medium">{item.title}</span>
+                      <span className="font-medium flex items-center gap-2">
+                        {item.title}
+                        {item.badge && (
+                          <span className="bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded-full">
+                            {item.badge}
+                          </span>
+                        )}
+                      </span>
+                    )}
+                    {state === "collapsed" && item.badge && (
+                      <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                        {item.badge}
+                      </span>
                     )}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
