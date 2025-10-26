@@ -159,6 +159,11 @@ All colors MUST be HSL.
     outline: none;
   }
 
+  .ProseMirror p {
+    margin-top: 1em;
+    margin-bottom: 1em;
+  }
+
   .ProseMirror p.is-editor-empty:first-child::before {
     color: hsl(var(--muted-foreground));
     content: attr(data-placeholder);
