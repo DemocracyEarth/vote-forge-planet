@@ -355,41 +355,52 @@ export function PublicElectionsFeed() {
                         </div>
                       </div>
                       
-                      <div className="space-y-3">
-                        {validResults
+                      {validTotalVotes > 0 ? (
+                        <div className="space-y-3">
+                          {validResults
                           .sort((a, b) => b.vote_count - a.vote_count)
                           .slice(0, 3)
                           .map((result, idx) => {
                             const percentage = validTotalVotes > 0 
                               ? (result.vote_count / validTotalVotes) * 100
                               : 0;
-                            
-                            return (
-                              <div 
-                                key={result.vote_value}
-                                className="p-4 rounded-xl bg-muted/50 border border-muted hover:border-muted-foreground/20 transition-all duration-300"
-                              >
-                                <div className="flex items-center justify-between mb-2">
-                                  <div className="flex items-center gap-2">
-                                    {idx === 0 && (
-                                      <Badge className="bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/30 font-semibold">
-                                        Leading
-                                      </Badge>
-                                    )}
-                                    <span className="font-semibold">{result.vote_value}</span>
+                              
+                              return (
+                                <div 
+                                  key={result.vote_value}
+                                  className="p-4 rounded-xl bg-muted/50 border border-muted hover:border-muted-foreground/20 transition-all duration-300"
+                                >
+                                  <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                      {idx === 0 && (
+                                        <Badge className="bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/30 font-semibold">
+                                          Leading
+                                        </Badge>
+                                      )}
+                                      <span className="font-semibold">{result.vote_value}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                      <span className="text-2xl font-bold">{result.vote_count}</span>
+                                      <span className="text-sm font-semibold text-muted-foreground min-w-[3.5rem] text-right">
+                                        {percentage.toFixed(1)}%
+                                      </span>
+                                    </div>
                                   </div>
-                                  <div className="flex items-center gap-3">
-                                    <span className="text-2xl font-bold">{result.vote_count}</span>
-                                    <span className="text-sm font-semibold text-muted-foreground min-w-[3.5rem] text-right">
-                                      {percentage.toFixed(1)}%
-                                    </span>
-                                  </div>
+                                  <Progress value={percentage} className="h-2" />
                                 </div>
-                                <Progress value={percentage} className="h-2" />
-                              </div>
-                            );
-                          })}
-                      </div>
+                              );
+                            })}
+                        </div>
+                      ) : (
+                        <div className="p-6 rounded-xl bg-muted/30 border border-dashed border-muted-foreground/30 text-center">
+                          <p className="text-sm text-muted-foreground">
+                            {election.is_ongoing 
+                              ? '🗳️ Voting is open! Be the first to cast your vote.'
+                              : 'No votes have been cast yet.'
+                            }
+                          </p>
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
