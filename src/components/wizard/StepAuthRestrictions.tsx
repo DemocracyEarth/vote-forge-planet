@@ -1,4 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -13,7 +16,98 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 interface StepAuthRestrictionsProps {
   authenticationType: string;
   onDataChange?: (data: any) => void;
+  onValidationChange?: (isValid: boolean) => void;
+  hasAttemptedNext?: boolean;
 }
+
+// Base form data type
+type BaseFormData = {
+  restrictionType: string;
+};
+
+type EmailFormData = BaseFormData & {
+  allowedEmails?: string;
+  allowedDomains?: string;
+};
+
+type PhoneFormData = BaseFormData & {
+  allowedPhones?: string;
+  allowedCountries?: string[];
+};
+
+type WorldIdFormData = BaseFormData & {
+  worldIdConfig?: string;
+};
+
+type FormData = EmailFormData | PhoneFormData | WorldIdFormData;
+
+// Validation schema
+const createValidationSchema = (authenticationType: string) => {
+  const baseSchema = z.object({
+    restrictionType: z.string().min(1, "Restriction type is required"),
+  });
+
+  if (authenticationType === "email" || authenticationType === "google") {
+    return baseSchema.extend({
+      allowedEmails: z.string().optional(),
+      allowedDomains: z.string().optional(),
+    }).refine((data) => {
+      if (data.restrictionType === "email-list") {
+        return data.allowedEmails && data.allowedEmails.trim() !== "";
+      }
+      return true;
+    }, {
+      message: "Email list is required when email-list restriction is selected",
+      path: ["allowedEmails"],
+    }).refine((data) => {
+      if (data.restrictionType === "domain") {
+        return data.allowedDomains && data.allowedDomains.trim() !== "";
+      }
+      return true;
+    }, {
+      message: "Domain list is required when domain restriction is selected",
+      path: ["allowedDomains"],
+    });
+  }
+
+  if (authenticationType === "phone") {
+    return baseSchema.extend({
+      allowedPhones: z.string().optional(),
+      allowedCountries: z.array(z.string()).optional(),
+    }).refine((data) => {
+      if (data.restrictionType === "phone-list") {
+        return data.allowedPhones && data.allowedPhones.trim() !== "";
+      }
+      return true;
+    }, {
+      message: "Phone list is required when phone-list restriction is selected",
+      path: ["allowedPhones"],
+    }).refine((data) => {
+      if (data.restrictionType === "country") {
+        return data.allowedCountries && data.allowedCountries.length > 0;
+      }
+      return true;
+    }, {
+      message: "At least one country must be selected when country restriction is selected",
+      path: ["allowedCountries"],
+    });
+  }
+
+  if (authenticationType === "worldid") {
+    return baseSchema.extend({
+      worldIdConfig: z.string().optional(),
+    });
+  }
+
+  // For any other authentication type, return base schema with all optional fields
+  return baseSchema.extend({
+    allowedEmails: z.string().optional(),
+    allowedDomains: z.string().optional(),
+    allowedPhones: z.string().optional(),
+    allowedCountries: z.array(z.string()).optional(),
+    worldIdConfig: z.string().optional(),
+  });
+};
 
 const COUNTRIES = [
   { code: "AF", name: "Afghanistan", flag: "🇦🇫", phone: "+93" },
@@ -214,25 +308,54 @@ const COUNTRIES = [
   { code: "ZW", name: "Zimbabwe", flag: "🇿🇪", phone: "+263" },
 ];
 
-const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRestrictionsProps) => {
-  const [restrictionType, setRestrictionType] = useState<string>("open");
-  const [allowedEmails, setAllowedEmails] = useState<string>("");
-  const [allowedDomains, setAllowedDomains] = useState<string>("");
-  const [allowedPhones, setAllowedPhones] = useState<string>("");
-  const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
+const StepAuthRestrictions = ({ authenticationType, onDataChange, onValidationChange, hasAttemptedNext = false }: StepAuthRestrictionsProps) => {
   const [countrySearch, setCountrySearch] = useState<string>("");
-  const [worldIdConfig, setWorldIdConfig] = useState<string>("");
   const [emailValidationErrors, setEmailValidationErrors] = useState<string[]>([]);
   const [isValidatingEmails, setIsValidatingEmails] = useState<boolean>(false);
   const [domainValidationErrors, setDomainValidationErrors] = useState<string[]>([]);
   const [isValidatingDomains, setIsValidatingDomains] = useState<boolean>(false);
+  const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
+
+  const validationSchema = createValidationSchema(authenticationType);
+  
+  const form = useForm<any>({
+    resolver: zodResolver(validationSchema),
+    defaultValues: {
+      restrictionType: "open",
+      allowedEmails: "",
+      allowedDomains: "",
+      allowedPhones: "",
+      allowedCountries: [],
+      worldIdConfig: "",
+    },
+    mode: "onChange",
+    reValidateMode: "onChange",
+  });
+
+  const { control, handleSubmit, watch, setValue, formState: { errors, isValid, dirtyFields } } = form;
+  const watchedValues = watch();
+
+  // Helper function to check if a field should show errors
+  const shouldShowError = (fieldName: string) => {
+    const isFieldTouched = touchedFields.has(fieldName);
+    const isFieldDirty = dirtyFields[fieldName as keyof typeof dirtyFields] === true;
+    // Show errors if field is touched, dirty, OR user has attempted to proceed
+    return isFieldTouched || isFieldDirty || hasAttemptedNext;
+  };
+
+  // Trigger initial validation on mount
+  useEffect(() => {
+    form.trigger();
+  }, [form]);
 
   const toggleCountry = (countryCode: string) => {
-    setSelectedCountries(prev => 
-      prev.includes(countryCode)
-        ? prev.filter(c => c !== countryCode)
-        : [...prev, countryCode]
-    );
+    // Mark field as touched
+    setTouchedFields(prev => new Set([...prev, 'allowedCountries']));
+    const currentCountries = (watchedValues as any).allowedCountries || [];
+    const newCountries = currentCountries.includes(countryCode)
+      ? currentCountries.filter(c => c !== countryCode)
+      : [...currentCountries, countryCode];
+    setValue("allowedCountries", newCountries, { shouldValidate: true });
   };
 
   // Email validation function
@@ -306,20 +429,25 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
 
     const text = await file.text();
     const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+    const content = lines.join('\n');
     
     if (type === 'email') {
-      setAllowedEmails(lines.join('\n'));
+      setTouchedFields(prev => new Set([...prev, 'allowedEmails']));
+      setValue("allowedEmails", content, { shouldValidate: true });
       // Validate emails after upload
-      const errors = validateAllEmails(lines.join('\n'));
+      const errors = validateAllEmails(content);
       setEmailValidationErrors(errors);
     } else {
-      setAllowedPhones(lines.join('\n'));
+      setTouchedFields(prev => new Set([...prev, 'allowedPhones']));
+      setValue("allowedPhones", content, { shouldValidate: true });
     }
   };
 
   // Handle email input changes with validation
   const handleEmailChange = (value: string) => {
-    setAllowedEmails(value);
+    // Mark field as touched
+    setTouchedFields(prev => new Set([...prev, 'allowedEmails']));
+    setValue("allowedEmails", value, { shouldValidate: true });
     
     // Debounce validation to avoid excessive validation on every keystroke
     setIsValidatingEmails(true);
@@ -332,7 +460,9 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
 
   // Handle domain input changes with validation
   const handleDomainChange = (value: string) => {
-    setAllowedDomains(value);
+    // Mark field as touched
+    setTouchedFields(prev => new Set([...prev, 'allowedDomains']));
+    setValue("allowedDomains", value, { shouldValidate: true });
     
     // Debounce validation to avoid excessive validation on every keystroke
     setIsValidatingDomains(true);
@@ -364,39 +494,125 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
     country.phone.includes(countrySearch)
   );
 
+  // Update parent component when form data changes
   useEffect(() => {
     if (onDataChange) {
       const data: any = {
-        restrictionType,
+        restrictionType: watchedValues.restrictionType,
       };
 
       if (authenticationType === "email" || authenticationType === "google") {
-        if (restrictionType === "email-list") {
-          data.allowedEmails = allowedEmails.split("\n").filter(e => e.trim());
+        if ((watchedValues as any).restrictionType === "email-list") {
+          data.allowedEmails = (watchedValues as any).allowedEmails?.split("\n").filter(e => e.trim()) || [];
           data.emailValidationErrors = emailValidationErrors;
           data.isEmailValidationValid = emailValidationErrors.length === 0 && !isValidatingEmails;
-        } else if (restrictionType === "domain") {
-          data.allowedDomains = allowedDomains.split(",").map(d => d.trim()).filter(d => d);
+        } else if ((watchedValues as any).restrictionType === "domain") {
+          data.allowedDomains = (watchedValues as any).allowedDomains?.split(",").map(d => d.trim()).filter(d => d) || [];
           data.domainValidationErrors = domainValidationErrors;
           data.isDomainValidationValid = domainValidationErrors.length === 0 && !isValidatingDomains;
         }
       } else if (authenticationType === "phone") {
-        if (restrictionType === "phone-list") {
-          data.allowedPhones = allowedPhones.split("\n").filter(p => p.trim());
-        } else if (restrictionType === "country") {
-          data.allowedCountries = selectedCountries;
+        if ((watchedValues as any).restrictionType === "phone-list") {
+          data.allowedPhones = (watchedValues as any).allowedPhones?.split("\n").filter(p => p.trim()) || [];
+        } else if ((watchedValues as any).restrictionType === "country") {
+          data.allowedCountries = (watchedValues as any).allowedCountries || [];
         }
       } else if (authenticationType === "worldid") {
-        data.worldIdConfig = worldIdConfig;
+        data.worldIdConfig = (watchedValues as any).worldIdConfig || "";
       }
 
       onDataChange(data);
     }
-  }, [restrictionType, allowedEmails, allowedDomains, allowedPhones, selectedCountries, worldIdConfig, authenticationType, onDataChange, emailValidationErrors, isValidatingEmails, domainValidationErrors, isValidatingDomains]);
+  }, [watchedValues, authenticationType, onDataChange, emailValidationErrors, isValidatingEmails, domainValidationErrors, isValidatingDomains]);
+
+  // Calculate comprehensive validation state
+  const isComprehensivelyValid = useCallback(() => {
+    // First check form validation
+    if (!isValid) {
+      return false;
+    }
+
+    // Then check format validation based on restriction type
+    const restrictionType = (watchedValues as any).restrictionType;
+    
+    if (restrictionType === "email-list") {
+      const hasEmailErrors = emailValidationErrors.length > 0 || isValidatingEmails;
+      const hasEmailContent = (watchedValues as any).allowedEmails && (watchedValues as any).allowedEmails.trim() !== "";
+      // If there's content and errors, form is invalid
+      // If there's no content, form is valid (required field validation handled by form validation)
+      return !(hasEmailContent && hasEmailErrors);
+    }
+    
+    if (restrictionType === "domain") {
+      const hasDomainErrors = domainValidationErrors.length > 0 || isValidatingDomains;
+      const hasDomainContent = (watchedValues as any).allowedDomains && (watchedValues as any).allowedDomains.trim() !== "";
+      // If there's content and errors, form is invalid
+      // If there's no content, form is valid (required field validation handled by form validation)
+      return !(hasDomainContent && hasDomainErrors);
+    }
+    
+    // For other restriction types, just use form validation
+    return true;
+  }, [isValid, emailValidationErrors, isValidatingEmails, domainValidationErrors, isValidatingDomains, watchedValues]);
+
+  // Update validation status
+  useEffect(() => {
+    const comprehensiveValid = isComprehensivelyValid();
+    if (onValidationChange) {
+      onValidationChange(comprehensiveValid);
+    }
+  }, [isValid, emailValidationErrors, isValidatingEmails, domainValidationErrors, isValidatingDomains, watchedValues, isComprehensivelyValid, onValidationChange]);
+
+  // Trigger validation when restriction type changes
+  const restrictionType = (watchedValues as any).restrictionType;
+  useEffect(() => {
+    if (restrictionType) {
+      form.trigger();
+    }
+  }, [restrictionType, form]);
+
+  // Expose form validation function to parent
+  const validateForm = useCallback(async () => {
+    const formValid = await form.trigger();
+    
+    // For the "next" button, we need to validate all fields regardless of dirty state
+    const restrictionType = (watchedValues as any).restrictionType;
+    
+    if (restrictionType === "email-list") {
+      const hasEmailErrors = emailValidationErrors.length > 0 || isValidatingEmails;
+      const hasEmailContent = (watchedValues as any).allowedEmails && (watchedValues as any).allowedEmails.trim() !== "";
+      // If there's content and errors, it's invalid
+      if (hasEmailContent && hasEmailErrors) {
+        return false;
+      }
+    }
+    
+    if (restrictionType === "domain") {
+      const hasDomainErrors = domainValidationErrors.length > 0 || isValidatingDomains;
+      const hasDomainContent = (watchedValues as any).allowedDomains && (watchedValues as any).allowedDomains.trim() !== "";
+      // If there's content and errors, it's invalid
+      if (hasDomainContent && hasDomainErrors) {
+        return false;
+      }
+    }
+    
+    return formValid;
+  }, [form, emailValidationErrors, isValidatingEmails, domainValidationErrors, isValidatingDomains, watchedValues]);
+
+  // Expose validateForm to parent component
+  useEffect(() => {
+    if (onDataChange) {
+      onDataChange({ ...watchedValues, validateForm });
+    }
+  }, [watchedValues, onDataChange, validateForm]);
 
   const renderEmailGoogleRestrictions = () => (
     <div className="space-y-6">
-      <RadioGroup value={restrictionType} onValueChange={setRestrictionType}>
+      <Controller
+        name="restrictionType"
+        control={control}
+        render={({ field }) => (
+          <RadioGroup value={field.value} onValueChange={field.onChange}>
         <Card className="p-4 cursor-pointer hover:border-primary/50 transition-colors">
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="open" id="open" />
@@ -421,7 +637,7 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
               </div>
             </Label>
           </div>
-          {restrictionType === "email-list" && (
+          {field.value === "email-list" && (
             <div className="mt-4 ml-8">
               <div className="flex items-center gap-2 mb-3">
                 <Input
@@ -440,19 +656,29 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
                 </Label>
                 <span className="text-xs text-muted-foreground">or enter manually below</span>
               </div>
-              <Textarea
-                placeholder="Enter email addresses (one per line)&#10;example@domain.com&#10;another@example.org"
-                value={allowedEmails}
-                onChange={(e) => handleEmailChange(e.target.value)}
-                rows={6}
-                className={`font-mono text-sm ${
-                  emailValidationErrors.length > 0 ? 'border-destructive' : 
-                  allowedEmails && emailValidationErrors.length === 0 ? 'border-green-500' : ''
-                }`}
+              <Controller
+                name="allowedEmails"
+                control={control}
+                render={({ field: emailField }) => (
+                  <Textarea
+                    placeholder="Enter email addresses (one per line)&#10;example@domain.com&#10;another@example.org"
+                    value={emailField.value || ""}
+                    onChange={(e) => handleEmailChange(e.target.value)}
+                    onFocus={() => {
+                      setTouchedFields(prev => new Set([...prev, 'allowedEmails']));
+                      form.trigger("allowedEmails");
+                    }}
+                    rows={6}
+                    className={`font-mono text-sm ${
+                      shouldShowError("allowedEmails") && (((errors as any).allowedEmails) || (emailField.value && emailValidationErrors.length > 0)) ? 'border-destructive' : 
+                      emailField.value && emailValidationErrors.length === 0 ? 'border-green-500' : ''
+                    }`}
+                  />
+                )}
               />
               
               {/* Validation Status */}
-              {allowedEmails && (
+              {(watchedValues as any).allowedEmails && shouldShowError("allowedEmails") && (
                 <div className="mt-2">
                   {isValidatingEmails ? (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -490,6 +716,18 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
                 </div>
               )}
               
+              {/* Form validation error */}
+              {shouldShowError("allowedEmails") && (errors as any).allowedEmails && (
+                <div className="mt-2">
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      {(errors as any).allowedEmails.message}
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
+              
               <p className="text-xs text-muted-foreground mt-2">
                 Enter one email address per line, or upload a CSV/TXT file with one email per line
               </p>
@@ -508,20 +746,30 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
               </div>
             </Label>
           </div>
-          {restrictionType === "domain" && (
+          {field.value === "domain" && (
             <div className="mt-4 ml-8">
-              <Input
-                placeholder="example.com, company.org"
-                value={allowedDomains}
-                onChange={(e) => handleDomainChange(e.target.value)}
-                className={`${
-                  domainValidationErrors.length > 0 ? 'border-destructive' : 
-                  allowedDomains && domainValidationErrors.length === 0 ? 'border-green-500' : ''
-                }`}
+              <Controller
+                name="allowedDomains"
+                control={control}
+                render={({ field: domainField }) => (
+                  <Input
+                    placeholder="example.com, company.org"
+                    value={domainField.value || ""}
+                    onChange={(e) => handleDomainChange(e.target.value)}
+                    onFocus={() => {
+                      setTouchedFields(prev => new Set([...prev, 'allowedDomains']));
+                      form.trigger("allowedDomains");
+                    }}
+                    className={`${
+                      shouldShowError("allowedDomains") && (((errors as any).allowedDomains) || (domainField.value && domainValidationErrors.length > 0)) ? 'border-destructive' : 
+                      domainField.value && domainValidationErrors.length === 0 ? 'border-green-500' : ''
+                    }`}
+                  />
+                )}
               />
               
               {/* Domain Validation Status */}
-              {allowedDomains && (
+              {(watchedValues as any).allowedDomains && shouldShowError("allowedDomains") && (
                 <div className="mt-2">
                   {isValidatingDomains ? (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -559,19 +807,37 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
                 </div>
               )}
               
+              {/* Form validation error */}
+              {shouldShowError("allowedDomains") && (errors as any).allowedDomains && (
+                <div className="mt-2">
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      {(errors as any).allowedDomains.message}
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
+              
               <p className="text-xs text-muted-foreground mt-2">
                 Enter domain names separated by commas (e.g., example.com, company.org)
               </p>
             </div>
           )}
         </Card>
-      </RadioGroup>
+          </RadioGroup>
+        )}
+      />
     </div>
   );
 
   const renderPhoneRestrictions = () => (
     <div className="space-y-6">
-      <RadioGroup value={restrictionType} onValueChange={setRestrictionType}>
+      <Controller
+        name="restrictionType"
+        control={control}
+        render={({ field }) => (
+          <RadioGroup value={field.value} onValueChange={field.onChange}>
         <Card className="p-4 cursor-pointer hover:border-primary/50 transition-colors">
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="open" id="phone-open" />
@@ -596,7 +862,7 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
               </div>
             </Label>
           </div>
-          {restrictionType === "phone-list" && (
+          {field.value === "phone-list" && (
             <div className="mt-4 ml-8">
               <div className="flex items-center gap-2 mb-3">
                 <Input
@@ -615,13 +881,40 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
                 </Label>
                 <span className="text-xs text-muted-foreground">or enter manually below</span>
               </div>
-              <Textarea
-                placeholder="Enter phone numbers with country code (one per line)&#10;+1234567890&#10;+9876543210"
-                value={allowedPhones}
-                onChange={(e) => setAllowedPhones(e.target.value)}
-                rows={6}
-                className="font-mono text-sm"
+              <Controller
+                name="allowedPhones"
+                control={control}
+                render={({ field: phoneField }) => (
+                  <Textarea
+                    placeholder="Enter phone numbers with country code (one per line)&#10;+1234567890&#10;+9876543210"
+                    value={phoneField.value || ""}
+                    onChange={(e) => {
+                      setTouchedFields(prev => new Set([...prev, 'allowedPhones']));
+                      setValue("allowedPhones", e.target.value, { shouldValidate: true });
+                    }}
+                    onFocus={() => {
+                      setTouchedFields(prev => new Set([...prev, 'allowedPhones']));
+                      form.trigger("allowedPhones");
+                    }}
+                    rows={6}
+                    className={`font-mono text-sm ${
+                      shouldShowError("allowedPhones") && (errors as any).allowedPhones ? 'border-destructive' : ''
+                    }`}
+                  />
+                )}
               />
+              {/* Form validation error */}
+              {shouldShowError("allowedPhones") && (errors as any).allowedPhones && (
+                <div className="mt-2">
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      {(errors as any).allowedPhones.message}
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
+              
               <p className="text-xs text-muted-foreground mt-2">
                 Enter one phone number per line with country code (e.g., +1234567890), or upload a CSV/TXT file
               </p>
@@ -640,17 +933,17 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
               </div>
             </Label>
           </div>
-          {restrictionType === "country" && (
+          {field.value === "country" && (
             <div className="mt-4 ml-8 space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium">
-                  Selected: {selectedCountries.length} {selectedCountries.length === 1 ? 'country' : 'countries'}
+                  Selected: {((watchedValues as any).allowedCountries || []).length} {((watchedValues as any).allowedCountries || []).length === 1 ? 'country' : 'countries'}
                 </p>
-                {selectedCountries.length > 0 && (
+                {((watchedValues as any).allowedCountries || []).length > 0 && (
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setSelectedCountries([])}
+                    onClick={() => setValue("allowedCountries", [], { shouldValidate: true })}
                     className="h-8 text-xs"
                   >
                     Clear All
@@ -667,7 +960,7 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
                 <ScrollArea className="h-[280px] w-full">
                   <div className="p-2 space-y-1">
                     {filteredCountries.map((country) => {
-                      const isSelected = selectedCountries.includes(country.code);
+                      const isSelected = ((watchedValues as any).allowedCountries || []).includes(country.code);
                       
                       return (
                         <div
@@ -701,13 +994,27 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
                   </div>
                 </ScrollArea>
               </Card>
+              {/* Form validation error */}
+              {shouldShowError("allowedCountries") && (errors as any).allowedCountries && (
+                <div className="mt-2">
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      {(errors as any).allowedCountries.message}
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              )}
+              
               <p className="text-xs text-muted-foreground">
                 Select one or more countries to restrict phone authentication
               </p>
             </div>
           )}
         </Card>
-      </RadioGroup>
+          </RadioGroup>
+        )}
+      />
     </div>
   );
 
@@ -721,13 +1028,20 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
               Configure World ID verification parameters
             </p>
           </div>
-          <Textarea
-            id="worldid-config"
-            placeholder="Enter World ID configuration parameters (JSON format)&#10;{&#10;  &quot;verification_level&quot;: &quot;orb&quot;,&#10;  &quot;action&quot;: &quot;vote&quot;&#10;}"
-            value={worldIdConfig}
-            onChange={(e) => setWorldIdConfig(e.target.value)}
-            rows={8}
-            className="font-mono text-sm"
+          <Controller
+            name="worldIdConfig"
+            control={control}
+            render={({ field }) => (
+              <Textarea
+                id="worldid-config"
+                placeholder="Enter World ID configuration parameters (JSON format)&#10;{&#10;  &quot;verification_level&quot;: &quot;orb&quot;,&#10;  &quot;action&quot;: &quot;vote&quot;&#10;}"
+                value={field.value || ""}
+                onChange={(e) => setValue("worldIdConfig", e.target.value, { shouldValidate: true })}
+                onFocus={() => form.trigger("worldIdConfig")}
+                rows={8}
+                className="font-mono text-sm"
+              />
+            )}
           />
           <p className="text-xs text-muted-foreground">
             World ID provides proof-of-human verification. Configure verification level and action parameters.

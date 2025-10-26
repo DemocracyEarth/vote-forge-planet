@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
@@ -26,6 +26,13 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
   const [votingLogicData, setVotingLogicData] = useState<any>({});
   const [billData, setBillData] = useState<any>({});
   const [isDeploying, setIsDeploying] = useState(false);
+  const [isStep2Valid, setIsStep2Valid] = useState(true);
+  const [hasAttemptedNext, setHasAttemptedNext] = useState(false);
+
+  // Reset hasAttemptedNext when step changes
+  useEffect(() => {
+    setHasAttemptedNext(false);
+  }, [currentStep]);
 
   const steps = [
     { id: 1, title: t('steps.identity.title'), description: t('steps.identity.description') },
@@ -34,9 +41,39 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
     { id: 4, title: t('steps.bill.title'), description: t('steps.bill.description') },
   ];
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    // Always validate the current step before proceeding
+    if (currentStep === 2) {
+      // Mark that user has attempted to proceed
+      setHasAttemptedNext(true);
+      
+      if (!isStep2Valid) {
+        toast({
+          title: "Validation Error",
+          description: "Please fix the validation errors before proceeding",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Double-check with form validation
+      if (authRestrictions.validateForm) {
+        const isValid = await authRestrictions.validateForm();
+        if (!isValid) {
+          toast({
+            title: "Validation Error",
+            description: "Please fix the validation errors before proceeding",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+    }
+    
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
+      // Reset hasAttemptedNext when moving to next step
+      setHasAttemptedNext(false);
     }
   };
 
@@ -188,7 +225,7 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
       {/* Step content */}
       <div className="bg-card/50 backdrop-blur-sm rounded-lg p-4 sm:p-6 md:p-8 card-glow smooth-transition min-h-[400px] sm:min-h-[500px]">
         {currentStep === 1 && <StepIdentity onDataChange={setIdentityData} />}
-        {currentStep === 2 && <StepAuthRestrictions authenticationType={identityData.authenticationType} onDataChange={setAuthRestrictions} />}
+        {currentStep === 2 && <StepAuthRestrictions authenticationType={identityData.authenticationType} onDataChange={setAuthRestrictions} onValidationChange={setIsStep2Valid} hasAttemptedNext={hasAttemptedNext} />}
         {currentStep === 3 && <StepVotingLogic selectedModel={selectedVotingModel} onModelChange={setSelectedVotingModel} onDataChange={setVotingLogicData} />}
         {currentStep === 4 && <StepBill votingModel={selectedVotingModel} votingLogicData={votingLogicData} onDataChange={setBillData} />}
       </div>
@@ -209,7 +246,8 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
         {currentStep < 4 ? (
           <Button
             onClick={handleNext}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground smooth-transition text-xs sm:text-sm"
+            disabled={currentStep === 2 && !isStep2Valid}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground smooth-transition text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             size="sm"
           >
             <span className="hidden xs:inline">{t('wizard.nextStep')}</span>
