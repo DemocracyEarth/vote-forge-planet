@@ -285,6 +285,10 @@ export type Database = {
         }[]
       }
       has_user_voted: { Args: { election_uuid: string }; Returns: boolean }
+      is_valid_vote_value: {
+        Args: { election_uuid: string; vote_val: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
