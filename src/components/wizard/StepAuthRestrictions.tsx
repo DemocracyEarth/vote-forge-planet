@@ -323,14 +323,7 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange, onValidationCh
     const hasValidEmails = emailChips.filter(chip => chip.valid).length > 0;
     const isValid = restrictionType !== "allowed_list" || hasValidEmails;
     onValidationChange?.(isValid);
-  }, [restrictionType, emailChips]);
-
-  // Initialize validation on mount
-  useEffect(() => {
-    const hasValidEmails = emailChips.filter(chip => chip.valid).length > 0;
-    const isValid = restrictionType !== "allowed_list" || hasValidEmails;
-    onValidationChange?.(isValid);
-  }, []);
+  }, [restrictionType, emailChips, onValidationChange]);
 
   // Sync emailChips with allowedEmails for data persistence
   useEffect(() => {
