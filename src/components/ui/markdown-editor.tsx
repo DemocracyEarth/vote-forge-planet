@@ -57,7 +57,7 @@ export const MarkdownEditor = ({
     },
     editorProps: {
       attributes: {
-        class: 'max-w-[72ch] mx-auto focus:outline-none min-h-[220px] px-4 py-4 text-foreground leading-7',
+        class: 'w-full focus:outline-none min-h-[220px] px-3 py-4 text-foreground leading-7',
       },
     },
   });
