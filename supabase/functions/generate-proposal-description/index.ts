@@ -25,30 +25,22 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const systemPrompt = `You are an expert policy analyst and neutral debate facilitator. Your task is to generate a comprehensive, balanced description of a proposal based on its title.
+    const systemPrompt = `You are a neutral policy analyst. Write proposal descriptions in the SAME LANGUAGE as the input title.
 
-CRITICAL REQUIREMENTS:
-1. NEUTRALITY: Use strictly neutral, objective language. Never advocate for or against the proposal.
-2. MULTIPLE PERSPECTIVES: Present arguments both in favor and against the proposal with equal depth and respect.
-3. COMPREHENSIVE COVERAGE: Include all major viewpoints, alternatives, and implications.
-4. EVIDENCE-BASED: Include relevant statistical, economic, or factual information when applicable (cite general sources if needed).
-5. STRUCTURE: Organize the description with clear sections covering:
-   - What the proposal is (brief summary)
-   - Arguments in favor
-   - Arguments against
-   - Alternative approaches
-   - Key facts and data (if relevant)
-   - Potential impacts
+REQUIREMENTS:
+- Write ONLY the proposal content, no meta-commentary
+- Use the EXACT SAME LANGUAGE as the proposal title (if title is in Spanish, write in Spanish; if French, write in French, etc.)
+- Be neutral and objective
+- Include: brief summary, key arguments in favor, key arguments against, alternative approaches
+- Keep it concise (200-400 words)
+- Use simple, clear language
+- Format with markdown for readability
 
-FORMAT: Write in clear, accessible language suitable for public voting. Use markdown formatting for readability. Aim for 300-800 words.
+Do NOT include phrases like "Here's the description" or "I've written". Just write the actual proposal content directly.`;
 
-TONE: Professional, balanced, informative. Think "Wikipedia article" not "campaign speech".`;
+    const userPrompt = `Proposal title: ${title}
 
-    const userPrompt = `Generate a comprehensive, balanced description for this proposal:
-
-Title: ${title}
-
-Provide a detailed analysis covering all perspectives, relevant data, and implications. Remember to maintain strict neutrality.`;
+Write a concise, neutral description covering arguments for, arguments against, and alternatives. Use the same language as the title.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
