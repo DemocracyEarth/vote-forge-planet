@@ -92,15 +92,67 @@ export function ElectionCountdown({ startDate, endDate, isOngoing }: ElectionCou
     };
 
     const getTimeText = () => {
-      if (timeRemaining.days > 0) {
-        return `${timeRemaining.days}d ${timeRemaining.hours}h ${timeRemaining.minutes}m`;
-      } else if (timeRemaining.hours > 0) {
-        return `${timeRemaining.hours}h ${timeRemaining.minutes}m ${timeRemaining.seconds}s`;
-      } else if (timeRemaining.minutes > 0) {
-        return `${timeRemaining.minutes}m ${timeRemaining.seconds}s`;
-      } else {
-        return `${timeRemaining.seconds}s`;
+      const { days, hours, minutes, seconds } = timeRemaining;
+      
+      // Calculate larger time units
+      const centuries = Math.floor(days / 36500);
+      const years = Math.floor(days / 365);
+      const months = Math.floor(days / 30);
+      const weeks = Math.floor(days / 7);
+      
+      // Centuries (100+ years)
+      if (centuries > 0) {
+        const remainingYears = years % 100;
+        if (remainingYears > 0) {
+          return `${centuries} ${centuries === 1 ? 'century' : 'centuries'}, ${remainingYears} ${remainingYears === 1 ? 'year' : 'years'}`;
+        }
+        return `${centuries} ${centuries === 1 ? 'century' : 'centuries'}`;
       }
+      
+      // Years (365+ days)
+      if (years > 0) {
+        const remainingMonths = Math.floor((days % 365) / 30);
+        if (remainingMonths > 0) {
+          return `${years} ${years === 1 ? 'year' : 'years'}, ${remainingMonths} ${remainingMonths === 1 ? 'month' : 'months'}`;
+        }
+        return `${years} ${years === 1 ? 'year' : 'years'}`;
+      }
+      
+      // Months (30+ days)
+      if (months > 0) {
+        const remainingWeeks = Math.floor((days % 30) / 7);
+        if (remainingWeeks > 0) {
+          return `${months} ${months === 1 ? 'month' : 'months'}, ${remainingWeeks} ${remainingWeeks === 1 ? 'week' : 'weeks'}`;
+        }
+        return `${months} ${months === 1 ? 'month' : 'months'}`;
+      }
+      
+      // Weeks (7+ days)
+      if (weeks > 0) {
+        const remainingDays = days % 7;
+        if (remainingDays > 0) {
+          return `${weeks} ${weeks === 1 ? 'week' : 'weeks'}, ${remainingDays} ${remainingDays === 1 ? 'day' : 'days'}`;
+        }
+        return `${weeks} ${weeks === 1 ? 'week' : 'weeks'}`;
+      }
+      
+      // Days (1+ days)
+      if (days > 0) {
+        return `${days} ${days === 1 ? 'day' : 'days'}, ${hours}h ${minutes}m`;
+      }
+      
+      // Hours
+      if (hours > 0) {
+        return `${hours}h ${minutes}m ${seconds}s`;
+      }
+      
+      // Minutes
+      if (minutes > 0) {
+        return `${minutes}m ${seconds}s`;
+      }
+      
+      // Seconds only
+      return `${seconds}s`;
     };
 
     return (
