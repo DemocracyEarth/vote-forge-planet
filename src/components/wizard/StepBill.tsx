@@ -286,7 +286,18 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange }: StepBillProps)
                 id="startDate"
                 type="datetime-local"
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  // If end date is set and is before new start date, clear it
+                  if (endDate && e.target.value && new Date(endDate) <= new Date(e.target.value)) {
+                    setEndDate("");
+                    toast({
+                      title: "End date cleared",
+                      description: "End date must be after start date",
+                      variant: "destructive",
+                    });
+                  }
+                }}
                 className="text-xs sm:text-sm"
               />
             </div>
@@ -298,10 +309,30 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange }: StepBillProps)
                 id="endDate"
                 type="datetime-local"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                min={startDate || new Date().toISOString().slice(0, 16)}
+                onChange={(e) => {
+                  const selectedDate = new Date(e.target.value);
+                  const startDateTime = startDate ? new Date(startDate) : new Date();
+                  
+                  if (selectedDate <= startDateTime) {
+                    toast({
+                      title: "Invalid end date",
+                      description: "End date must be after start date",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  
+                  setEndDate(e.target.value);
+                }}
                 disabled={isOngoing}
                 className="text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               />
+              {!isOngoing && (
+                <p className="text-xs text-muted-foreground">
+                  Must be after start date
+                </p>
+              )}
             </div>
           </div>
         </Card>

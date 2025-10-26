@@ -85,6 +85,17 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
           customThreshold: z.string().optional(),
           customOptions: z.record(z.string()).optional()
         })
+      }).refine((data) => {
+        // If not ongoing and both dates are provided, validate end date is after start date
+        if (!data.billData.isOngoing && data.billData.startDate && data.billData.endDate) {
+          const start = new Date(data.billData.startDate);
+          const end = new Date(data.billData.endDate);
+          return end > start;
+        }
+        return true;
+      }, {
+        message: "End date must be after start date",
+        path: ["billData", "endDate"]
       });
 
       // Validate input before submission

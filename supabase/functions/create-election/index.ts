@@ -26,7 +26,18 @@ const billConfigSchema = z.object({
   endDate: z.union([z.string().datetime(), z.literal("")]).optional(),
   isOngoing: z.boolean().optional(),
   isPublic: z.boolean().optional(),
-}).passthrough();
+}).passthrough().refine((data) => {
+  // If not ongoing and both dates are provided, validate end date is after start date
+  if (!data.isOngoing && data.startDate && data.endDate && data.startDate !== "" && data.endDate !== "") {
+    const start = new Date(data.startDate);
+    const end = new Date(data.endDate);
+    return end > start;
+  }
+  return true;
+}, {
+  message: "End date must be after start date",
+  path: ["endDate"]
+});
 
 const requestSchema = z.object({
   identityConfig: identityConfigSchema,
