@@ -76,6 +76,12 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
 
       if (data.description) {
         setDescription(data.description);
+        
+        // Also set ballot options if provided
+        if (data.ballotOptions && Array.isArray(data.ballotOptions) && data.ballotOptions.length > 0) {
+          setBallotOptions(data.ballotOptions);
+        }
+        
         toast({
           title: "Description generated! ✨",
           description: "AI created a comprehensive, neutral analysis of your proposal.",

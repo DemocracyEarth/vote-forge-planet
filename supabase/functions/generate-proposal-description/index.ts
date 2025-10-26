@@ -32,15 +32,27 @@ REQUIREMENTS:
 - Use the EXACT SAME LANGUAGE as the proposal title (if title is in Spanish, write in Spanish; if French, write in French, etc.)
 - Be neutral and objective
 - Include: brief summary, key arguments in favor, key arguments against, alternative approaches
-- Keep it concise (200-400 words)
+- Keep it SHORT and CONCISE (maximum 300 words, around 2000-3000 characters)
 - Use simple, clear language
 - Format with markdown for readability
 
-Do NOT include phrases like "Here's the description" or "I've written". Just write the actual proposal content directly.`;
+Also suggest 3-5 ballot options that voters can choose from, based on the proposal. These should be short labels (2-4 words each).
+
+Return your response as JSON with this structure:
+{
+  "description": "the proposal description in markdown",
+  "ballotOptions": ["Option 1", "Option 2", "Option 3"]
+}
+
+Do NOT include phrases like "Here's the description". Just provide the JSON directly.`;
 
     const userPrompt = `Proposal title: ${title}
 
-Write a concise, neutral description covering arguments for, arguments against, and alternatives. Use the same language as the title.`;
+Generate:
+1. A short, neutral description (max 300 words) covering arguments for, against, and alternatives
+2. Suggest 3-5 short ballot option labels
+
+Use the same language as the title. Return as JSON.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -79,14 +91,30 @@ Write a concise, neutral description covering arguments for, arguments against, 
     }
 
     const data = await response.json();
-    const description = data.choices?.[0]?.message?.content;
+    const content = data.choices?.[0]?.message?.content;
 
-    if (!description) {
+    if (!content) {
       throw new Error("No content in AI response");
     }
 
+    // Parse the JSON response from the AI
+    let parsedContent;
+    try {
+      // Try to extract JSON from markdown code blocks if present
+      const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/) || content.match(/```\n?([\s\S]*?)\n?```/);
+      const jsonStr = jsonMatch ? jsonMatch[1] : content;
+      parsedContent = JSON.parse(jsonStr.trim());
+    } catch (parseError) {
+      console.error("Failed to parse AI response as JSON:", content);
+      // Fallback: treat entire content as description
+      parsedContent = {
+        description: content,
+        ballotOptions: ["YES", "NO", "ABSTENTION"]
+      };
+    }
+
     return new Response(
-      JSON.stringify({ description }),
+      JSON.stringify(parsedContent),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
