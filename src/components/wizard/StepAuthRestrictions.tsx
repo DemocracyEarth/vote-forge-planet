@@ -4,10 +4,11 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Upload, Globe, List, Lock, Check } from "lucide-react";
+import { Upload, Globe, List, Lock, Check, X, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
 interface StepAuthRestrictionsProps {
   authenticationType: string;
@@ -221,6 +222,62 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   const [countrySearch, setCountrySearch] = useState<string>("");
   const [worldIdConfig, setWorldIdConfig] = useState<string>("");
+  const [emailValidation, setEmailValidation] = useState<{ valid: string[]; invalid: string[] }>({ valid: [], invalid: [] });
+  const [domainValidation, setDomainValidation] = useState<{ valid: string[]; invalid: string[] }>({ valid: [], invalid: [] });
+
+  // Email validation function
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email.trim());
+  };
+
+  // Domain validation function
+  const validateDomain = (domain: string): boolean => {
+    const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
+    return domainRegex.test(domain.trim());
+  };
+
+  // Validate emails whenever allowedEmails changes
+  useEffect(() => {
+    if (restrictionType === "email-list" && allowedEmails) {
+      const emails = allowedEmails.split('\n').map(e => e.trim()).filter(e => e);
+      const valid: string[] = [];
+      const invalid: string[] = [];
+      
+      emails.forEach(email => {
+        if (validateEmail(email)) {
+          valid.push(email);
+        } else if (email) { // Only mark as invalid if not empty
+          invalid.push(email);
+        }
+      });
+      
+      setEmailValidation({ valid, invalid });
+    } else {
+      setEmailValidation({ valid: [], invalid: [] });
+    }
+  }, [allowedEmails, restrictionType]);
+
+  // Validate domains whenever allowedDomains changes
+  useEffect(() => {
+    if (restrictionType === "domain" && allowedDomains) {
+      const domains = allowedDomains.split(',').map(d => d.trim()).filter(d => d);
+      const valid: string[] = [];
+      const invalid: string[] = [];
+      
+      domains.forEach(domain => {
+        if (validateDomain(domain)) {
+          valid.push(domain);
+        } else if (domain) {
+          invalid.push(domain);
+        }
+      });
+      
+      setDomainValidation({ valid, invalid });
+    } else {
+      setDomainValidation({ valid: [], invalid: [] });
+    }
+  }, [allowedDomains, restrictionType]);
 
   const toggleCountry = (countryCode: string) => {
     setSelectedCountries(prev => 
@@ -337,16 +394,61 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
                 </Label>
                 <span className="text-xs text-muted-foreground">or enter manually below</span>
               </div>
-              <Textarea
-                placeholder="Enter email addresses (one per line)&#10;example@domain.com&#10;another@example.org"
-                value={allowedEmails}
-                onChange={(e) => setAllowedEmails(e.target.value)}
-                rows={6}
-                className="font-mono text-sm"
-              />
-              <p className="text-xs text-muted-foreground mt-2">
-                Enter one email address per line, or upload a CSV/TXT file with one email per line
-              </p>
+              
+              {/* Validation Summary */}
+              {(emailValidation.valid.length > 0 || emailValidation.invalid.length > 0) && (
+                <div className="flex items-center gap-3 mb-3 p-3 rounded-lg bg-muted/50">
+                  {emailValidation.valid.length > 0 && (
+                    <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30">
+                      <Check className="w-3 h-3 mr-1" />
+                      {emailValidation.valid.length} valid
+                    </Badge>
+                  )}
+                  {emailValidation.invalid.length > 0 && (
+                    <Badge variant="outline" className="bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30">
+                      <AlertCircle className="w-3 h-3 mr-1" />
+                      {emailValidation.invalid.length} invalid
+                    </Badge>
+                  )}
+                </div>
+              )}
+
+              <div className="relative">
+                <Textarea
+                  placeholder="Enter email addresses (one per line)&#10;example@domain.com&#10;another@example.org"
+                  value={allowedEmails}
+                  onChange={(e) => setAllowedEmails(e.target.value)}
+                  rows={6}
+                  className={`font-mono text-sm ${emailValidation.invalid.length > 0 ? 'border-red-500/50' : emailValidation.valid.length > 0 ? 'border-green-500/50' : ''}`}
+                />
+                {emailValidation.valid.length > 0 && emailValidation.invalid.length === 0 && (
+                  <div className="absolute top-2 right-2">
+                    <Check className="w-5 h-5 text-green-500" />
+                  </div>
+                )}
+              </div>
+              
+              <div className="mt-2 space-y-1">
+                <p className="text-xs text-muted-foreground">
+                  Enter one email address per line, or upload a CSV/TXT file with one email per line
+                </p>
+                {emailValidation.invalid.length > 0 && (
+                  <div className="text-xs text-red-600 dark:text-red-400 space-y-1">
+                    <p className="font-semibold flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      Invalid emails detected:
+                    </p>
+                    <ul className="pl-4 space-y-0.5">
+                      {emailValidation.invalid.slice(0, 3).map((email, idx) => (
+                        <li key={idx} className="font-mono">{email}</li>
+                      ))}
+                      {emailValidation.invalid.length > 3 && (
+                        <li className="text-muted-foreground">...and {emailValidation.invalid.length - 3} more</li>
+                      )}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </Card>
@@ -363,15 +465,52 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
             </Label>
           </div>
           {restrictionType === "domain" && (
-            <div className="mt-4 ml-8">
-              <Input
-                placeholder="example.com, company.org"
-                value={allowedDomains}
-                onChange={(e) => setAllowedDomains(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground mt-2">
-                Enter domain names separated by commas
-              </p>
+            <div className="mt-4 ml-8 space-y-3">
+              {/* Validation Summary */}
+              {(domainValidation.valid.length > 0 || domainValidation.invalid.length > 0) && (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                  {domainValidation.valid.length > 0 && (
+                    <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30">
+                      <Check className="w-3 h-3 mr-1" />
+                      {domainValidation.valid.length} valid domain{domainValidation.valid.length > 1 ? 's' : ''}
+                    </Badge>
+                  )}
+                  {domainValidation.invalid.length > 0 && (
+                    <Badge variant="outline" className="bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30">
+                      <AlertCircle className="w-3 h-3 mr-1" />
+                      {domainValidation.invalid.length} invalid
+                    </Badge>
+                  )}
+                </div>
+              )}
+
+              <div className="relative">
+                <Input
+                  placeholder="example.com, company.org"
+                  value={allowedDomains}
+                  onChange={(e) => setAllowedDomains(e.target.value)}
+                  className={`${domainValidation.invalid.length > 0 ? 'border-red-500/50' : domainValidation.valid.length > 0 ? 'border-green-500/50' : ''}`}
+                />
+                {domainValidation.valid.length > 0 && domainValidation.invalid.length === 0 && (
+                  <div className="absolute top-1/2 -translate-y-1/2 right-2">
+                    <Check className="w-5 h-5 text-green-500" />
+                  </div>
+                )}
+              </div>
+              
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">
+                  Enter domain names separated by commas (e.g., example.com, company.org)
+                </p>
+                {domainValidation.invalid.length > 0 && (
+                  <div className="text-xs text-red-600 dark:text-red-400 space-y-1">
+                    <p className="font-semibold flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      Invalid domains: {domainValidation.invalid.join(', ')}
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </Card>
