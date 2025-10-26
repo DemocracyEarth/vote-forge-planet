@@ -44,6 +44,7 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
   const [isPolishing, setIsPolishing] = useState(false);
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
   const lastGeneratedTitleRef = useRef<string>("");
+  const [showFullForm, setShowFullForm] = useState(false);
 
   const handleAddOption = () => {
     setBallotOptions([...ballotOptions, ""]);
@@ -143,6 +144,9 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
     const shouldAuto = trimmed.length > 10 && description.trim().length === 0 && !isGeneratingDescription && lastGeneratedTitleRef.current !== trimmed;
     if (!shouldAuto) return;
 
+    // Expand the form when auto-generation starts
+    setShowFullForm(true);
+
     const timer = setTimeout(() => {
       handleGenerateDescription();
     }, 1500);
@@ -207,40 +211,107 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
   }, [title, description, ballotType, ballotOptions, startDate, endDate, isOngoing, votingModel, tokenSettings, quadraticSettings, reputationSettings, onDataChange]);
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <div>
-        <h2 className="text-2xl sm:text-3xl font-display font-bold mb-2">What Are We Voting On? 📜</h2>
-        <p className="text-sm sm:text-base text-muted-foreground">
-          Time to write your proposal. Make it count—this is what democracy looks like.
-        </p>
-      </div>
-
-      <div className="space-y-4 sm:space-y-6">
-        {/* Title */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="title" className="flex items-center gap-2 text-sm sm:text-base">
-              <FileText className="w-4 h-4 text-primary" />
-              Proposal Title
-            </Label>
-            <span className={`text-xs ${title.trim().length > 500 ? 'text-destructive' : 'text-muted-foreground'}`}>
-              {title.trim().length}/500
-            </span>
+    <div className="space-y-6 sm:space-y-8">
+      {!showFullForm ? (
+        /* Initial prominent title input */
+        <div className="min-h-[400px] flex flex-col items-center justify-center space-y-6 px-4">
+          <div className="text-center space-y-3 max-w-2xl">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-bold glow-text">
+              What should we vote on?
+            </h2>
+            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+              Write your proposal as a clear question or statement. Our AI will analyze it from all angles, 
+              present arguments for and against, and suggest voting options—all automatically.
+            </p>
           </div>
-          <Input
-            id="title"
-            placeholder="e.g., Let's Give Everyone Free Money (UBI Pilot) 💰"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className={`text-sm sm:text-base ${title.trim().length === 0 || title.trim().length > 500 ? 'border-destructive' : ''}`}
-          />
-          {title.trim().length === 0 && (
-            <p className="text-xs text-destructive">Title is required</p>
-          )}
-          {title.trim().length > 500 && (
-            <p className="text-xs text-destructive">Title must be 500 characters or less</p>
-          )}
+          
+          <div className="w-full max-w-3xl space-y-3">
+            <div className="relative">
+              <Input
+                id="title"
+                placeholder="e.g., Should we implement a 4-day work week?"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={() => {
+                  if (title.trim().length >= 10) {
+                    setShowFullForm(true);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && title.trim().length >= 10) {
+                    setShowFullForm(true);
+                  }
+                }}
+                className={`text-base sm:text-lg h-14 px-6 ${
+                  title.trim().length === 0 || title.trim().length > 500 ? 'border-destructive' : ''
+                }`}
+                autoFocus
+              />
+              <span className={`absolute right-4 top-1/2 -translate-y-1/2 text-xs ${
+                title.trim().length > 500 ? 'text-destructive' : 'text-muted-foreground'
+              }`}>
+                {title.trim().length}/500
+              </span>
+            </div>
+            
+            {title.trim().length > 0 && title.trim().length < 10 && (
+              <p className="text-xs text-muted-foreground text-center">
+                Keep typing... (at least 10 characters for AI to generate content)
+              </p>
+            )}
+            {title.trim().length > 500 && (
+              <p className="text-xs text-destructive text-center">
+                Title must be 500 characters or less
+              </p>
+            )}
+            {title.trim().length >= 10 && (
+              <p className="text-xs text-primary text-center animate-pulse">
+                ✨ Press Enter or click away to continue
+              </p>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Sparkles className="w-4 h-4" />
+            <span>AI will generate a balanced analysis and voting options for you</span>
+          </div>
         </div>
+      ) : (
+        /* Full form after title is entered */
+        <>
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-display font-bold mb-2">Review Your Proposal 📜</h2>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              AI has analyzed your proposal. Review and customize the details below.
+            </p>
+          </div>
+
+          <div className="space-y-4 sm:space-y-6">
+            {/* Title - Compact version */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="title" className="flex items-center gap-2 text-sm sm:text-base">
+                  <FileText className="w-4 h-4 text-primary" />
+                  Proposal Title
+                </Label>
+                <span className={`text-xs ${title.trim().length > 500 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                  {title.trim().length}/500
+                </span>
+              </div>
+              <Input
+                id="title"
+                placeholder="e.g., Should we implement a 4-day work week?"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className={`text-sm sm:text-base ${title.trim().length === 0 || title.trim().length > 500 ? 'border-destructive' : ''}`}
+              />
+              {title.trim().length === 0 && (
+                <p className="text-xs text-destructive">Title is required</p>
+              )}
+              {title.trim().length > 500 && (
+                <p className="text-xs text-destructive">Title must be 500 characters or less</p>
+              )}
+            </div>
 
         {/* Description */}
         <div className="space-y-2">
@@ -617,15 +688,17 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
             We'll timestamp your proposal, store it on IPFS, and anchor the hash on-chain. Translation: it's permanent, verifiable, and censorship-proof. 🛡️
           </p>
         </Card>
-      </div>
 
-      {/* Output preview */}
-      <div className="mt-8 p-4 bg-muted/50 rounded-lg border border-border">
-        <p className="text-sm text-muted-foreground">
-          <strong className="text-foreground">Output:</strong> Proposal metadata will be stored 
-          via IPFS and a cryptographic hash will be anchored on-chain for verification.
-        </p>
+        {/* Output preview */}
+        <div className="p-4 bg-muted/50 rounded-lg border border-border">
+          <p className="text-sm text-muted-foreground">
+            <strong className="text-foreground">Output:</strong> Proposal metadata will be stored 
+            via IPFS and a cryptographic hash will be anchored on-chain for verification.
+          </p>
+        </div>
       </div>
+        </>
+      )}
     </div>
   );
 };
