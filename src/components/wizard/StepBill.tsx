@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -9,6 +8,7 @@ import { Calendar, FileText, Shield, Plus, X, List, Sparkles, Settings, Coins, S
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { MarkdownEditor } from "@/components/ui/markdown-editor";
 
 interface StepBillProps {
   votingModel: string;
@@ -262,14 +262,12 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
               </Button>
             </div>
           </div>
-          <Textarea
-            id="description"
-            placeholder="AI will generate a comprehensive, neutral analysis once you finish writing the title... ✨"
+          <MarkdownEditor
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={8}
-            className={`resize-none font-mono text-xs sm:text-sm ${description.length > 10000 ? 'border-destructive' : ''} ${isGeneratingDescription ? 'opacity-50' : ''}`}
-            disabled={isGeneratingDescription}
+            onChange={setDescription}
+            placeholder="AI will generate a comprehensive, neutral analysis once you finish writing the title... ✨"
+            disabled={!title.trim() && description.length === 0}
+            isGenerating={isGeneratingDescription}
           />
           {description.length > 10000 ? (
             <p className="text-xs text-destructive">
