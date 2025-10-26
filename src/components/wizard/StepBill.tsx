@@ -14,9 +14,10 @@ interface StepBillProps {
   votingModel: string;
   votingLogicData?: any;
   onDataChange?: (data: any) => void;
+  onValidationChange?: (isValid: boolean) => void;
 }
 
-const StepBill = ({ votingModel, votingLogicData, onDataChange }: StepBillProps) => {
+const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChange }: StepBillProps) => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [title, setTitle] = useState("");
@@ -95,6 +96,39 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange }: StepBillProps)
     }
   };
 
+  // Validation effect
+  useEffect(() => {
+    let isValid = true;
+
+    // Title validation: required, 1-500 characters
+    const trimmedTitle = title.trim();
+    if (trimmedTitle.length === 0 || trimmedTitle.length > 500) {
+      isValid = false;
+    }
+
+    // Description validation: max 10,000 characters
+    if (description.length > 10000) {
+      isValid = false;
+    }
+
+    // Ballot options validation: at least 2 non-empty options
+    const validOptions = ballotOptions.filter(opt => opt.trim().length > 0);
+    if (validOptions.length < 2) {
+      isValid = false;
+    }
+
+    // Date validation: if not ongoing and both dates set, end must be after start
+    if (!isOngoing && startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (end <= start) {
+        isValid = false;
+      }
+    }
+
+    onValidationChange?.(isValid);
+  }, [title, description, ballotOptions, isOngoing, startDate, endDate, onValidationChange]);
+
   useEffect(() => {
     if (onDataChange) {
       const modelSettings = votingModel === "token" 
@@ -130,34 +164,50 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange }: StepBillProps)
       <div className="space-y-4 sm:space-y-6">
         {/* Title */}
         <div className="space-y-2">
-          <Label htmlFor="title" className="flex items-center gap-2 text-sm sm:text-base">
-            <FileText className="w-4 h-4 text-primary" />
-            Proposal Title
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="title" className="flex items-center gap-2 text-sm sm:text-base">
+              <FileText className="w-4 h-4 text-primary" />
+              Proposal Title
+            </Label>
+            <span className={`text-xs ${title.trim().length > 500 ? 'text-destructive' : 'text-muted-foreground'}`}>
+              {title.trim().length}/500
+            </span>
+          </div>
           <Input
             id="title"
             placeholder="e.g., Let's Give Everyone Free Money (UBI Pilot) 💰"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="text-sm sm:text-base"
+            className={`text-sm sm:text-base ${title.trim().length === 0 || title.trim().length > 500 ? 'border-destructive' : ''}`}
           />
+          {title.trim().length === 0 && (
+            <p className="text-xs text-destructive">Title is required</p>
+          )}
+          {title.trim().length > 500 && (
+            <p className="text-xs text-destructive">Title must be 500 characters or less</p>
+          )}
         </div>
 
         {/* Description */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="description" className="text-sm sm:text-base">The Full Story</Label>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handlePolishProposal}
-              disabled={isPolishing || (!title && !description)}
-              className="text-xs"
-            >
-              <Sparkles className="w-3 h-3 mr-1" />
-              {isPolishing ? "Polishing..." : "Polish with AI"}
-            </Button>
+            <div className="flex items-center gap-2">
+              <span className={`text-xs ${description.length > 10000 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                {description.length}/10,000
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handlePolishProposal}
+                disabled={isPolishing || (!title && !description)}
+                className="text-xs"
+              >
+                <Sparkles className="w-3 h-3 mr-1" />
+                {isPolishing ? "Polishing..." : "Polish with AI"}
+              </Button>
+            </div>
           </div>
           <Textarea
             id="description"
@@ -165,11 +215,17 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange }: StepBillProps)
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={6}
-            className="resize-none font-mono text-xs sm:text-sm"
+            className={`resize-none font-mono text-xs sm:text-sm ${description.length > 10000 ? 'border-destructive' : ''}`}
           />
-          <p className="text-xs text-muted-foreground">
-            Use the Polish button to make your text more neutral and objective.
-          </p>
+          {description.length > 10000 ? (
+            <p className="text-xs text-destructive">
+              Description must be 10,000 characters or less
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Use the Polish button to make your text more neutral and objective.
+            </p>
+          )}
         </div>
 
         {/* Ballot Options */}
@@ -248,6 +304,11 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange }: StepBillProps)
             {t('steps.bill.addOption')}
           </Button>
 
+          {ballotOptions.filter(opt => opt.trim().length > 0).length < 2 && (
+            <p className="text-xs text-destructive">
+              At least 2 non-empty ballot options are required
+            </p>
+          )}
           <p className="text-xs text-muted-foreground">
             {ballotType === "single" 
               ? t('steps.bill.singleChoiceDesc')

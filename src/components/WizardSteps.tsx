@@ -27,9 +27,14 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
   const [billData, setBillData] = useState<any>({});
   const [isDeploying, setIsDeploying] = useState(false);
   const [isStep2Valid, setIsStep2Valid] = useState(false);
+  const [isStep4Valid, setIsStep4Valid] = useState(false);
 
   const handleStep2ValidationChange = useCallback((isValid: boolean) => {
     setIsStep2Valid(isValid);
+  }, []);
+
+  const handleStep4ValidationChange = useCallback((isValid: boolean) => {
+    setIsStep4Valid(isValid);
   }, []);
 
   const steps = [
@@ -206,7 +211,7 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
         {currentStep === 1 && <StepIdentity onDataChange={setIdentityData} />}
         {currentStep === 2 && <StepAuthRestrictions authenticationType={identityData.authenticationType} onDataChange={setAuthRestrictions} onValidationChange={handleStep2ValidationChange} />}
         {currentStep === 3 && <StepVotingLogic selectedModel={selectedVotingModel} onModelChange={setSelectedVotingModel} onDataChange={setVotingLogicData} />}
-        {currentStep === 4 && <StepBill votingModel={selectedVotingModel} votingLogicData={votingLogicData} onDataChange={setBillData} />}
+        {currentStep === 4 && <StepBill votingModel={selectedVotingModel} votingLogicData={votingLogicData} onDataChange={setBillData} onValidationChange={handleStep4ValidationChange} />}
       </div>
 
       {/* Navigation */}
@@ -236,7 +241,7 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
         ) : (
           <Button
             onClick={handleDeploy}
-            disabled={isDeploying}
+            disabled={isDeploying || !isStep4Valid}
             className="bg-primary hover:bg-primary/90 text-primary-foreground glow-border smooth-transition text-xs sm:text-sm"
             size="sm"
           >
