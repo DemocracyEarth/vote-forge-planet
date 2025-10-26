@@ -157,11 +157,16 @@ All colors MUST be HSL.
   /* Tiptap Editor Styles */
   .ProseMirror {
     outline: none;
+    line-height: 1.6;
   }
 
   .ProseMirror p {
-    margin-top: 1em;
-    margin-bottom: 1em;
+    margin-top: 0;
+    margin-bottom: 1.5em;
+  }
+
+  .ProseMirror p:last-child {
+    margin-bottom: 0;
   }
 
   .ProseMirror p.is-editor-empty:first-child::before {
