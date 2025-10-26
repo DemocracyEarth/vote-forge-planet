@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
-import { Loader2, ExternalLink, Users, Calendar, TrendingUp, Mail, Phone, Chrome, Globe } from "lucide-react";
+import { Loader2, ExternalLink, Users, Calendar, TrendingUp, Mail, Phone, Chrome, Globe, MessageSquare } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface PublicElection {
@@ -33,9 +33,15 @@ interface ElectionResults {
   total_votes: number;
 }
 
+interface ElectionCommentCount {
+  election_id: string;
+  comment_count: number;
+}
+
 export function PublicElectionsFeed() {
   const [elections, setElections] = useState<PublicElection[]>([]);
   const [electionResults, setElectionResults] = useState<Record<string, ElectionResults[]>>({});
+  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -79,7 +85,7 @@ export function PublicElectionsFeed() {
         
         setElections(electionsWithProfiles as PublicElection[]);
 
-        // Load results for each election
+        // Load results and comment counts for each election
         const resultsPromises = publicElections.map(async (election) => {
           const { data } = await supabase.rpc('get_election_results', {
             election_uuid: election.id
@@ -87,12 +93,30 @@ export function PublicElectionsFeed() {
           return { electionId: election.id, results: data || [] };
         });
 
-        const allResults = await Promise.all(resultsPromises);
+        const commentCountPromises = publicElections.map(async (election) => {
+          const { count } = await supabase
+            .from('discussion_comments')
+            .select('*', { count: 'exact', head: true })
+            .eq('election_id', election.id);
+          return { electionId: election.id, count: count || 0 };
+        });
+
+        const [allResults, allCommentCounts] = await Promise.all([
+          Promise.all(resultsPromises),
+          Promise.all(commentCountPromises)
+        ]);
+        
         const resultsMap: Record<string, ElectionResults[]> = {};
         allResults.forEach(({ electionId, results }) => {
           resultsMap[electionId] = results;
         });
         setElectionResults(resultsMap);
+
+        const countsMap: Record<string, number> = {};
+        allCommentCounts.forEach(({ electionId, count }) => {
+          countsMap[electionId] = count;
+        });
+        setCommentCounts(countsMap);
       }
     } catch (error) {
       console.error("Error loading public elections:", error);
@@ -329,7 +353,7 @@ export function PublicElectionsFeed() {
                 </div>
 
                 {/* Results Preview */}
-                {totalVotes > 0 && (() => {
+                {(totalVotes > 0 || election.is_ongoing) && (() => {
                   // Get valid ballot options from the election config
                   const validOptions = election.voting_page_config?.election?.ballotOptions?.map((opt: any) => opt.name) || [];
                   
@@ -345,13 +369,20 @@ export function PublicElectionsFeed() {
                   
                   return (
                     <div className="space-y-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="p-2 rounded-lg bg-primary/20">
-                          <TrendingUp className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <p className="font-bold text-base">Live Results</p>
-                          <p className="text-xs text-muted-foreground">Real-time voting statistics</p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 rounded-lg bg-primary/20">
+                            <TrendingUp className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-base">{election.is_ongoing ? 'Live Results' : 'Results'}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {validTotalVotes === 0 
+                                ? 'No votes cast yet - be the first!' 
+                                : `${validTotalVotes} ${validTotalVotes === 1 ? 'vote' : 'votes'} cast`
+                              }
+                            </p>
+                          </div>
                         </div>
                       </div>
                       
@@ -404,6 +435,16 @@ export function PublicElectionsFeed() {
                     </div>
                   );
                 })()}
+
+                {/* Comment Count */}
+                {commentCounts[election.id] !== undefined && commentCounts[election.id] > 0 && (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-muted">
+                    <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">
+                      {commentCounts[election.id]} {commentCounts[election.id] === 1 ? 'comment' : 'comments'} in discussion
+                    </span>
+                  </div>
+                )}
 
                 <div className="pt-4 border-t border-border">
                   <Button
