@@ -320,9 +320,17 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange, onValidationCh
   // Validate step and notify parent
   useEffect(() => {
     // Validation: if restriction type is "allowed_list", at least one valid email is required
-    const isValid = restrictionType !== "allowed_list" || emailChips.filter(chip => chip.valid).length > 0;
+    const hasValidEmails = emailChips.filter(chip => chip.valid).length > 0;
+    const isValid = restrictionType !== "allowed_list" || hasValidEmails;
     onValidationChange?.(isValid);
-  }, [restrictionType, emailChips, onValidationChange]);
+  }, [restrictionType, emailChips]);
+
+  // Initialize validation on mount
+  useEffect(() => {
+    const hasValidEmails = emailChips.filter(chip => chip.valid).length > 0;
+    const isValid = restrictionType !== "allowed_list" || hasValidEmails;
+    onValidationChange?.(isValid);
+  }, []);
 
   // Sync emailChips with allowedEmails for data persistence
   useEffect(() => {
