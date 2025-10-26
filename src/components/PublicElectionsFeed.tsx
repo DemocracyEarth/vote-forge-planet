@@ -365,7 +365,8 @@ export function PublicElectionsFeed() {
                   // Recalculate total votes from valid results only
                   const validTotalVotes = validResults.reduce((sum, r) => sum + r.vote_count, 0);
                   
-                  if (validTotalVotes === 0) return null;
+                  // Don't show results section if there are no votes AND election is not ongoing
+                  if (validTotalVotes === 0 && !election.is_ongoing) return null;
                   
                   return (
                     <div className="space-y-4">
