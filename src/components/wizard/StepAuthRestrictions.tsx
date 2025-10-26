@@ -319,9 +319,9 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange, onValidationCh
 
   // Validate step and notify parent
   useEffect(() => {
-    // Validation: if restriction type is "allowed_list", at least one valid email is required
+    // Validation: if restriction type is "email-list", at least one valid email is required
     const hasValidEmails = emailChips.filter(chip => chip.valid).length > 0;
-    const isValid = restrictionType !== "allowed_list" || hasValidEmails;
+    const isValid = restrictionType !== "email-list" || hasValidEmails;
     onValidationChange?.(isValid);
   }, [restrictionType, emailChips, onValidationChange]);
 
