@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
-import { Loader2, ExternalLink, Users, Calendar, TrendingUp, Mail, Phone, Chrome, Globe, MessageSquare } from "lucide-react";
+import { Loader2, ExternalLink, Users, TrendingUp, Mail, Phone, Chrome, Globe, MessageSquare } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { ElectionCountdown } from "@/components/ElectionCountdown";
 
 interface PublicElection {
   id: string;
@@ -295,27 +296,12 @@ export function PublicElectionsFeed() {
               </CardHeader>
               
               <CardContent className="relative space-y-5">
-                {/* Date Information */}
-                <div className="flex flex-wrap gap-2 text-xs">
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                    <Calendar className="h-3 w-3" />
-                    {election.start_date ? (
-                      <span>Started: {new Date(election.start_date).toLocaleDateString()}</span>
-                    ) : (
-                      <span>No start date</span>
-                    )}
-                  </div>
-                  {election.end_date ? (
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                      <Calendar className="h-3 w-3" />
-                      <span>Ends: {new Date(election.end_date).toLocaleDateString()}</span>
-                    </div>
-                  ) : election.is_ongoing && (
-                    <div className="px-3 py-1.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
-                      <span>No end date</span>
-                    </div>
-                  )}
-                </div>
+                {/* Countdown Timer */}
+                <ElectionCountdown 
+                  startDate={election.start_date}
+                  endDate={election.end_date}
+                  isOngoing={election.is_ongoing}
+                />
 
                 {/* Eligibility Information */}
                 <div className="space-y-2">
