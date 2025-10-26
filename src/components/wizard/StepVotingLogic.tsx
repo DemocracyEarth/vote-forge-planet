@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Vote, Scale, Star, Coins } from "lucide-react";
+import { Vote, Scale, ListOrdered, Coins } from "lucide-react";
 
 const votingModels = [
   {
@@ -15,8 +15,8 @@ const votingModels = [
     icon: Scale,
   },
   {
-    id: "weighted",
-    icon: Star,
+    id: "ranked",
+    icon: ListOrdered,
   },
   {
     id: "token",

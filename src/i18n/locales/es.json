@@ -144,10 +144,10 @@
           "description": "Distribuye tu poder entre temas. Matemáticas que combaten el extremismo. 📊",
           "prompt": "Implementa votación cuadrática donde cada votante recibe un número fijo de créditos (ej: 100 puntos) para distribuir entre múltiples temas. El costo de los votos aumenta cuadráticamente: 1 voto = 1 crédito, 2 votos = 4 créditos, 3 votos = 9 créditos, etc. Esto permite a los votantes expresar intensidad de preferencia mientras previene concentración de votos en temas únicos."
         },
-        "weighted": {
-          "title": "Basado en Reputación",
-          "description": "Tu contribución = tu voz. Modo meritocracia activado. ⭐",
-          "prompt": "Crea un sistema de votación ponderado por reputación donde el poder de voto es proporcional a la contribución o puntuación de reputación del votante. Define métricas claras para la reputación (ej: historial de participación, calidad de contribución, antigüedad). Mayor reputación = más peso de voto. Incluye mecanismos para prevenir plutocracia y asegurar que nuevos miembros puedan ganar influencia."
+        "ranked": {
+          "title": "Votación por Clasificación",
+          "description": "Clasifica candidatos por preferencia. Si no hay mayoría, se elimina el más bajo y los votos se redistribuyen hasta que alguien gane. 🔢",
+          "prompt": "Crea un sistema de votación por clasificación donde los votantes clasifican a los candidatos en orden de preferencia (1º, 2º, 3º, etc.). Si ningún candidato recibe una mayoría de votos de primera preferencia, elimina al candidato con menos votos y redistribuye sus votos a la siguiente preferencia. Repite hasta que un candidato logre una mayoría."
         }
       },
       "exampleList": [

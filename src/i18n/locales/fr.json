@@ -144,10 +144,10 @@
           "description": "Répartissez votre pouvoir entre les questions. Des maths qui combattent l'extrémisme. 📊",
           "prompt": "Implémentez le vote quadratique où chaque électeur reçoit un nombre fixe de crédits (ex : 100 points) à distribuer sur plusieurs questions. Le coût des votes augmente quadratiquement : 1 vote = 1 crédit, 2 votes = 4 crédits, 3 votes = 9 crédits, etc. Cela permet aux électeurs d'exprimer l'intensité de leurs préférences tout en empêchant la concentration des votes sur des questions uniques."
         },
-        "weighted": {
-          "title": "Basé sur la Réputation",
-          "description": "Votre contribution = votre voix. Mode méritocratie activé. ⭐",
-          "prompt": "Créez un système de vote pondéré par réputation où le pouvoir de vote est proportionnel à la contribution ou au score de réputation de l'électeur. Définissez des métriques claires pour la réputation (ex : historique de participation, qualité de contribution, ancienneté). Plus de réputation = plus de poids de vote. Incluez des mécanismes pour prévenir la ploutocratie et garantir que les nouveaux membres puissent gagner de l'influence."
+        "ranked": {
+          "title": "Vote par Ordre de Préférence",
+          "description": "Classez les candidats par préférence. Si pas de majorité, le dernier est éliminé et les votes redistribués jusqu'à ce que quelqu'un gagne. 🔢",
+          "prompt": "Créez un système de vote par ordre de préférence où les électeurs classent les candidats par ordre de préférence (1er, 2ème, 3ème, etc.). Si aucun candidat n'obtient une majorité de votes de première préférence, éliminez le candidat avec le moins de votes et redistribuez ses votes à la préférence suivante. Répétez jusqu'à ce qu'un candidat obtienne une majorité."
         }
       },
       "exampleList": [

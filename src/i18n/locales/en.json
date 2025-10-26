@@ -149,10 +149,10 @@
           "description": "Spread your power across issues. Math that fights extremism. 📊",
           "prompt": "Implement quadratic voting where each voter receives a fixed number of credits (e.g., 100 points) to distribute across multiple issues. The cost of votes increases quadratically: 1 vote = 1 credit, 2 votes = 4 credits, 3 votes = 9 credits, etc. This allows voters to express preference intensity while preventing vote concentration on single issues."
         },
-        "weighted": {
-          "title": "Reputation-Based",
-          "description": "Your contribution = your voice. Meritocracy mode activated. ⭐",
-          "prompt": "Create a reputation-weighted voting system where voting power is proportional to the voter's contribution or reputation score. Define clear metrics for reputation (e.g., participation history, contribution quality, tenure). Higher reputation = more voting weight. Include mechanisms to prevent plutocracy and ensure new members can gain influence."
+        "ranked": {
+          "title": "Ranked Choice Voting",
+          "description": "Rank candidates by preference. If no majority, lowest is eliminated and votes redistribute until someone wins. 🔢",
+          "prompt": "Create a ranked choice voting system where voters rank candidates in order of preference (1st, 2nd, 3rd, etc.). If no candidate receives a majority of first-preference votes, eliminate the candidate with the fewest votes and redistribute their votes to the next preference. Repeat until a candidate achieves a majority. This ensures the winner has broad support and reduces strategic voting."
         },
         "token": {
           "title": "Token Voting",

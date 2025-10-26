@@ -144,10 +144,10 @@
           "description": "Espalhe seu poder entre questões. Matemática que combate extremismo. 📊",
           "prompt": "Implemente votação quadrática onde cada eleitor recebe um número fixo de créditos (ex: 100 pontos) para distribuir entre várias questões. O custo dos votos aumenta quadraticamente: 1 voto = 1 crédito, 2 votos = 4 créditos, 3 votos = 9 créditos, etc. Isso permite aos eleitores expressar intensidade de preferência enquanto evita concentração de votos em questões únicas."
         },
-        "weighted": {
-          "title": "Baseado em Reputação",
-          "description": "Sua contribuição = sua voz. Modo meritocracia ativado. ⭐",
-          "prompt": "Crie um sistema de votação ponderado por reputação onde o poder de voto é proporcional à contribuição ou pontuação de reputação do eleitor. Defina métricas claras para reputação (ex: histórico de participação, qualidade de contribuição, tempo de serviço). Maior reputação = mais peso de voto. Inclua mecanismos para prevenir plutocracia e garantir que novos membros possam ganhar influência."
+        "ranked": {
+          "title": "Votação por Classificação",
+          "description": "Classifique candidatos por preferência. Se não houver maioria, o mais baixo é eliminado e os votos redistribuídos até alguém vencer. 🔢",
+          "prompt": "Crie um sistema de votação por classificação onde os eleitores classificam os candidatos em ordem de preferência (1º, 2º, 3º, etc.). Se nenhum candidato receber uma maioria de votos de primeira preferência, elimine o candidato com menos votos e redistribua seus votos para a próxima preferência. Repita até que um candidato alcance uma maioria."
         }
       },
       "exampleList": [
