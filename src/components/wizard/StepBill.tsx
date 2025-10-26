@@ -138,20 +138,9 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
     }
   };
 
-  // Auto-generate description when title changes (once per unique title, only if description is empty)
+  // Manual generation only - no auto-trigger
   useEffect(() => {
-    const trimmed = title.trim();
-    const shouldAuto = trimmed.length > 10 && description.trim().length === 0 && !isGeneratingDescription && lastGeneratedTitleRef.current !== trimmed;
-    if (!shouldAuto) return;
-
-    // Expand the form when auto-generation starts
-    setShowFullForm(true);
-
-    const timer = setTimeout(() => {
-      handleGenerateDescription();
-    }, 1500);
-
-    return () => clearTimeout(timer);
+    // Just validation, no auto-generation
   }, [title, description, isGeneratingDescription, handleGenerateDescription]);
 
   // Validation effect
@@ -235,11 +224,19 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
                 onBlur={() => {
                   if (title.trim().length >= 10) {
                     setShowFullForm(true);
+                    // Trigger AI generation on blur
+                    if (description.trim().length === 0 && lastGeneratedTitleRef.current !== title.trim()) {
+                      handleGenerateDescription();
+                    }
                   }
                 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && title.trim().length >= 10) {
                     setShowFullForm(true);
+                    // Trigger AI generation on Enter
+                    if (description.trim().length === 0 && lastGeneratedTitleRef.current !== title.trim()) {
+                      handleGenerateDescription();
+                    }
                   }
                 }}
                 className={`text-base sm:text-lg h-14 px-6 ${
