@@ -21,6 +21,7 @@ interface PublicElection {
   created_by: string;
   identity_config?: any;
   voting_page_config?: any;
+  bill_config?: any;
   profiles?: {
     full_name: string;
     avatar_url: string | null;
@@ -62,7 +63,7 @@ export function PublicElectionsFeed() {
       // Load public elections with identity_config and voting_page_config
       const { data: publicElections, error } = await supabase
         .from("elections")
-        .select("id, title, description, start_date, end_date, is_ongoing, is_public, status, created_at, identity_config, voting_page_config, created_by")
+        .select("id, title, description, start_date, end_date, is_ongoing, is_public, status, created_at, identity_config, voting_page_config, bill_config, created_by")
         .eq("is_public", true)
         .eq("status", "active")
         .order("created_at", { ascending: false });
@@ -354,19 +355,36 @@ export function PublicElectionsFeed() {
 
                 {/* Results Preview */}
                 {(totalVotes > 0 || election.is_ongoing) && (() => {
-                  // Get valid ballot options from the election config
-                  const validOptions = election.voting_page_config?.election?.ballotOptions?.map((opt: any) => opt.name) || [];
+                  // Build valid ballot options from multiple possible config shapes
+                  const extractOptionText = (opt: any) => (typeof opt === 'string' ? opt : (opt?.name || opt?.label || opt?.text || ''));
+                  const vp = election.voting_page_config || {};
+                  const optionsFromElection = (vp.election?.ballotOptions || []).map(extractOptionText);
+                  const optionsFromElectionConfig = (vp.electionConfig?.ballotOptions || []).map(extractOptionText);
+                  const optionsFromBallot = (vp.ballot?.options || []).map(extractOptionText);
+                  const optionsFromBill = (election.bill_config?.ballotOptions || []).map(extractOptionText);
                   
-                  // Filter results to only show valid ballot options
-                  const validResults = results.filter(result => 
-                    result.vote_value && validOptions.includes(result.vote_value)
-                  );
+                  const validOptionStrings = Array.from(new Set([
+                    ...optionsFromElection,
+                    ...optionsFromElectionConfig,
+                    ...optionsFromBallot,
+                    ...optionsFromBill,
+                  ]
+                    .filter(Boolean)
+                    .map((s: string) => s.trim())));
                   
-                  // Recalculate total votes from valid results only
+                  const shouldFilter = validOptionStrings.length > 0;
+                  
+                  // Use filtered results only if we have known options; otherwise use raw results
+                  const validResults = (shouldFilter
+                    ? results.filter(result => result.vote_value && validOptionStrings.includes(String(result.vote_value).trim()))
+                    : results);
+                  
+                  // Totals
                   const validTotalVotes = validResults.reduce((sum, r) => sum + r.vote_count, 0);
+                  const displayTotalVotes = results.length > 0 ? results[0].total_votes : 0;
                   
                   // Don't show results section if there are no votes AND election is not ongoing
-                  if (validTotalVotes === 0 && !election.is_ongoing) return null;
+                  if (displayTotalVotes === 0 && !election.is_ongoing) return null;
                   
                   return (
                     <div className="space-y-4">
@@ -378,9 +396,9 @@ export function PublicElectionsFeed() {
                           <div>
                             <p className="font-bold text-base">{election.is_ongoing ? 'Live Results' : 'Results'}</p>
                             <p className="text-xs text-muted-foreground">
-                              {validTotalVotes === 0 
+                              {displayTotalVotes === 0 
                                 ? 'No votes cast yet - be the first!' 
-                                : `${validTotalVotes} ${validTotalVotes === 1 ? 'vote' : 'votes'} cast`
+                                : `${displayTotalVotes} ${displayTotalVotes === 1 ? 'vote' : 'votes'} cast`
                               }
                             </p>
                           </div>
