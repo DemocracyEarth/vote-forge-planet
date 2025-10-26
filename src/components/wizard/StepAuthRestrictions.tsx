@@ -319,11 +319,22 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange, onValidationCh
 
   // Validate step and notify parent
   useEffect(() => {
-    // Validation: if restriction type is "email-list", at least one valid email is required
-    const hasValidEmails = emailChips.filter(chip => chip.valid).length > 0;
-    const isValid = restrictionType !== "email-list" || hasValidEmails;
+    let isValid = true;
+    
+    // Validation for email-list: at least one valid email is required
+    if (restrictionType === "email-list") {
+      const hasValidEmails = emailChips.filter(chip => chip.valid).length > 0;
+      isValid = hasValidEmails;
+    }
+    
+    // Validation for domain: at least one valid domain is required with no invalid domains
+    else if (restrictionType === "domain") {
+      const hasValidDomains = domainValidation.valid.length > 0 && domainValidation.invalid.length === 0;
+      isValid = hasValidDomains;
+    }
+    
     onValidationChange?.(isValid);
-  }, [restrictionType, emailChips, onValidationChange]);
+  }, [restrictionType, emailChips, domainValidation, onValidationChange]);
 
   // Sync emailChips with allowedEmails for data persistence
   useEffect(() => {
