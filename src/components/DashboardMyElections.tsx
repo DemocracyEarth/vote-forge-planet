@@ -408,56 +408,71 @@ export function DashboardMyElections({ userId }: DashboardMyElectionsProps) {
                   </div>
 
                   {/* Results Preview */}
-                  {totalVotes > 0 && (
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className="p-2 rounded-lg bg-primary/20">
-                          <TrendingUp className="h-5 w-5 text-primary" />
+                  {totalVotes > 0 && (() => {
+                    // Get valid ballot options from the election config
+                    const votingConfig = election.voting_page_config as any;
+                    const validOptions = votingConfig?.election?.ballotOptions?.map((opt: any) => opt.name) || [];
+                    
+                    // Filter results to only show valid ballot options
+                    const validResults = results.filter(result => 
+                      result.vote_value && validOptions.includes(result.vote_value)
+                    );
+                    
+                    // Recalculate total votes from valid results only
+                    const validTotalVotes = validResults.reduce((sum, r) => sum + r.vote_count, 0);
+                    
+                    if (validTotalVotes === 0) return null;
+                    
+                    return (
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 rounded-lg bg-primary/20">
+                            <TrendingUp className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-base">Live Results</p>
+                            <p className="text-xs text-muted-foreground">Real-time voting statistics</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-bold text-base">Live Results</p>
-                          <p className="text-xs text-muted-foreground">Real-time voting statistics</p>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        {results
-                          .sort((a, b) => b.vote_count - a.vote_count)
-                          .slice(0, 3)
-                          .map((result, idx) => {
-                            if (!result.vote_value) return null;
-                            const percentage = totalVotes > 0 
-                              ? (result.vote_count / totalVotes) * 100
-                              : 0;
-                            
-                            return (
-                              <div 
-                                key={result.vote_value}
-                                className="p-4 rounded-xl bg-muted/50 border border-muted hover:border-muted-foreground/20 transition-all duration-300"
-                              >
-                                <div className="flex items-center justify-between mb-2">
-                                  <div className="flex items-center gap-2">
-                                    {idx === 0 && (
-                                      <Badge className="bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/30 font-semibold">
-                                        Leading
-                                      </Badge>
-                                    )}
-                                    <span className="font-semibold">{result.vote_value}</span>
+                        
+                        <div className="space-y-3">
+                          {validResults
+                            .sort((a, b) => b.vote_count - a.vote_count)
+                            .slice(0, 3)
+                            .map((result, idx) => {
+                              const percentage = validTotalVotes > 0 
+                                ? (result.vote_count / validTotalVotes) * 100
+                                : 0;
+                              
+                              return (
+                                <div 
+                                  key={result.vote_value}
+                                  className="p-4 rounded-xl bg-muted/50 border border-muted hover:border-muted-foreground/20 transition-all duration-300"
+                                >
+                                  <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                      {idx === 0 && (
+                                        <Badge className="bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/30 font-semibold">
+                                          Leading
+                                        </Badge>
+                                      )}
+                                      <span className="font-semibold">{result.vote_value}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                      <span className="text-2xl font-bold">{result.vote_count}</span>
+                                      <span className="text-sm font-semibold text-muted-foreground min-w-[3.5rem] text-right">
+                                        {percentage.toFixed(1)}%
+                                      </span>
+                                    </div>
                                   </div>
-                                  <div className="flex items-center gap-3">
-                                    <span className="text-2xl font-bold">{result.vote_count}</span>
-                                    <span className="text-sm font-semibold text-muted-foreground min-w-[3.5rem] text-right">
-                                      {percentage.toFixed(1)}%
-                                    </span>
-                                  </div>
+                                  <Progress value={percentage} className="h-2" />
                                 </div>
-                                <Progress value={percentage} className="h-2" />
-                              </div>
-                            );
-                          })}
+                              );
+                            })}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {/* Action Buttons */}
                   <div className="flex flex-wrap gap-3 pt-4 border-t border-border">
