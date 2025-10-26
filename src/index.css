@@ -157,12 +157,16 @@ All colors MUST be HSL.
   /* Tiptap Editor Styles */
   .ProseMirror {
     outline: none;
-    line-height: 1.6;
+    line-height: 1.75;
+  }
+
+  /* Comfortable block spacing */
+  .ProseMirror > * + * {
+    margin-top: 1.25em;
   }
 
   .ProseMirror p {
-    margin-top: 0;
-    margin-bottom: 1.5em;
+    margin: 0 0 1.5em 0;
   }
 
   .ProseMirror p:last-child {
@@ -178,37 +182,75 @@ All colors MUST be HSL.
   }
 
   .ProseMirror h1 {
-    font-size: 2em;
+    font-size: 2rem;
     font-weight: 700;
-    margin-top: 0.5em;
-    margin-bottom: 0.5em;
+    margin-top: 1.2em;
+    margin-bottom: 0.6em;
   }
 
   .ProseMirror h2 {
-    font-size: 1.5em;
+    font-size: 1.5rem;
     font-weight: 600;
-    margin-top: 0.5em;
-    margin-bottom: 0.5em;
+    margin-top: 1.2em;
+    margin-bottom: 0.6em;
   }
 
   .ProseMirror h3 {
-    font-size: 1.25em;
+    font-size: 1.25rem;
     font-weight: 600;
-    margin-top: 0.5em;
+    margin-top: 1.1em;
     margin-bottom: 0.5em;
   }
 
   .ProseMirror ul,
   .ProseMirror ol {
     padding-left: 1.5em;
-    margin: 0.5em 0;
+    margin: 0.25em 0 1.25em 0;
   }
 
-  .ProseMirror strong {
-    font-weight: 700;
+  .ProseMirror li + li {
+    margin-top: 0.35em;
   }
 
-  .ProseMirror em {
+  .ProseMirror blockquote {
+    border-left: 3px solid hsl(var(--border));
+    padding-left: 1em;
+    color: hsl(var(--muted-foreground));
     font-style: italic;
+    margin: 1.25em 0 1.5em 0;
+  }
+
+  .ProseMirror hr {
+    border: none;
+    border-top: 1px solid hsl(var(--border));
+    margin: 2em 0;
+  }
+
+  .ProseMirror a {
+    color: hsl(var(--primary));
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .ProseMirror code {
+    background-color: hsl(var(--muted));
+    padding: 0.15em 0.35em;
+    border-radius: 0.25rem;
+    font-size: 0.95em;
+  }
+
+  .ProseMirror pre {
+    background-color: hsl(var(--secondary));
+    padding: 1em;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    border: 1px solid hsl(var(--border));
+    margin: 1.25em 0 1.5em 0;
+  }
+
+  .ProseMirror img {
+    display: block;
+    margin: 1.5em auto;
+    border-radius: 0.5rem;
   }
 }
