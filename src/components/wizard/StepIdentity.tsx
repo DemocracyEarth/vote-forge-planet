@@ -38,12 +38,12 @@ const StepIdentity = ({ onDataChange }: StepIdentityProps) => {
       disabled: true,
     },
     {
-      id: "google",
-      title: t('steps.identity.google'),
-      description: t('steps.identity.googleDesc'),
+      id: "credit-card",
+      title: "Credit Card Authentication",
+      description: "Verify identity using credit card information for corporate voting",
       icon: Users,
-      badge: null,
-      disabled: false,
+      badge: "Under Development",
+      disabled: true,
     },
     {
       id: "worldid",
