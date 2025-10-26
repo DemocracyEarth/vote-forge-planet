@@ -295,173 +295,39 @@ export function PublicElectionsFeed() {
                 </div>
               </CardHeader>
               
-              <CardContent className="relative space-y-5">
-                {/* Countdown Timer */}
-                <ElectionCountdown 
-                  startDate={election.start_date}
-                  endDate={election.end_date}
-                  isOngoing={election.is_ongoing}
-                />
-
-                {/* Eligibility Information */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <Users className="h-3 w-3" />
-                    <span className="font-semibold">Who can vote:</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {election.identity_config?.authenticationType && (
-                      <Badge variant="outline" className="flex items-center gap-1">
-                        {getAuthMethodIcon(election.identity_config.authenticationType)}
-                        {getAuthMethodLabel(election.identity_config.authenticationType)}
-                      </Badge>
-                    )}
-                    {election.identity_config?.restrictions?.allowedCountries && 
-                     election.identity_config.restrictions.allowedCountries.length > 0 && (
-                      election.identity_config.restrictions.allowedCountries.length === 1 ? (
-                        <Badge variant="outline" className="flex items-center gap-1">
-                          <span>{getCountryFlag(election.identity_config.restrictions.allowedCountries[0])}</span>
-                          {getCountryName(election.identity_config.restrictions.allowedCountries[0])}
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="flex items-center gap-1">
-                          <Globe className="h-3 w-3" />
-                          {election.identity_config.restrictions.allowedCountries.length} countries
-                        </Badge>
-                      )
-                    )}
-                    {!election.identity_config?.restrictions?.allowedCountries && (
-                      <Badge variant="outline" className="flex items-center gap-1">
-                        <Globe className="h-3 w-3" />
-                        Global
-                      </Badge>
-                    )}
-                  </div>
+              <CardContent className="relative space-y-4">
+                {/* Compact Countdown */}
+                <div className="text-sm">
+                  <ElectionCountdown 
+                    startDate={election.start_date}
+                    endDate={election.end_date}
+                    isOngoing={election.is_ongoing}
+                  />
                 </div>
 
-                {/* Results Preview */}
-                {(totalVotes > 0 || election.is_ongoing) && (() => {
-                  // Build valid ballot options from multiple possible config shapes
-                  const extractOptionText = (opt: any) => (typeof opt === 'string' ? opt : (opt?.name || opt?.label || opt?.text || ''));
-                  const vp = election.voting_page_config || {};
-                  const optionsFromElection = (vp.election?.ballotOptions || []).map(extractOptionText);
-                  const optionsFromElectionConfig = (vp.electionConfig?.ballotOptions || []).map(extractOptionText);
-                  const optionsFromBallot = (vp.ballot?.options || []).map(extractOptionText);
-                  const optionsFromBill = (election.bill_config?.ballotOptions || []).map(extractOptionText);
-                  
-                  const validOptionStrings = Array.from(new Set([
-                    ...optionsFromElection,
-                    ...optionsFromElectionConfig,
-                    ...optionsFromBallot,
-                    ...optionsFromBill,
-                  ]
-                    .filter(Boolean)
-                    .map((s: string) => s.trim())));
-                  
-                  const shouldFilter = validOptionStrings.length > 0;
-                  
-                  // Use filtered results only if we have known options; otherwise use raw results
-                  const validResults = (shouldFilter
-                    ? results.filter(result => result.vote_value && validOptionStrings.includes(String(result.vote_value).trim()))
-                    : results);
-                  
-                  // Totals
-                  const validTotalVotes = validResults.reduce((sum, r) => sum + r.vote_count, 0);
-                  const displayTotalVotes = results.length > 0 ? results[0].total_votes : 0;
-                  
-                  // Don't show results section if there are no votes AND election is not ongoing
-                  if (displayTotalVotes === 0 && !election.is_ongoing) return null;
-                  
-                  return (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                          <div className="p-2 rounded-lg bg-primary/20">
-                            <TrendingUp className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <p className="font-bold text-base">{election.is_ongoing ? 'Live Results' : 'Results'}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {displayTotalVotes === 0 
-                                ? 'No votes cast yet - be the first!' 
-                                : `${displayTotalVotes} ${displayTotalVotes === 1 ? 'vote' : 'votes'} cast`
-                              }
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {validTotalVotes > 0 ? (
-                        <div className="space-y-3">
-                          {validResults
-                          .sort((a, b) => b.vote_count - a.vote_count)
-                          .slice(0, 3)
-                          .map((result, idx) => {
-                            const percentage = validTotalVotes > 0 
-                              ? (result.vote_count / validTotalVotes) * 100
-                              : 0;
-                              
-                              return (
-                                <div 
-                                  key={result.vote_value}
-                                  className="p-4 rounded-xl bg-muted/50 border border-muted hover:border-muted-foreground/20 transition-all duration-300"
-                                >
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center gap-2">
-                                      {idx === 0 && (
-                                        <Badge className="bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/30 font-semibold">
-                                          Leading
-                                        </Badge>
-                                      )}
-                                      <span className="font-semibold">{result.vote_value}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                      <span className="text-2xl font-bold">{result.vote_count}</span>
-                                      <span className="text-sm font-semibold text-muted-foreground min-w-[3.5rem] text-right">
-                                        {percentage.toFixed(1)}%
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <Progress value={percentage} className="h-2" />
-                                </div>
-                              );
-                            })}
-                        </div>
-                      ) : (
-                        <div className="p-6 rounded-xl bg-muted/30 border border-dashed border-muted-foreground/30 text-center">
-                          <p className="text-sm text-muted-foreground">
-                            {election.is_ongoing 
-                              ? '🗳️ Voting is open! Be the first to cast your vote.'
-                              : 'No votes have been cast yet.'
-                            }
-                          </p>
-                        </div>
-                      )}
+                {/* Quick stats bar */}
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  {election.identity_config?.authenticationType && (
+                    <div className="flex items-center gap-1">
+                      {getAuthMethodIcon(election.identity_config.authenticationType)}
+                      <span>{getAuthMethodLabel(election.identity_config.authenticationType)}</span>
                     </div>
-                  );
-                })()}
-
-                {/* Comment Count */}
-                {commentCounts[election.id] !== undefined && commentCounts[election.id] > 0 && (
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-muted">
-                    <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">
-                      {commentCounts[election.id]} {commentCounts[election.id] === 1 ? 'comment' : 'comments'} in discussion
-                    </span>
-                  </div>
-                )}
-
-                <div className="pt-4 border-t border-border">
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={() => navigate(`/vote/${election.id}`)}
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-300"
-                  >
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    View & Vote
-                  </Button>
+                  )}
+                  {commentCounts[election.id] > 0 && (
+                    <div className="flex items-center gap-1">
+                      <MessageSquare className="h-3 w-3" />
+                      <span>{commentCounts[election.id]}</span>
+                    </div>
+                  )}
                 </div>
+                
+                <Button
+                  onClick={() => navigate(`/vote/${election.id}`)}
+                  className="w-full"
+                >
+                  View Details & Vote
+                  <ExternalLink className="ml-2 h-4 w-4" />
+                </Button>
               </CardContent>
             </Card>
           );
