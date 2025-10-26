@@ -511,17 +511,17 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange, onValidationCh
               )}
 
               {/* Email Chips Container */}
-              <div className={`min-h-[120px] p-3 rounded-lg border bg-background focus-within:ring-2 focus-within:ring-offset-2 transition-all ${
+              <div className={`min-h-[50px] rounded-lg border bg-background focus-within:ring-2 focus-within:ring-offset-2 transition-all ${
                 inputEmailError 
                   ? 'border-destructive focus-within:ring-destructive' 
                   : 'border-border focus-within:ring-ring'
               }`}>
-                <div className="flex flex-wrap gap-2 mb-2">
+                <div className={`flex flex-wrap gap-2 ${emailChips.length > 0 ? 'p-2 pb-0' : ''}`}>
                   {emailChips.map((chip) => (
                     <Badge
                       key={chip.email}
                       variant={chip.valid ? "secondary" : "destructive"}
-                      className={`pl-3 pr-1 py-1 gap-1 text-xs ${
+                      className={`pl-3 pr-1 py-1 gap-1 text-sm ${
                         chip.valid 
                           ? 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/20' 
                           : 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30'
@@ -547,7 +547,7 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange, onValidationCh
                   value={currentEmailInput}
                   onChange={(e) => handleEmailInputChange(e.target.value)}
                   onKeyDown={handleEmailInputKeyDown}
-                  className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-0 h-8 text-sm"
+                  className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-3 py-2 h-auto min-h-[42px] text-sm"
                 />
               </div>
 
