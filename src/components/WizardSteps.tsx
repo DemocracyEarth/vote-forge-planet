@@ -26,7 +26,6 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
   const [votingLogicData, setVotingLogicData] = useState<any>({});
   const [billData, setBillData] = useState<any>({});
   const [isDeploying, setIsDeploying] = useState(false);
-  const [isStep2Valid, setIsStep2Valid] = useState(true);
 
   const steps = [
     { id: 1, title: t('steps.identity.title'), description: t('steps.identity.description') },
@@ -200,7 +199,7 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
       {/* Step content */}
       <div className="bg-card/50 backdrop-blur-sm rounded-lg p-4 sm:p-6 md:p-8 card-glow smooth-transition min-h-[400px] sm:min-h-[500px]">
         {currentStep === 1 && <StepIdentity onDataChange={setIdentityData} />}
-        {currentStep === 2 && <StepAuthRestrictions authenticationType={identityData.authenticationType} onDataChange={setAuthRestrictions} onValidationChange={setIsStep2Valid} />}
+        {currentStep === 2 && <StepAuthRestrictions authenticationType={identityData.authenticationType} onDataChange={setAuthRestrictions} />}
         {currentStep === 3 && <StepVotingLogic selectedModel={selectedVotingModel} onModelChange={setSelectedVotingModel} onDataChange={setVotingLogicData} />}
         {currentStep === 4 && <StepBill votingModel={selectedVotingModel} votingLogicData={votingLogicData} onDataChange={setBillData} />}
       </div>
@@ -221,7 +220,6 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
         {currentStep < 4 ? (
           <Button
             onClick={handleNext}
-            disabled={currentStep === 2 && !isStep2Valid}
             className="bg-primary hover:bg-primary/90 text-primary-foreground smooth-transition text-xs sm:text-sm"
             size="sm"
           >

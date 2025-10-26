@@ -15,7 +15,6 @@ import { toast } from "sonner";
 interface StepAuthRestrictionsProps {
   authenticationType: string;
   onDataChange?: (data: any) => void;
-  onValidationChange?: (isValid: boolean) => void;
 }
 
 const COUNTRIES = [
@@ -217,7 +216,7 @@ const COUNTRIES = [
   { code: "ZW", name: "Zimbabwe", flag: "🇿🇪", phone: "+263" },
 ];
 
-const StepAuthRestrictions = ({ authenticationType, onDataChange, onValidationChange }: StepAuthRestrictionsProps) => {
+const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRestrictionsProps) => {
   const [restrictionType, setRestrictionType] = useState<string>("open");
   const [allowedEmails, setAllowedEmails] = useState<string>("");
   const [emailChips, setEmailChips] = useState<Array<{ email: string; valid: boolean }>>([]);
@@ -316,13 +315,6 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange, onValidationCh
   const removeEmailChip = (emailToRemove: string) => {
     setEmailChips(prev => prev.filter(chip => chip.email !== emailToRemove));
   };
-
-  // Validate step and notify parent
-  useEffect(() => {
-    // Validation: if restriction type is "allowed_list", at least one valid email is required
-    const isValid = restrictionType !== "allowed_list" || emailChips.filter(chip => chip.valid).length > 0;
-    onValidationChange?.(isValid);
-  }, [restrictionType, emailChips, onValidationChange]);
 
   // Sync emailChips with allowedEmails for data persistence
   useEffect(() => {
