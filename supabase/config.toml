@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.polish-proposal]
 verify_jwt = true
+
+[functions.generate-proposal-description]
+verify_jwt = true

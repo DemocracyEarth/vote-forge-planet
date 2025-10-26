@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -42,6 +42,7 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
     weightFormula: "linear",
   });
   const [isPolishing, setIsPolishing] = useState(false);
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
 
   const handleAddOption = () => {
     setBallotOptions([...ballotOptions, ""]);
@@ -58,6 +59,38 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
     newOptions[index] = value;
     setBallotOptions(newOptions);
   };
+
+  const handleGenerateDescription = useCallback(async () => {
+    if (!title.trim() || title.trim().length === 0) {
+      return;
+    }
+
+    setIsGeneratingDescription(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-proposal-description", {
+        body: { title: title.trim() },
+      });
+
+      if (error) throw error;
+
+      if (data.description) {
+        setDescription(data.description);
+        toast({
+          title: "Description generated! ✨",
+          description: "AI created a comprehensive, neutral analysis of your proposal.",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error generating description:", error);
+      toast({
+        title: "Failed to generate description",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingDescription(false);
+    }
+  }, [title, toast]);
 
   const handlePolishProposal = async () => {
     if (!title && !description) {
@@ -95,6 +128,17 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
       setIsPolishing(false);
     }
   };
+
+  // Auto-generate description when title changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (title.trim().length > 10 && !isGeneratingDescription) {
+        handleGenerateDescription();
+      }
+    }, 1500); // Wait 1.5 seconds after user stops typing
+
+    return () => clearTimeout(timer);
+  }, [title, isGeneratingDescription, handleGenerateDescription]);
 
   // Validation effect
   useEffect(() => {
@@ -191,7 +235,12 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
         {/* Description */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="description" className="text-sm sm:text-base">The Full Story</Label>
+            <Label htmlFor="description" className="text-sm sm:text-base">
+              The Full Story
+              {isGeneratingDescription && (
+                <span className="ml-2 text-xs text-primary animate-pulse">✨ AI is writing...</span>
+              )}
+            </Label>
             <div className="flex items-center gap-2">
               <span className={`text-xs ${description.length > 10000 ? 'text-destructive' : 'text-muted-foreground'}`}>
                 {description.length}/10,000
@@ -200,22 +249,23 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={handlePolishProposal}
-                disabled={isPolishing || (!title && !description)}
+                onClick={handleGenerateDescription}
+                disabled={isGeneratingDescription || !title.trim()}
                 className="text-xs"
               >
                 <Sparkles className="w-3 h-3 mr-1" />
-                {isPolishing ? "Polishing..." : "Polish with AI"}
+                {isGeneratingDescription ? "Generating..." : "Generate with AI"}
               </Button>
             </div>
           </div>
           <Textarea
             id="description"
-            placeholder="Tell us everything. Use markdown, get fancy, make your case. This is your moment. ✍️"
+            placeholder="AI will generate a comprehensive, neutral analysis once you finish writing the title... ✨"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            rows={6}
-            className={`resize-none font-mono text-xs sm:text-sm ${description.length > 10000 ? 'border-destructive' : ''}`}
+            rows={8}
+            className={`resize-none font-mono text-xs sm:text-sm ${description.length > 10000 ? 'border-destructive' : ''} ${isGeneratingDescription ? 'opacity-50' : ''}`}
+            disabled={isGeneratingDescription}
           />
           {description.length > 10000 ? (
             <p className="text-xs text-destructive">
@@ -223,7 +273,7 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
             </p>
           ) : (
             <p className="text-xs text-muted-foreground">
-              Use the Polish button to make your text more neutral and objective.
+              ✨ AI automatically generates a balanced, comprehensive analysis covering all perspectives when you write the title. You can also edit it manually or click Generate to regenerate.
             </p>
           )}
         </div>
