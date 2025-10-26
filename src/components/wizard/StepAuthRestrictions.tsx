@@ -503,7 +503,7 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-muted hover:bg-muted/80 text-muted-foreground rounded-md cursor-pointer transition-colors"
                   >
                     <Upload className="w-3 h-3" />
-                    CSV/TXT
+                    Upload CSV/TXT
                   </Label>
                 </div>
               </div>
