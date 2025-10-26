@@ -17,10 +17,113 @@ interface StepBillProps {
   onValidationChange?: (isValid: boolean) => void;
 }
 
+const placeholderExamples = [
+  "Should we implement a 4-day work week?",
+  "Should we ban single-use plastics in our city?",
+  "Should we increase funding for renewable energy research?",
+  "Should we make voting mandatory in national elections?",
+  "Should we implement universal basic income?",
+  "Should we ban artificial intelligence in military applications?",
+  "Should we require all new buildings to be carbon neutral?",
+  "Should we implement a wealth tax on billionaires?",
+  "Should we legalize recreational marijuana nationwide?",
+  "Should we ban gasoline-powered cars by 2035?",
+  "Should we mandate paid parental leave for all workers?",
+  "Should we eliminate daylight saving time?",
+  "Should we make community college tuition-free?",
+  "Should we ban factory farming?",
+  "Should we implement ranked choice voting?",
+  "Should we require companies to disclose their carbon footprint?",
+  "Should we ban genetic modification of human embryos?",
+  "Should we implement a carbon tax?",
+  "Should we guarantee housing as a human right?",
+  "Should we ban cryptocurrency mining?",
+  "Should we make election day a national holiday?",
+  "Should we implement term limits for Congress?",
+  "Should we ban TikTok for national security reasons?",
+  "Should we require social media companies to verify user ages?",
+  "Should we implement a robot tax on automated labor?",
+  "Should we ban puppy mills nationwide?",
+  "Should we require all packaging to be biodegradable?",
+  "Should we eliminate the Electoral College?",
+  "Should we ban targeted advertising based on personal data?",
+  "Should we implement a maximum wage cap?",
+  "Should we require all energy to be renewable by 2040?",
+  "Should we ban private prisons?",
+  "Should we implement universal healthcare?",
+  "Should we ban facial recognition technology in public spaces?",
+  "Should we require companies to have worker representation on boards?",
+  "Should we ban trophy hunting?",
+  "Should we implement a land value tax?",
+  "Should we require all food to be labeled with its carbon footprint?",
+  "Should we ban advertising to children?",
+  "Should we implement a universal job guarantee?",
+  "Should we ban billboards on highways?",
+  "Should we require all new homes to have solar panels?",
+  "Should we implement a maximum rental price cap?",
+  "Should we ban algorithmic stock trading?",
+  "Should we require all electronics to have a right to repair?",
+  "Should we ban non-compete agreements?",
+  "Should we implement a progressive consumption tax?",
+  "Should we require all cities to have protected bike lanes?",
+  "Should we ban microplastics in cosmetics?",
+  "Should we implement a universal savings account system?",
+  "Should we require all food waste to be composted?",
+  "Should we ban gas stoves in new construction?",
+  "Should we implement a federal job training program?",
+  "Should we require all streaming services to pay artists fairly?",
+  "Should we ban leaf blowers in residential areas?",
+  "Should we implement congestion pricing in major cities?",
+  "Should we require all hotels to eliminate single-use toiletries?",
+  "Should we ban algorithmic pricing in housing markets?",
+  "Should we implement a federal apprenticeship program?",
+  "Should we require all lawns to be water-efficient landscaping?",
+  "Should we ban puppy sales in pet stores?",
+  "Should we implement a public banking option?",
+  "Should we require all clothing to be labeled with labor conditions?",
+  "Should we ban pesticides in urban areas?",
+  "Should we implement a federal childcare program?",
+  "Should we require all restaurants to compost food waste?",
+  "Should we ban conversion therapy nationwide?",
+  "Should we implement portable benefits for gig workers?",
+  "Should we require all new appliances to be energy star rated?",
+  "Should we ban invasive species as pets?",
+  "Should we implement a federal reparations program?",
+  "Should we require all schools to serve plant-based meals?",
+  "Should we ban for-profit bail bonds?",
+  "Should we implement a negative income tax?",
+  "Should we require all products to display their environmental impact?",
+  "Should we ban captive breeding of dolphins and whales?",
+  "Should we implement a federal infrastructure jobs program?",
+  "Should we require all companies to offer remote work options?",
+  "Should we ban glitter in consumer products?",
+  "Should we implement a progressive estate tax?",
+  "Should we require all public buildings to have gender-neutral bathrooms?",
+  "Should we ban non-recyclable packaging?",
+  "Should we implement a federal music education program?",
+  "Should we require all transportation to be zero-emission by 2050?",
+  "Should we ban algorithmic hiring tools?",
+  "Should we implement a federal arts funding program?",
+  "Should we require all products to be repairable?",
+  "Should we ban surveillance advertising?",
+  "Should we implement a four-day school week?",
+  "Should we require all cities to provide free public transit?",
+  "Should we ban battery cages for chickens?",
+  "Should we implement a federal broadband guarantee?",
+  "Should we require all websites to be accessible to disabled users?",
+  "Should we ban predatory lending practices?",
+  "Should we implement a federal green jobs program?",
+  "Should we require all airlines to offset their carbon emissions?",
+  "Should we ban cosmetic animal testing?",
+  "Should we implement a federal cultural heritage preservation program?",
+  "Should we require all companies to publish diversity reports?",
+];
+
 const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChange }: StepBillProps) => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [title, setTitle] = useState("");
+  const [titleTouched, setTitleTouched] = useState(false);
   const [description, setDescription] = useState("");
   const [ballotType, setBallotType] = useState<"single" | "multiple">("single");
   const [ballotOptions, setBallotOptions] = useState<string[]>(["YES", "NO", "ABSTENTION"]);
@@ -45,6 +148,7 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
   const lastGeneratedTitleRef = useRef<string>("");
   const [showFullForm, setShowFullForm] = useState(false);
+  const [placeholder] = useState(() => placeholderExamples[Math.floor(Math.random() * placeholderExamples.length)]);
 
   const handleAddOption = () => {
     setBallotOptions([...ballotOptions, ""]);
@@ -218,10 +322,14 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
             <div className="relative">
               <Input
                 id="title"
-                placeholder="e.g., Should we implement a 4-day work week?"
+                placeholder={placeholder}
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  setTitleTouched(true);
+                }}
                 onBlur={() => {
+                  setTitleTouched(true);
                   if (title.trim().length >= 10) {
                     setShowFullForm(true);
                     // Trigger AI generation on blur
@@ -240,7 +348,7 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
                   }
                 }}
                 className={`text-base sm:text-lg h-14 px-6 ${
-                  title.trim().length === 0 || title.trim().length > 500 ? 'border-destructive' : ''
+                  titleTouched && (title.trim().length === 0 || title.trim().length > 500) ? 'border-destructive' : ''
                 }`}
                 autoFocus
               />
@@ -251,12 +359,12 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
               </span>
             </div>
             
-            {title.trim().length > 0 && title.trim().length < 10 && (
+            {titleTouched && title.trim().length > 0 && title.trim().length < 10 && (
               <p className="text-xs text-muted-foreground text-center">
                 Keep typing... (at least 10 characters for AI to generate content)
               </p>
             )}
-            {title.trim().length > 500 && (
+            {titleTouched && title.trim().length > 500 && (
               <p className="text-xs text-destructive text-center">
                 Title must be 500 characters or less
               </p>
