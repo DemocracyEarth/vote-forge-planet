@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -43,6 +43,7 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
   });
   const [isPolishing, setIsPolishing] = useState(false);
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
+  const lastGeneratedTitleRef = useRef<string>("");
 
   const handleAddOption = () => {
     setBallotOptions([...ballotOptions, ""]);
@@ -79,6 +80,7 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
           title: "Description generated! ✨",
           description: "AI created a comprehensive, neutral analysis of your proposal.",
         });
+        lastGeneratedTitleRef.current = title.trim();
       }
     } catch (error: any) {
       console.error("Error generating description:", error);
@@ -129,16 +131,18 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
     }
   };
 
-  // Auto-generate description when title changes
+  // Auto-generate description when title changes (once per unique title, only if description is empty)
   useEffect(() => {
+    const trimmed = title.trim();
+    const shouldAuto = trimmed.length > 10 && description.trim().length === 0 && !isGeneratingDescription && lastGeneratedTitleRef.current !== trimmed;
+    if (!shouldAuto) return;
+
     const timer = setTimeout(() => {
-      if (title.trim().length > 10 && !isGeneratingDescription) {
-        handleGenerateDescription();
-      }
-    }, 1500); // Wait 1.5 seconds after user stops typing
+      handleGenerateDescription();
+    }, 1500);
 
     return () => clearTimeout(timer);
-  }, [title, isGeneratingDescription, handleGenerateDescription]);
+  }, [title, description, isGeneratingDescription, handleGenerateDescription]);
 
   // Validation effect
   useEffect(() => {
