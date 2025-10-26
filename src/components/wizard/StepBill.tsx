@@ -313,8 +313,8 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
               What should we vote on?
             </h2>
             <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-              Write your proposal as a clear question or statement. Our AI will analyze it from all angles, 
-              present arguments for and against, and suggest voting options—all automatically.
+              Just write a question or statement. Our AI will draft the entire proposal for you—complete with 
+              balanced analysis, arguments from all perspectives, and voting options.
             </p>
           </div>
           
@@ -378,7 +378,7 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
 
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Sparkles className="w-4 h-4" />
-            <span>AI will generate a balanced analysis and voting options for you</span>
+            <span>Your entire proposal will be drafted by AI—just provide the topic</span>
           </div>
         </div>
       ) : (
