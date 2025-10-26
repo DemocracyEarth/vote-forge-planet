@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { DiscussionThread } from "@/components/DiscussionThread";
 import { LiveResults } from "@/components/LiveResults";
+import { ElectionCountdown } from "@/components/ElectionCountdown";
 
 const Vote = () => {
   const { t } = useTranslation();
@@ -449,6 +450,15 @@ const Vote = () => {
 
             {/* Election Details Grid */}
             <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Countdown Component */}
+              <div className="md:col-span-2">
+                <ElectionCountdown 
+                  startDate={election.start_date}
+                  endDate={election.end_date}
+                  isOngoing={election.is_ongoing}
+                />
+              </div>
+              
               {/* Closed Election Banner */}
               {isElectionClosed() && (
                 <div className="md:col-span-2 p-4 rounded-xl bg-gradient-to-r from-gray-500/20 to-gray-500/10 border-2 border-gray-500/30">
