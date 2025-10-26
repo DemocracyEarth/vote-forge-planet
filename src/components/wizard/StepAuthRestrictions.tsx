@@ -217,6 +217,8 @@ const COUNTRIES = [
 const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRestrictionsProps) => {
   const [restrictionType, setRestrictionType] = useState<string>("open");
   const [allowedEmails, setAllowedEmails] = useState<string>("");
+  const [emailChips, setEmailChips] = useState<Array<{ email: string; valid: boolean }>>([]);
+  const [currentEmailInput, setCurrentEmailInput] = useState<string>("");
   const [allowedDomains, setAllowedDomains] = useState<string>("");
   const [allowedPhones, setAllowedPhones] = useState<string>("");
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
@@ -227,9 +229,59 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
 
   // Email validation function
   const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // More comprehensive email validation regex
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
     return emailRegex.test(email.trim());
   };
+
+  // Handle adding email chips
+  const handleEmailInputChange = (value: string) => {
+    setCurrentEmailInput(value);
+    
+    // Check for delimiters: space, comma, semicolon, or Enter
+    const delimiters = /[,;\s]/;
+    if (delimiters.test(value)) {
+      const emails = value.split(delimiters).map(e => e.trim()).filter(e => e);
+      
+      emails.forEach(email => {
+        if (email && !emailChips.some(chip => chip.email === email)) {
+          const isValid = validateEmail(email);
+          setEmailChips(prev => [...prev, { email, valid: isValid }]);
+        }
+      });
+      
+      setCurrentEmailInput('');
+    }
+  };
+
+  const handleEmailInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && currentEmailInput.trim()) {
+      e.preventDefault();
+      const email = currentEmailInput.trim();
+      if (!emailChips.some(chip => chip.email === email)) {
+        const isValid = validateEmail(email);
+        setEmailChips(prev => [...prev, { email, valid: isValid }]);
+      }
+      setCurrentEmailInput('');
+    } else if (e.key === 'Backspace' && !currentEmailInput && emailChips.length > 0) {
+      // Remove last chip on backspace if input is empty
+      setEmailChips(prev => prev.slice(0, -1));
+    }
+  };
+
+  const removeEmailChip = (emailToRemove: string) => {
+    setEmailChips(prev => prev.filter(chip => chip.email !== emailToRemove));
+  };
+
+  // Sync emailChips with allowedEmails for data persistence
+  useEffect(() => {
+    const emailsString = emailChips.map(chip => chip.email).join('\n');
+    setAllowedEmails(emailsString);
+    
+    const valid = emailChips.filter(chip => chip.valid).map(chip => chip.email);
+    const invalid = emailChips.filter(chip => !chip.valid).map(chip => chip.email);
+    setEmailValidation({ valid, invalid });
+  }, [emailChips]);
 
   // Domain validation function
   const validateDomain = (domain: string): boolean => {
@@ -237,24 +289,16 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
     return domainRegex.test(domain.trim());
   };
 
-  // Validate emails whenever allowedEmails changes
+  // Validate emails whenever allowedEmails changes (for backwards compatibility)
   useEffect(() => {
-    if (restrictionType === "email-list" && allowedEmails) {
+    if (restrictionType === "email-list" && allowedEmails && emailChips.length === 0) {
+      // Initialize chips from allowedEmails if chips are empty (e.g., on load)
       const emails = allowedEmails.split('\n').map(e => e.trim()).filter(e => e);
-      const valid: string[] = [];
-      const invalid: string[] = [];
-      
-      emails.forEach(email => {
-        if (validateEmail(email)) {
-          valid.push(email);
-        } else if (email) { // Only mark as invalid if not empty
-          invalid.push(email);
-        }
-      });
-      
-      setEmailValidation({ valid, invalid });
-    } else {
-      setEmailValidation({ valid: [], invalid: [] });
+      const chips = emails.map(email => ({
+        email,
+        valid: validateEmail(email)
+      }));
+      setEmailChips(chips);
     }
   }, [allowedEmails, restrictionType]);
 
@@ -295,10 +339,18 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
     const lines = text.split('\n').map(line => line.trim()).filter(line => line);
     
     if (type === 'email') {
-      setAllowedEmails(lines.join('\n'));
+      const newChips = lines.map(email => ({
+        email,
+        valid: validateEmail(email)
+      })).filter(chip => !emailChips.some(existing => existing.email === chip.email));
+      
+      setEmailChips(prev => [...prev, ...newChips]);
     } else {
       setAllowedPhones(lines.join('\n'));
     }
+    
+    // Reset file input
+    e.target.value = '';
   };
 
   // Popular countries that should appear first
@@ -376,36 +428,18 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
             </Label>
           </div>
           {restrictionType === "email-list" && (
-            <div className="mt-4 ml-8">
-              <div className="flex items-center gap-2 mb-3">
-                <Input
-                  type="file"
-                  accept=".csv,.txt"
-                  onChange={(e) => handleFileUpload(e, 'email')}
-                  className="hidden"
-                  id="email-csv-upload"
-                />
-                <Label
-                  htmlFor="email-csv-upload"
-                  className="flex items-center gap-2 px-4 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-md cursor-pointer transition-colors"
-                >
-                  <Upload className="w-4 h-4" />
-                  <span className="text-sm font-medium">Upload CSV/TXT</span>
-                </Label>
-                <span className="text-xs text-muted-foreground">or enter manually below</span>
-              </div>
-              
+            <div className="mt-4 ml-8 space-y-3">
               {/* Validation Summary */}
-              {(emailValidation.valid.length > 0 || emailValidation.invalid.length > 0) && (
-                <div className="flex items-center gap-3 mb-3 p-3 rounded-lg bg-muted/50">
+              {emailChips.length > 0 && (
+                <div className="flex items-center gap-2">
                   {emailValidation.valid.length > 0 && (
-                    <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30">
+                    <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30 text-xs">
                       <Check className="w-3 h-3 mr-1" />
                       {emailValidation.valid.length} valid
                     </Badge>
                   )}
                   {emailValidation.invalid.length > 0 && (
-                    <Badge variant="outline" className="bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30">
+                    <Badge variant="outline" className="bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30 text-xs">
                       <AlertCircle className="w-3 h-3 mr-1" />
                       {emailValidation.invalid.length} invalid
                     </Badge>
@@ -413,41 +447,65 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
                 </div>
               )}
 
-              <div className="relative">
-                <Textarea
-                  placeholder="Enter email addresses (one per line)&#10;example@domain.com&#10;another@example.org"
-                  value={allowedEmails}
-                  onChange={(e) => setAllowedEmails(e.target.value)}
-                  rows={6}
-                  className={`font-mono text-sm ${emailValidation.invalid.length > 0 ? 'border-red-500/50' : emailValidation.valid.length > 0 ? 'border-green-500/50' : ''}`}
+              {/* Email Chips Container */}
+              <div className="min-h-[120px] p-3 rounded-lg border border-border bg-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 transition-all">
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {emailChips.map((chip) => (
+                    <Badge
+                      key={chip.email}
+                      variant={chip.valid ? "secondary" : "destructive"}
+                      className={`pl-3 pr-1 py-1 gap-1 text-xs ${
+                        chip.valid 
+                          ? 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/20' 
+                          : 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30'
+                      }`}
+                    >
+                      <span className="max-w-[200px] truncate">{chip.email}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-4 w-4 p-0 hover:bg-transparent"
+                        onClick={() => removeEmailChip(chip.email)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </Badge>
+                  ))}
+                </div>
+                
+                {/* Email Input Field */}
+                <Input
+                  type="text"
+                  placeholder={emailChips.length === 0 ? "Type email and press Enter, Space, or Comma..." : "Add another email..."}
+                  value={currentEmailInput}
+                  onChange={(e) => handleEmailInputChange(e.target.value)}
+                  onKeyDown={handleEmailInputKeyDown}
+                  className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-0 h-8 text-sm"
                 />
-                {emailValidation.valid.length > 0 && emailValidation.invalid.length === 0 && (
-                  <div className="absolute top-2 right-2">
-                    <Check className="w-5 h-5 text-green-500" />
-                  </div>
-                )}
               </div>
-              
-              <div className="mt-2 space-y-1">
+
+              {/* Helper Text and Upload Button */}
+              <div className="flex items-center justify-between">
                 <p className="text-xs text-muted-foreground">
-                  Enter one email address per line, or upload a CSV/TXT file with one email per line
+                  Type email and press Enter, Space, or Comma to add
                 </p>
-                {emailValidation.invalid.length > 0 && (
-                  <div className="text-xs text-red-600 dark:text-red-400 space-y-1">
-                    <p className="font-semibold flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" />
-                      Invalid emails detected:
-                    </p>
-                    <ul className="pl-4 space-y-0.5">
-                      {emailValidation.invalid.slice(0, 3).map((email, idx) => (
-                        <li key={idx} className="font-mono">{email}</li>
-                      ))}
-                      {emailValidation.invalid.length > 3 && (
-                        <li className="text-muted-foreground">...and {emailValidation.invalid.length - 3} more</li>
-                      )}
-                    </ul>
-                  </div>
-                )}
+                
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="file"
+                    accept=".csv,.txt"
+                    onChange={(e) => handleFileUpload(e, 'email')}
+                    className="hidden"
+                    id="email-csv-upload"
+                  />
+                  <Label
+                    htmlFor="email-csv-upload"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-muted hover:bg-muted/80 text-muted-foreground rounded-md cursor-pointer transition-colors"
+                  >
+                    <Upload className="w-3 h-3" />
+                    CSV/TXT
+                  </Label>
+                </div>
               </div>
             </div>
           )}
