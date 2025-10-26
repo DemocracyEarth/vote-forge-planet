@@ -305,6 +305,57 @@ export function PublicElectionsFeed() {
                   />
                 </div>
 
+                {/* Winner Display for Closed Elections */}
+                {(() => {
+                  const isClosed = election.end_date && new Date(election.end_date) < new Date() && !election.is_ongoing;
+                  if (!isClosed || results.length === 0) return null;
+
+                  // Extract valid ballot options
+                  const extractOptionText = (opt: any) => (typeof opt === 'string' ? opt : (opt?.name || opt?.label || opt?.text || ''));
+                  const vp = election.voting_page_config || {};
+                  const optionsFromElection = (vp.election?.ballotOptions || []).map(extractOptionText);
+                  const optionsFromElectionConfig = (vp.electionConfig?.ballotOptions || []).map(extractOptionText);
+                  const optionsFromBallot = (vp.ballot?.options || []).map(extractOptionText);
+                  const optionsFromBill = (election.bill_config?.ballotOptions || []).map(extractOptionText);
+                  
+                  const validOptionStrings = Array.from(new Set([
+                    ...optionsFromElection,
+                    ...optionsFromElectionConfig,
+                    ...optionsFromBallot,
+                    ...optionsFromBill,
+                  ]
+                    .filter(Boolean)
+                    .map((s: string) => s.trim())));
+                  
+                  const shouldFilter = validOptionStrings.length > 0;
+                  const validResults = (shouldFilter
+                    ? results.filter(result => result.vote_value && validOptionStrings.includes(String(result.vote_value).trim()))
+                    : results);
+
+                  if (validResults.length === 0) return null;
+
+                  const winner = validResults.sort((a, b) => b.vote_count - a.vote_count)[0];
+                  const totalValidVotes = validResults.reduce((sum, r) => sum + r.vote_count, 0);
+                  const winnerPercentage = totalValidVotes > 0 ? (winner.vote_count / totalValidVotes) * 100 : 0;
+
+                  return (
+                    <div className="p-4 rounded-xl bg-gradient-to-br from-green-500/10 to-green-500/5 border border-green-500/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge className="bg-green-500/20 text-green-700 dark:text-green-400 border border-green-500/40 font-semibold">
+                          Winner
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-lg">{winner.vote_value}</span>
+                        <div className="text-right">
+                          <span className="text-2xl font-bold text-green-600 dark:text-green-400">{winner.vote_count}</span>
+                          <span className="text-sm text-muted-foreground ml-2">({winnerPercentage.toFixed(1)}%)</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 {/* Quick stats bar */}
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   {election.identity_config?.authenticationType && (
