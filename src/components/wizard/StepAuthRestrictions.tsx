@@ -4,11 +4,13 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Upload, Globe, List, Lock, Check, X, AlertCircle } from "lucide-react";
+import { Upload, Globe, List, Lock, Check, X, AlertCircle, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { z } from "zod";
+import { toast } from "sonner";
 
 interface StepAuthRestrictionsProps {
   authenticationType: string;
@@ -226,17 +228,44 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
   const [worldIdConfig, setWorldIdConfig] = useState<string>("");
   const [emailValidation, setEmailValidation] = useState<{ valid: string[]; invalid: string[] }>({ valid: [], invalid: [] });
   const [domainValidation, setDomainValidation] = useState<{ valid: string[]; invalid: string[] }>({ valid: [], invalid: [] });
+  const [inputEmailError, setInputEmailError] = useState<string>("");
 
-  // Email validation function
+  // Enhanced email validation using zod
+  const emailSchema = z.string().trim().email({ message: "Invalid email address" }).max(255, { message: "Email must be less than 255 characters" });
+
   const validateEmail = (email: string): boolean => {
-    // More comprehensive email validation regex
-    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-    return emailRegex.test(email.trim());
+    try {
+      emailSchema.parse(email);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const getEmailErrorMessage = (email: string): string => {
+    if (!email) return "";
+    try {
+      emailSchema.parse(email);
+      return "";
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return error.errors[0]?.message || "Invalid email";
+      }
+      return "Invalid email";
+    }
   };
 
   // Handle adding email chips
   const handleEmailInputChange = (value: string) => {
     setCurrentEmailInput(value);
+    
+    // Real-time validation feedback
+    if (value.trim() && !value.match(/[,;\s]/)) {
+      const error = getEmailErrorMessage(value.trim());
+      setInputEmailError(error);
+    } else {
+      setInputEmailError("");
+    }
     
     // Check for delimiters: space, comma, semicolon, or Enter
     const delimiters = /[,;\s]/;
@@ -246,11 +275,15 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
       emails.forEach(email => {
         if (email && !emailChips.some(chip => chip.email === email)) {
           const isValid = validateEmail(email);
+          if (!isValid) {
+            toast.error(`Invalid email: ${email}`);
+          }
           setEmailChips(prev => [...prev, { email, valid: isValid }]);
         }
       });
       
       setCurrentEmailInput('');
+      setInputEmailError("");
     }
   };
 
@@ -258,11 +291,21 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
     if (e.key === 'Enter' && currentEmailInput.trim()) {
       e.preventDefault();
       const email = currentEmailInput.trim();
-      if (!emailChips.some(chip => chip.email === email)) {
-        const isValid = validateEmail(email);
-        setEmailChips(prev => [...prev, { email, valid: isValid }]);
+      const isValid = validateEmail(email);
+      
+      if (!isValid) {
+        toast.error(`Invalid email: ${email}`);
+        return;
       }
+      
+      if (emailChips.some(chip => chip.email === email)) {
+        toast.error("This email is already added");
+        return;
+      }
+      
+      setEmailChips(prev => [...prev, { email, valid: isValid }]);
       setCurrentEmailInput('');
+      setInputEmailError("");
     } else if (e.key === 'Backspace' && !currentEmailInput && emailChips.length > 0) {
       // Remove last chip on backspace if input is empty
       setEmailChips(prev => prev.slice(0, -1));
@@ -448,7 +491,11 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
               )}
 
               {/* Email Chips Container */}
-              <div className="min-h-[120px] p-3 rounded-lg border border-border bg-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 transition-all">
+              <div className={`min-h-[120px] p-3 rounded-lg border bg-background focus-within:ring-2 focus-within:ring-offset-2 transition-all ${
+                inputEmailError 
+                  ? 'border-destructive focus-within:ring-destructive' 
+                  : 'border-border focus-within:ring-ring'
+              }`}>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {emailChips.map((chip) => (
                     <Badge
@@ -483,6 +530,14 @@ const StepAuthRestrictions = ({ authenticationType, onDataChange }: StepAuthRest
                   className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-0 h-8 text-sm"
                 />
               </div>
+
+              {/* Email Validation Error Message */}
+              {inputEmailError && (
+                <div className="flex items-center gap-2 text-destructive text-xs mt-1">
+                  <AlertCircle className="w-3 h-3" />
+                  <span>{inputEmailError}</span>
+                </div>
+              )}
 
               {/* Helper Text and Upload Button */}
               <div className="flex items-center justify-between">
