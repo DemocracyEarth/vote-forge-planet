@@ -3,6 +3,8 @@ import { useNavigate, Routes, Route, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { NotificationsPanel } from "@/components/NotificationsPanel";
+import { useUnreadNotifications } from "@/hooks/useUnreadNotifications";
 import { Loader2 } from "lucide-react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -19,6 +21,7 @@ const Dashboard = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { unreadCount, refetch } = useUnreadNotifications(user?.id);
 
   useEffect(() => {
     checkUser();
@@ -58,6 +61,7 @@ const Dashboard = () => {
             <SidebarTrigger className="hover:bg-primary/10 transition-colors duration-300" />
             <div className="flex-1" />
             <div className="flex items-center gap-3">
+              <NotificationsPanel unreadCount={unreadCount} onCountChange={refetch} />
               <LanguageSelector />
               <ThemeToggle />
             </div>

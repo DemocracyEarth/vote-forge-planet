@@ -1,11 +1,8 @@
 import { Home, Vote, PlusCircle, History, User, Users, MessageSquare } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useState, useEffect } from "react";
 import logo from "@/assets/logo.png";
 import FeedbackButton from "@/components/FeedbackButton";
-import { useUnreadNotifications } from "@/hooks/useUnreadNotifications";
-import { NotificationsPanel } from "./NotificationsPanel";
 import {
   Sidebar,
   SidebarContent,
@@ -30,19 +27,6 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
-  const [userId, setUserId] = useState<string>();
-  const [refreshCount, setRefreshCount] = useState(0);
-  const unreadCount = useUnreadNotifications(userId);
-
-  const handleCountChange = () => {
-    setRefreshCount(prev => prev + 1);
-  };
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUserId(session?.user?.id);
-    });
-  }, []);
 
   const navItems = [
     {
@@ -93,7 +77,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r border-primary/10 bg-gradient-to-b from-background via-background to-primary/5">
       <SidebarHeader className="border-b border-primary/20 backdrop-blur-xl bg-background/60">
-        <div className={`flex items-center gap-2 p-3 ${state === "collapsed" ? "justify-center" : "justify-between"}`}>
+        <div className={`flex items-center gap-2 p-3 ${state === "collapsed" ? "justify-center" : ""}`}>
           {state !== "collapsed" && (
             <div 
               className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
@@ -112,7 +96,6 @@ export function AppSidebar() {
               </div>
             </div>
           )}
-          <NotificationsPanel unreadCount={unreadCount} onCountChange={handleCountChange} />
         </div>
       </SidebarHeader>
 

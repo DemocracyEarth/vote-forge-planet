@@ -4,18 +4,20 @@ import { supabase } from "@/integrations/supabase/client";
 export const useUnreadNotifications = (userId: string | undefined) => {
   const [unreadCount, setUnreadCount] = useState(0);
 
+  const loadUnreadCount = async () => {
+    if (!userId) return;
+    
+    const { count } = await supabase
+      .from('notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('is_read', false);
+
+    setUnreadCount(count || 0);
+  };
+
   useEffect(() => {
     if (!userId) return;
-
-    const loadUnreadCount = async () => {
-      const { count } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .eq('is_read', false);
-
-      setUnreadCount(count || 0);
-    };
 
     loadUnreadCount();
 
@@ -41,5 +43,5 @@ export const useUnreadNotifications = (userId: string | undefined) => {
     };
   }, [userId]);
 
-  return unreadCount;
+  return { unreadCount, refetch: loadUnreadCount };
 };
