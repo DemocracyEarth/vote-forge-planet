@@ -32,6 +32,7 @@ interface UserProfile {
   full_name: string;
   avatar_url: string;
   bio: string;
+  email: string;
 }
 
 interface GlobalSearchProps {
@@ -95,8 +96,8 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
       // Search users
       const { data: usersData } = await supabase
         .from('profiles')
-        .select('id, full_name, avatar_url, bio')
-        .or(`full_name.ilike.%${query}%,bio.ilike.%${query}%`)
+        .select('id, full_name, avatar_url, bio, email')
+        .or(`full_name.ilike.%${query}%,bio.ilike.%${query}%,email.ilike.%${query}%`)
         .neq('id', user?.id || '')
         .limit(5);
 
@@ -217,6 +218,9 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{user.full_name}</p>
+                      {user.email && (
+                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                      )}
                       {user.bio && (
                         <p className="text-sm text-muted-foreground line-clamp-1">
                           {user.bio}
