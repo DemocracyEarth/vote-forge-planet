@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { Search, UserCheck, UserX, Shield, Users, CheckCircle2 } from "lucide-react";
+import { Search, UserCheck, UserX, Shield, Users, CheckCircle2, Star } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 interface UserProfile {
@@ -232,11 +233,11 @@ export function DashboardUsersFeed() {
         <Card className="glass-card border-primary/50 bg-primary/5">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <UserCheck className="h-5 w-5" />
+              <Star className="h-5 w-5 fill-primary text-primary" />
               Active Delegation
             </CardTitle>
             <CardDescription>
-              You are currently delegating your vote
+              You are currently delegating your vote to a trusted member
             </CardDescription>
           </CardHeader>
         </Card>
@@ -264,30 +265,42 @@ export function DashboardUsersFeed() {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredUsers.map((user) => (
-            <Card key={user.id} className="glass-card hover:border-primary/50 transition-all duration-300">
+            <Card 
+              key={user.id} 
+              className={`glass-card hover:border-primary/50 transition-all duration-300 ${
+                user.is_delegated_by_me ? 'border-primary/50 bg-primary/5 ring-2 ring-primary/20' : ''
+              }`}
+            >
               <CardHeader>
-                <div className="flex items-start gap-4">
-                  <Avatar className="h-16 w-16 border-2 border-primary/20">
-                    <AvatarImage src={user.avatar_url || undefined} alt={user.full_name || "User"} />
-                    <AvatarFallback className="text-lg">
-                      {user.full_name?.[0]?.toUpperCase() || "?"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start gap-2 mb-1">
-                      <CardTitle className="text-lg truncate">
-                        {user.full_name || "Anonymous"}
-                      </CardTitle>
-                      {user.is_verified && (
-                        <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                <Link to={`/dashboard/user/${user.id}`} className="block">
+                  <div className="flex items-start gap-4 cursor-pointer group">
+                    <div className="relative">
+                      <Avatar className="h-16 w-16 border-2 border-primary/20 group-hover:border-primary/50 transition-colors">
+                        <AvatarImage src={user.avatar_url || undefined} alt={user.full_name || "User"} />
+                        <AvatarFallback className="text-lg">
+                          {user.full_name?.[0]?.toUpperCase() || "?"}
+                        </AvatarFallback>
+                      </Avatar>
+                      {user.is_delegated_by_me && (
+                        <Star className="absolute -top-1 -right-1 h-5 w-5 fill-primary text-primary" />
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Users className="h-4 w-4" />
-                      <span>{user.delegation_count} delegator{user.delegation_count !== 1 ? 's' : ''}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start gap-2 mb-1">
+                        <CardTitle className="text-lg truncate group-hover:text-primary transition-colors">
+                          {user.full_name || "Anonymous"}
+                        </CardTitle>
+                        {user.is_verified && (
+                          <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Users className="h-4 w-4" />
+                        <span>{user.delegation_count} delegator{user.delegation_count !== 1 ? 's' : ''}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               </CardHeader>
               <CardContent className="space-y-4">
                 {user.bio && (
