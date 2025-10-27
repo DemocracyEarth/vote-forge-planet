@@ -462,21 +462,24 @@ const Vote = () => {
 
   return (
     <div className="min-h-screen aurora-bg">
+      {/* Top controls */}
+      <div className="fixed top-3 left-3 sm:top-4 sm:left-4 z-50">
+        <Button 
+          variant="outline" 
+          onClick={() => navigate(user ? '/dashboard' : '/')}
+          size="sm"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          {user ? t('vote.backToDashboard') : t('vote.backToHome')}
+        </Button>
+      </div>
+
       <div className="fixed top-3 right-3 sm:top-4 sm:right-4 z-50 flex items-center gap-2 sm:gap-3">
         <LanguageSelector />
         <ThemeToggle />
       </div>
 
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Button 
-          variant="outline" 
-          onClick={() => navigate(user ? '/dashboard' : '/')} 
-          className="mb-6"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          {user ? t('vote.backToDashboard') : t('vote.backToHome')}
-        </Button>
-
+      <div className="container mx-auto px-4 py-8 max-w-4xl pt-20">
         <Card className="relative overflow-hidden border-border/50 bg-card/40 backdrop-blur-xl">
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
