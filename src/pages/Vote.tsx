@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import Footer from "@/components/Footer";
 import { useTranslation } from "react-i18next";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { DiscussionThread } from "@/components/DiscussionThread";
 import { LiveResults } from "@/components/LiveResults";
 import { ElectionCountdown } from "@/components/ElectionCountdown";
@@ -217,7 +218,7 @@ const Vote = () => {
       // Fetch only necessary fields to prevent sensitive config exposure
       const { data, error } = await supabase
         .from('elections')
-        .select('id, title, description, start_date, end_date, is_ongoing, status, is_public, identity_config, voting_logic_config, bill_config, created_by')
+        .select('id, title, description, start_date, end_date, is_ongoing, status, is_public, identity_config, voting_logic_config, bill_config, created_by, tags')
         .eq('id', electionId)
         .single();
 
@@ -515,6 +516,22 @@ const Vote = () => {
                       className="text-muted-foreground text-sm sm:text-base lg:text-lg leading-relaxed prose prose-sm sm:prose max-w-none"
                       dangerouslySetInnerHTML={{ __html: marked(election.description) }}
                     />
+                  )}
+                  
+                  {/* Tags Display */}
+                  {election.tags && election.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      {election.tags.map((tag: string) => (
+                        <Badge 
+                          key={tag}
+                          variant="secondary" 
+                          className="text-xs px-3 py-1 bg-primary/10 text-primary border border-primary/20 cursor-pointer hover:bg-primary/20 transition-colors"
+                          onClick={() => navigate(`/dashboard?tag=${tag}`)}
+                        >
+                          {t(`tags.${tag}`)}
+                        </Badge>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>

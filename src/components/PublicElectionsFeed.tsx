@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Loader2, ExternalLink, Users, TrendingUp, Mail, Phone, Chrome, Globe, MessageSquare, Share2 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ElectionCountdown } from "@/components/ElectionCountdown";
@@ -64,6 +64,18 @@ export function PublicElectionsFeed() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Initialize tags from URL query parameter
+  useEffect(() => {
+    const tagParam = searchParams.get('tag');
+    if (tagParam && !selectedTags.includes(tagParam)) {
+      setSelectedTags([tagParam]);
+      // Remove the tag parameter from URL after applying it
+      searchParams.delete('tag');
+      setSearchParams(searchParams);
+    }
+  }, []);
 
   useEffect(() => {
     loadPublicElections();
