@@ -394,7 +394,7 @@ export function PublicElectionsFeed() {
                   <div className="flex-1">
                     <CardTitle 
                       className="text-2xl font-bold group-hover:text-primary transition-colors duration-300 mb-3 cursor-pointer"
-                      onClick={() => navigate(`/vote?id=${election.id}`)}
+                      onClick={() => navigate(`/vote/${election.id}`)}
                     >
                       {election.title}
                     </CardTitle>
@@ -438,20 +438,6 @@ export function PublicElectionsFeed() {
                         {truncateText(election.description, 120)}
                       </CardDescription>
                     </div>
-
-                    {/* Social Media Preview Image */}
-                    {election.bill_config?.illustrationUrl && (
-                      <div className="mt-4">
-                        <div className="max-w-sm rounded-lg border overflow-hidden bg-muted/30 shadow-sm" style={{ aspectRatio: '1.91/1' }}>
-                          <img
-                            src={election.bill_config.illustrationUrl}
-                            alt={`Illustration for ${election.title}`}
-                            className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                            onClick={() => navigate(`/vote?id=${election.id}`)}
-                          />
-                        </div>
-                      </div>
-                    )}
                   </div>
                   {totalVotes > 0 && (
                     <div className="flex flex-col items-end gap-1 px-4 py-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30">
