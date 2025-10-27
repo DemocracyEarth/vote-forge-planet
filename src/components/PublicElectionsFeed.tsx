@@ -449,6 +449,14 @@ export function PublicElectionsFeed() {
               </CardHeader>
               
               <CardContent className="relative space-y-4">
+                {/* Quick stats bar */}
+                {commentCounts[election.id] > 0 && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <MessageSquare className="h-3 w-3" />
+                    <span>{commentCounts[election.id]} {commentCounts[election.id] === 1 ? 'comment' : 'comments'}</span>
+                  </div>
+                )}
+
                 {/* Compact Countdown */}
                 <div className="text-sm">
                   <ElectionCountdown 
@@ -508,14 +516,6 @@ export function PublicElectionsFeed() {
                     </div>
                   );
                 })()}
-
-                {/* Quick stats bar */}
-                {commentCounts[election.id] > 0 && (
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <MessageSquare className="h-3 w-3" />
-                    <span>{commentCounts[election.id]} {commentCounts[election.id] === 1 ? 'comment' : 'comments'}</span>
-                  </div>
-                )}
                 
                 <div className="flex gap-3">
                   <Button
