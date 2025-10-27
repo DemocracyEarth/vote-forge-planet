@@ -492,7 +492,7 @@ const Vote = () => {
                       ? selectedOptions[0] === option ? "default" : "outline"
                       : selectedOptions.includes(option) ? "default" : "outline"
                   }
-                  className={`h-auto py-6 px-7 text-lg justify-start font-semibold transition-all duration-200 rounded-xl shadow-md ${
+                  className={`h-auto py-6 px-7 text-lg justify-start font-semibold transition-all duration-200 rounded-xl shadow-md whitespace-normal text-left ${
                     (election.bill_config.ballotType === "single" ? selectedOptions[0] === option : selectedOptions.includes(option))
                       ? "bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/30 scale-[1.02]"
                       : "bg-background/80 hover:bg-background hover:border-primary/50 hover:shadow-md hover:scale-[1.01]"
@@ -509,11 +509,11 @@ const Vote = () => {
                     }
                   }}
                 >
-                  <span className="flex items-center gap-3">
+                  <span className="flex items-start gap-3 w-full">
                     {(election.bill_config.ballotType === "single" ? selectedOptions[0] === option : selectedOptions.includes(option)) && (
-                      <span className="w-2.5 h-2.5 rounded-full bg-primary-foreground animate-pulse" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-primary-foreground animate-pulse flex-shrink-0 mt-1" />
                     )}
-                    {option}
+                    <span className="break-words flex-1">{option}</span>
                   </span>
                 </Button>
               ))}
