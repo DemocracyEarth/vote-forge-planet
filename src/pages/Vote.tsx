@@ -484,8 +484,9 @@ const Vote = () => {
           <div className="relative p-4 sm:p-6 lg:p-8">
             {/* Header Section */}
             <div className="mb-4 sm:mb-8 pb-4 sm:pb-6 border-b border-border/50">
-              <div className="flex items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
-                <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 backdrop-blur-sm flex-shrink-0">
+              {/* Mobile: Icon above, Desktop: Icon left */}
+              <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
+                <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 backdrop-blur-sm w-fit">
                   <VoteIcon className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
