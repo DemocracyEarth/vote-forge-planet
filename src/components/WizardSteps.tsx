@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -248,12 +248,12 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
             {isDeploying ? (
               <>
                 <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
-                {t('wizard.deploying') || 'Deploying...'}
+                {t('wizard.generating') || 'Generating...'}
               </>
             ) : (
               <>
-                {t('wizard.deploy')}
-                <Check className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
+                <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                {t('wizard.generateWithAI') || 'Generate with AI'}
               </>
             )}
           </Button>

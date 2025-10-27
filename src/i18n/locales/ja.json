@@ -96,7 +96,9 @@
     "next": "次",
     "deploy": "地球にデプロイ 🌎",
     "deploying": "デプロイ中...",
-    "deploySuccess": "🌎 投票がデプロイされました！民主主義がライブです。どこでも共有してください。🚀"
+    "deploySuccess": "🌎 投票がデプロイされました！民主主義がライブです。どこでも共有してください。🚀",
+    "generateWithAI": "AIで生成",
+    "generating": "生成中..."
   },
   "steps": {
     "identity": {

@@ -96,7 +96,9 @@
     "next": "Sig.",
     "deploy": "Desplegar a la Tierra 🌎",
     "deploying": "Desplegando...",
-    "deploySuccess": "🌎 ¡Voto desplegado! La democracia está en vivo. Compártelo en todas partes. 🚀"
+    "deploySuccess": "🌎 ¡Voto desplegado! La democracia está en vivo. Compártelo en todas partes. 🚀",
+    "generateWithAI": "Generar con IA",
+    "generating": "Generando..."
   },
   "steps": {
     "identity": {

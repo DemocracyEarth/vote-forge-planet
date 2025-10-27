@@ -101,7 +101,9 @@
     "next": "Next",
     "deploy": "Deploy to Earth 🌎",
     "deploying": "Deploying...",
-    "deploySuccess": "🌎 Vote deployed! Democracy is live. Share it everywhere. 🚀"
+    "deploySuccess": "🌎 Vote deployed! Democracy is live. Share it everywhere. 🚀",
+    "generateWithAI": "Generate with AI",
+    "generating": "Generating..."
   },
   "steps": {
     "identity": {

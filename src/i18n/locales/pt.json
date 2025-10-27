@@ -96,7 +96,9 @@
     "next": "Próx.",
     "deploy": "Implantar na Terra 🌎",
     "deploying": "Implantando...",
-    "deploySuccess": "🌎 Voto implantado! A democracia está ao vivo. Compartilhe em todos os lugares. 🚀"
+    "deploySuccess": "🌎 Voto implantado! A democracia está ao vivo. Compartilhe em todos os lugares. 🚀",
+    "generateWithAI": "Gerar com IA",
+    "generating": "Gerando..."
   },
   "steps": {
     "identity": {
