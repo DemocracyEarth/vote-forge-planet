@@ -54,7 +54,6 @@ export function DashboardUsersFeed() {
         .from("delegations")
         .select("id, delegate_id")
         .eq("delegator_id", user.id)
-        .eq("active", true)
         .maybeSingle();
       
       setMyDelegation(delegationData);
@@ -71,8 +70,7 @@ export function DashboardUsersFeed() {
       // Get delegation counts for all users
       const { data: delegations, error: delegationsError } = await supabase
         .from("delegations")
-        .select("delegate_id")
-        .eq("active", true);
+        .select("delegate_id");
 
       if (delegationsError) throw delegationsError;
 
@@ -130,10 +128,10 @@ export function DashboardUsersFeed() {
 
     try {
       if (myDelegation?.delegate_id === delegateId) {
-        // Revoke delegation
+        // Delete delegation entirely
         const { error } = await supabase
           .from("delegations")
-          .update({ active: false })
+          .delete()
           .eq("id", myDelegation.id);
 
         if (error) throw error;
@@ -145,25 +143,23 @@ export function DashboardUsersFeed() {
         
         setMyDelegation(null);
       } else {
-        // Create or update delegation (upsert to handle re-delegation)
+        // Create or update delegation
         if (myDelegation) {
-          // Update existing active delegation to point to new delegate
+          // Update existing delegation to point to new delegate
           const { error } = await supabase
             .from("delegations")
-            .update({ delegate_id: delegateId, active: true })
+            .update({ delegate_id: delegateId })
             .eq("id", myDelegation.id);
 
           if (error) throw error;
         } else {
-          // Upsert delegation (creates new or reactivates existing)
+          // Create new delegation
           const { data, error } = await supabase
             .from("delegations")
-            .upsert({
+            .insert({
               delegator_id: currentUserId,
               delegate_id: delegateId,
               active: true
-            }, {
-              onConflict: 'delegator_id,delegate_id'
             })
             .select()
             .single();
