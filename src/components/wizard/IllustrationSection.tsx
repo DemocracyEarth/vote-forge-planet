@@ -68,29 +68,28 @@ export const IllustrationSection = ({
               Creating editorial illustration...
             </div>
           ) : illustrationUrl ? (
-            <div className="space-y-2">
+            <div className="space-y-3">
+              <div className="rounded-lg border overflow-hidden bg-background" style={{ aspectRatio: '1.91/1' }}>
+                <img
+                  src={illustrationUrl}
+                  alt="Proposal preview illustration"
+                  className="w-full h-full object-cover"
+                />
+              </div>
               <div className="flex items-center gap-2">
-                <div className="w-32 h-16 rounded border overflow-hidden bg-background flex-shrink-0">
-                  <img
-                    src={illustrationUrl}
-                    alt="Proposal preview illustration"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="flex gap-1 flex-1">
-                  <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="text-xs flex-1"
-                        onClick={() => setTempPrompt(customPrompt)}
-                      >
-                        <Settings className="w-3 h-3 mr-1" />
-                        Customize
-                      </Button>
-                    </DialogTrigger>
+                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => setTempPrompt(customPrompt)}
+                    >
+                      <Settings className="w-3 h-3 mr-1" />
+                      Customize
+                    </Button>
+                  </DialogTrigger>
                     <DialogContent className="max-w-md">
                       <DialogHeader>
                         <DialogTitle>Customize Illustration</DialogTitle>
@@ -138,11 +137,10 @@ export const IllustrationSection = ({
                     <RefreshCw className="w-3 h-3" />
                   </Button>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Preview as it will appear on social media
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Used when sharing on social media
-              </p>
-            </div>
           ) : (
             <p className="text-xs text-muted-foreground py-2">
               An illustration will be automatically generated when you create the proposal
