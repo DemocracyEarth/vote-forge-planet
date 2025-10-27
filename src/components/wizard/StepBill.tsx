@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Calendar, FileText, Shield, Plus, X, List, Sparkles, Settings, Coins, Scale, Star, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -156,6 +157,8 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
   const [showFullForm, setShowFullForm] = useState(false);
   const [placeholder] = useState(() => placeholderExamples[Math.floor(Math.random() * placeholderExamples.length)]);
   const [loadingMessage, setLoadingMessage] = useState(0);
+  const [generatedTags, setGeneratedTags] = useState<string[]>([]);
+  const [isGeneratingTags, setIsGeneratingTags] = useState(false);
 
   const loadingMessages = [
     "Analyzing your proposal from all angles...",
@@ -195,6 +198,35 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
     setBallotOptions(newOptions);
   };
 
+  const handleGenerateTags = useCallback(async () => {
+    if (!title.trim() || title.trim().length === 0) {
+      return;
+    }
+
+    setIsGeneratingTags(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-election-tags", {
+        body: { 
+          title: title.trim(),
+          description: description.trim() 
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.tags && Array.isArray(data.tags)) {
+        setGeneratedTags(data.tags);
+      } else {
+        setGeneratedTags(["others"]);
+      }
+    } catch (error: any) {
+      console.error("Error generating tags:", error);
+      setGeneratedTags(["others"]);
+    } finally {
+      setIsGeneratingTags(false);
+    }
+  }, [title, description]);
+
   const handleGenerateDescription = useCallback(async () => {
     if (!title.trim() || title.trim().length === 0) {
       return;
@@ -222,6 +254,9 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
         });
         lastGeneratedTitleRef.current = title.trim();
 
+        // Generate tags after description is ready
+        handleGenerateTags();
+
         // AI image generation removed per user request
         // Illustration feature disabled
       }
@@ -235,7 +270,7 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
     } finally {
       setIsGeneratingDescription(false);
     }
-  }, [title, toast, illustrationEnabled, customIllustrationPrompt]);
+  }, [title, toast, illustrationEnabled, customIllustrationPrompt, handleGenerateTags]);
 
   const handlePolishProposal = async () => {
     if (!title && !description) {
@@ -349,10 +384,11 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
         endDate,
         isOngoing,
         illustrationUrl,
+        tags: generatedTags,
         ...modelSettings,
       });
     }
-  }, [title, description, ballotType, ballotOptions, startDate, endDate, isOngoing, illustrationUrl, votingModel, tokenSettings, quadraticSettings, reputationSettings, onDataChange]);
+  }, [title, description, ballotType, ballotOptions, startDate, endDate, isOngoing, illustrationUrl, generatedTags, votingModel, tokenSettings, quadraticSettings, reputationSettings, onDataChange]);
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -548,6 +584,37 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
           onCustomPromptChange={setCustomIllustrationPrompt}
           onRegenerate={handleRegenerateIllustration}
         /> */}
+
+        {/* Generated Tags Display */}
+        {(generatedTags.length > 0 || isGeneratingTags) && (
+          <Card className="p-4 space-y-3 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-sm font-semibold text-foreground">AI Generated Tags</span>
+            </div>
+            {isGeneratingTags ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Analyzing topic and generating tags...</span>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {generatedTags.map((tag) => (
+                  <Badge 
+                    key={tag}
+                    variant="secondary" 
+                    className="px-3 py-1 bg-primary/10 text-primary border border-primary/20 font-medium"
+                  >
+                    {t(`tags.${tag}`)}
+                  </Badge>
+                ))}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">
+              These tags help voters discover your election and categorize it for filtering.
+            </p>
+          </Card>
+        )}
 
         {/* Ballot Options */}
         <Card className="p-3 sm:p-4 space-y-3 sm:space-y-4">
