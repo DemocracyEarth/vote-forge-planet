@@ -112,7 +112,10 @@ const Vote = () => {
       // Convert RPC results to the format expected by LiveResults
       const results: Record<string, number> = {};
       data?.forEach((item: any) => {
-        results[item.vote_value] = item.vote_count;
+        // Filter out null vote values (when there are no votes yet)
+        if (item.vote_value !== null) {
+          results[item.vote_value] = item.vote_count;
+        }
       });
 
       setVoteResults(results);
@@ -673,12 +676,12 @@ const Vote = () => {
                     .sort(([, a], [, b]) => b - a)
                     .map(([option, count], index) => {
                       const total = Object.values(voteResults).reduce((sum, val) => sum + val, 0);
-                      const percentage = ((count / total) * 100).toFixed(1);
+                      const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : "0.0";
                       return (
                         <div key={option} className="space-y-2 p-4 rounded-lg bg-card/40 backdrop-blur-sm border border-border/50 hover:border-primary/30 smooth-transition">
                           <div className="flex justify-between items-center">
                             <div className="flex items-center gap-2">
-                              {index === 0 && (
+                              {index === 0 && total > 0 && (
                                 <span className="text-lg">🥇</span>
                               )}
                               <span className="font-semibold text-base">{option}</span>
