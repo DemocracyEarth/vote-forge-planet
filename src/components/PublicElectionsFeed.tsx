@@ -54,7 +54,8 @@ export function PublicElectionsFeed() {
   const [elections, setElections] = useState<PublicElection[]>([]);
   const [electionResults, setElectionResults] = useState<Record<string, ElectionResults[]>>({});
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [contentLoading, setContentLoading] = useState(false);
   const [filter, setFilter] = useState<FilterType>("all");
   const [userId, setUserId] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -65,7 +66,12 @@ export function PublicElectionsFeed() {
   }, [filter]);
 
   const loadPublicElections = async () => {
-    setLoading(true);
+    // Only show full loading on initial load
+    if (initialLoading) {
+      setInitialLoading(true);
+    } else {
+      setContentLoading(true);
+    }
     try {
       // Get current user
       const { data: { session } } = await supabase.auth.getSession();
@@ -95,7 +101,8 @@ export function PublicElectionsFeed() {
         const electionIds = voterRegistry?.map(v => v.election_id) || [];
         if (electionIds.length === 0) {
           setElections([]);
-          setLoading(false);
+          setInitialLoading(false);
+          setContentLoading(false);
           return;
         }
         query = query.in("id", electionIds);
@@ -160,7 +167,8 @@ export function PublicElectionsFeed() {
     } catch (error) {
       console.error("Error loading public elections:", error);
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
+      setContentLoading(false);
     }
   };
 
@@ -269,7 +277,7 @@ export function PublicElectionsFeed() {
   };
 
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -277,19 +285,51 @@ export function PublicElectionsFeed() {
     );
   }
 
-  if (elections.length === 0) {
-    return (
-      <Card className="border-primary/20 bg-gradient-to-br from-background via-primary/5 to-background backdrop-blur-sm">
-        <CardContent className="pt-12 pb-12 text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent mb-6 shadow-lg shadow-primary/20">
-            <Globe className="h-10 w-10 text-primary" />
-          </div>
-          <p className="text-muted-foreground text-lg mb-2 font-semibold">No public elections available</p>
-          <p className="text-sm text-muted-foreground/70">Check back later for new decisions to participate in!</p>
-        </CardContent>
-      </Card>
-    );
-  }
+  const renderSkeletonCards = () => (
+    <div className="grid gap-6">
+      {[1, 2, 3].map((i) => (
+        <Card key={i} className="border-primary/20 bg-gradient-to-br from-background via-background to-primary/5 backdrop-blur-sm animate-pulse">
+          <CardHeader className="pb-6">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 space-y-3">
+                <div className="h-8 bg-primary/10 rounded-lg w-3/4" />
+                <div className="flex items-center gap-2">
+                  <div className="h-6 w-6 bg-primary/10 rounded-full" />
+                  <div className="h-4 bg-primary/10 rounded w-32" />
+                </div>
+                <div className="h-4 bg-primary/10 rounded w-full" />
+              </div>
+              <div className="h-20 w-24 bg-primary/10 rounded-xl" />
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="h-4 bg-primary/10 rounded w-1/2" />
+            <div className="h-24 bg-primary/10 rounded-xl" />
+            <div className="flex gap-3">
+              <div className="h-10 bg-primary/10 rounded flex-1" />
+              <div className="h-10 bg-primary/10 rounded w-28" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+
+  const renderEmptyState = () => (
+    <Card className="border-primary/20 bg-gradient-to-br from-background via-primary/5 to-background backdrop-blur-sm">
+      <CardContent className="pt-12 pb-12 text-center">
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent mb-6 shadow-lg shadow-primary/20">
+          <Globe className="h-10 w-10 text-primary" />
+        </div>
+        <p className="text-muted-foreground text-lg mb-2 font-semibold">
+          {filter === "my-elections" ? "No elections created yet" : filter === "participated" ? "No participation history yet" : "No public elections available"}
+        </p>
+        <p className="text-sm text-muted-foreground/70">
+          {filter === "my-elections" ? "Create your first election to get started" : filter === "participated" ? "Start voting to see your history here" : "Check back later for new decisions to participate in!"}
+        </p>
+      </CardContent>
+    </Card>
+  );
 
   const getFilterTitle = () => {
     switch (filter) {
@@ -337,8 +377,9 @@ export function PublicElectionsFeed() {
         </TabsList>
       </Tabs>
 
-      <div className="grid gap-6">
-        {elections.map((election) => {
+      {contentLoading ? renderSkeletonCards() : elections.length === 0 ? renderEmptyState() : (
+        <div className="grid gap-6">
+          {elections.map((election) => {
           const results = electionResults[election.id] || [];
           const totalVotes = results.length > 0 ? results[0].total_votes : 0;
           
@@ -521,7 +562,8 @@ export function PublicElectionsFeed() {
             </Card>
           );
         })}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
