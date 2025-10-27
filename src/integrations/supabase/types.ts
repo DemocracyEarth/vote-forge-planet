@@ -203,7 +203,7 @@ export type Database = {
         Row: {
           comment_id: string | null
           created_at: string
-          election_id: string
+          election_id: string | null
           id: string
           is_read: boolean
           metadata: Json | null
@@ -214,7 +214,7 @@ export type Database = {
         Insert: {
           comment_id?: string | null
           created_at?: string
-          election_id: string
+          election_id?: string | null
           id?: string
           is_read?: boolean
           metadata?: Json | null
@@ -225,7 +225,7 @@ export type Database = {
         Update: {
           comment_id?: string | null
           created_at?: string
-          election_id?: string
+          election_id?: string | null
           id?: string
           is_read?: boolean
           metadata?: Json | null
