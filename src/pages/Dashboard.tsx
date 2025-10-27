@@ -13,6 +13,7 @@ import { DashboardProfile } from "@/components/DashboardProfile";
 import { DashboardUsersFeed } from "@/components/DashboardUsersFeed";
 import { DashboardDiscussions } from "@/components/DashboardDiscussions";
 import { UserProfileView } from "@/components/UserProfileView";
+import DashboardNotifications from "./DashboardNotifications";
 
 const Dashboard = () => {
   const [user, setUser] = useState<any>(null);
@@ -72,6 +73,7 @@ const Dashboard = () => {
                 <Route path="/community" element={<DashboardUsersFeed />} />
                 <Route path="/user/:userId" element={<UserProfileView />} />
                 <Route path="/profile" element={<DashboardProfile />} />
+                <Route path="/notifications" element={<DashboardNotifications />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
             </div>

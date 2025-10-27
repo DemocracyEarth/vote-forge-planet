@@ -172,29 +172,65 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          notification_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          notification_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          notification_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
-          comment_id: string
+          comment_id: string | null
           created_at: string
           election_id: string
           id: string
           is_read: boolean
+          metadata: Json | null
+          notification_type: Database["public"]["Enums"]["notification_type"]
+          related_user_id: string | null
           user_id: string
         }
         Insert: {
-          comment_id: string
+          comment_id?: string | null
           created_at?: string
           election_id: string
           id?: string
           is_read?: boolean
+          metadata?: Json | null
+          notification_type?: Database["public"]["Enums"]["notification_type"]
+          related_user_id?: string | null
           user_id: string
         }
         Update: {
-          comment_id?: string
+          comment_id?: string | null
           created_at?: string
           election_id?: string
           id?: string
           is_read?: boolean
+          metadata?: Json | null
+          notification_type?: Database["public"]["Enums"]["notification_type"]
+          related_user_id?: string | null
           user_id?: string
         }
         Relationships: []
@@ -296,9 +332,19 @@ export type Database = {
         Args: { election_uuid: string; vote_val: string }
         Returns: boolean
       }
+      should_notify_user: {
+        Args: { p_notification_type: string; p_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      notification_type:
+        | "comment_reply"
+        | "delegation_received"
+        | "delegator_voted"
+        | "election_started"
+        | "election_ending_soon"
+        | "election_ended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -425,6 +471,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      notification_type: [
+        "comment_reply",
+        "delegation_received",
+        "delegator_voted",
+        "election_started",
+        "election_ending_soon",
+        "election_ended",
+      ],
+    },
   },
 } as const

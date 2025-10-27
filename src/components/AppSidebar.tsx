@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import logo from "@/assets/logo.png";
 import FeedbackButton from "@/components/FeedbackButton";
 import { useUnreadNotifications } from "@/hooks/useUnreadNotifications";
+import { NotificationsPanel } from "./NotificationsPanel";
 import {
   Sidebar,
   SidebarContent,
@@ -30,7 +31,12 @@ export function AppSidebar() {
   const { toast } = useToast();
   const { t } = useTranslation();
   const [userId, setUserId] = useState<string>();
+  const [refreshCount, setRefreshCount] = useState(0);
   const unreadCount = useUnreadNotifications(userId);
+
+  const handleCountChange = () => {
+    setRefreshCount(prev => prev + 1);
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -58,7 +64,6 @@ export function AppSidebar() {
       title: "Discussions",
       url: "/dashboard/discussions",
       icon: MessageSquare,
-      badge: unreadCount > 0 ? unreadCount : undefined,
     },
     {
       title: "Community",
@@ -88,7 +93,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r border-primary/10 bg-gradient-to-b from-background via-background to-primary/5">
       <SidebarHeader className="border-b border-primary/20 backdrop-blur-xl bg-background/60">
-        <div className={`flex items-center gap-2 p-3 ${state === "collapsed" ? "justify-center" : ""}`}>
+        <div className={`flex items-center gap-2 p-3 ${state === "collapsed" ? "justify-center" : "justify-between"}`}>
           {state !== "collapsed" && (
             <div 
               className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
@@ -107,6 +112,7 @@ export function AppSidebar() {
               </div>
             </div>
           )}
+          <NotificationsPanel unreadCount={unreadCount} onCountChange={handleCountChange} />
         </div>
       </SidebarHeader>
 
@@ -133,18 +139,8 @@ export function AppSidebar() {
                       location.pathname === item.url ? "scale-110" : "group-hover:scale-110"
                     }`} />
                     {state !== "collapsed" && (
-                      <span className="font-medium flex items-center gap-2">
+                      <span className="font-medium">
                         {item.title}
-                        {item.badge && (
-                          <span className="bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded-full">
-                            {item.badge}
-                          </span>
-                        )}
-                      </span>
-                    )}
-                    {state === "collapsed" && item.badge && (
-                      <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                        {item.badge}
                       </span>
                     )}
                   </SidebarMenuButton>

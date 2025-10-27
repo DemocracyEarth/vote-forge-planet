@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
+import { NotificationPreferences } from "./NotificationPreferences";
 
 interface AuthProvider {
   id: string;
@@ -642,6 +643,9 @@ export function DashboardProfile() {
           )}
         </CardContent>
       </Card>
+
+      {/* Notification Preferences */}
+      <NotificationPreferences />
     </div>
   );
 }
