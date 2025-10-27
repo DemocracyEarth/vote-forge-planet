@@ -471,9 +471,109 @@ const Vote = () => {
         </div>
       )}
 
-      {/* Identifier Section */}
-      <div className="space-y-3">
-        <Label htmlFor="identifier" className="text-sm font-semibold">
+      {/* Vote Selection Section - PRIMARY ACTION */}
+      {!isElectionClosed() && (
+        <div className="space-y-5 p-6 rounded-2xl bg-gradient-to-br from-primary/5 to-accent/5 border-2 border-primary/20 shadow-lg">
+          <div className="flex items-center gap-2">
+            <VoteIcon className="w-6 h-6 text-primary" />
+            <Label className="text-2xl font-bold text-foreground">
+              Cast Your Vote
+            </Label>
+          </div>
+          
+          {election?.bill_config?.ballotOptions ? (
+            <div className="space-y-4">
+              {election.bill_config.ballotOptions.map((option: string, index: number) => (
+                <Button
+                  key={index}
+                  type="button"
+                  variant={
+                    election.bill_config.ballotType === "single"
+                      ? selectedOptions[0] === option ? "default" : "outline"
+                      : selectedOptions.includes(option) ? "default" : "outline"
+                  }
+                  className={`h-auto py-6 px-7 text-lg justify-start font-semibold transition-all duration-200 rounded-xl shadow-md ${
+                    (election.bill_config.ballotType === "single" ? selectedOptions[0] === option : selectedOptions.includes(option))
+                      ? "bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/30 scale-[1.02]"
+                      : "bg-background/80 hover:bg-background hover:border-primary/50 hover:shadow-md hover:scale-[1.01]"
+                  }`}
+                  onClick={() => {
+                    if (election.bill_config.ballotType === "single") {
+                      setSelectedOptions([option]);
+                    } else {
+                      if (selectedOptions.includes(option)) {
+                        setSelectedOptions(selectedOptions.filter((o) => o !== option));
+                      } else {
+                        setSelectedOptions([...selectedOptions, option]);
+                      }
+                    }
+                  }}
+                >
+                  <span className="flex items-center gap-3">
+                    {(election.bill_config.ballotType === "single" ? selectedOptions[0] === option : selectedOptions.includes(option)) && (
+                      <span className="w-2.5 h-2.5 rounded-full bg-primary-foreground animate-pulse" />
+                    )}
+                    {option}
+                  </span>
+                </Button>
+              ))}
+            </div>
+          ) : (
+            <Textarea
+              id="vote"
+              placeholder="Enter your vote (Yes/No or your choice)"
+              value={voteValue}
+              onChange={(e) => setVoteValue(e.target.value)}
+              required
+              rows={5}
+              className="bg-background/80 backdrop-blur-sm resize-none text-lg border-2"
+            />
+          )}
+          
+          {election?.bill_config?.ballotType === "multiple" && selectedOptions.length > 0 && (
+            <div className="flex items-center gap-2 text-sm px-3 py-2 rounded-lg bg-accent/10 text-accent border border-accent/20 w-fit">
+              <span className="font-semibold">{selectedOptions.length}</span>
+              <span>option{selectedOptions.length !== 1 ? 's' : ''} selected</span>
+            </div>
+          )}
+
+          {/* Submit Button - MOST PROMINENT */}
+          <Button 
+            type="submit" 
+            className="w-full h-16 text-lg font-bold bg-gradient-to-r from-primary via-primary to-accent hover:from-primary/90 hover:via-accent/90 hover:to-primary shadow-xl shadow-primary/30 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] mt-2" 
+            disabled={submitting || (election?.bill_config?.ballotOptions ? selectedOptions.length === 0 : !voteValue)}
+          >
+            {submitting ? (
+              <>
+                <Loader2 className="w-6 h-6 mr-2 animate-spin" />
+                Submitting...
+              </>
+            ) : delegatorInfo && delegatorInfo.count > 0 ? (
+              <>
+                <Users className="w-6 h-6 mr-2" />
+                Cast {delegatorInfo.count + 1} Votes
+              </>
+            ) : (
+              <>
+                <VoteIcon className="w-6 h-6 mr-2" />
+                Cast Your Vote
+              </>
+            )}
+          </Button>
+        </div>
+      )}
+
+      {isElectionClosed() && (
+        <div className="p-4 rounded-xl bg-muted/50 text-center">
+          <p className="text-sm text-muted-foreground">
+            This election has ended. No new votes can be cast.
+          </p>
+        </div>
+      )}
+
+      {/* Identifier Section - DE-EMPHASIZED */}
+      <div className="space-y-2 pt-4 border-t border-border/50">
+        <Label htmlFor="identifier" className="text-xs text-muted-foreground font-normal">
           Your Identifier
         </Label>
         <Input
@@ -484,12 +584,12 @@ const Vote = () => {
           onChange={(e) => setVoterIdentifier(e.target.value)}
           readOnly={!!user}
           required
-          className={user ? "bg-muted/50 cursor-not-allowed" : "bg-background"}
+          className={user ? "bg-muted/50 cursor-not-allowed h-9 text-sm" : "bg-background h-9 text-sm"}
         />
-        <div className="text-xs space-y-2">
+        <div className="text-xs space-y-1.5">
           <div className="flex items-center gap-2 text-muted-foreground">
-            <span className="font-medium">Required:</span>
-            <span className="px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+            <span>Required:</span>
+            <span className="px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border/50 text-xs">
               {election.identity_config?.verificationType || 'Email'}
             </span>
           </div>
@@ -500,8 +600,8 @@ const Vote = () => {
             const matches = requiredType.includes(userType) || userType.includes(requiredType);
             
             return (
-              <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${matches ? "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20" : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"}`}>
-                <span className="font-medium">{matches ? "✓" : "⚠"}</span>
+              <div className={`flex items-center gap-2 px-2 py-1.5 rounded-lg border ${matches ? "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20" : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"}`}>
+                <span className="text-xs">{matches ? "✓" : "⚠"}</span>
                 <span className="text-xs">
                   {matches ? "Authentication matches" : "Authentication type may not match"}
                 </span>
@@ -510,103 +610,6 @@ const Vote = () => {
           })()}
         </div>
       </div>
-
-      {/* Vote Selection Section */}
-      {!isElectionClosed() && (
-        <>
-          <div className="space-y-3">
-            <Label className="text-sm font-semibold">
-              Your Vote
-            </Label>
-            {election?.bill_config?.ballotOptions ? (
-              <div className="grid gap-2">
-                {election.bill_config.ballotOptions.map((option: string, index: number) => (
-                  <Button
-                    key={index}
-                    type="button"
-                    variant={
-                      election.bill_config.ballotType === "single"
-                        ? selectedOptions[0] === option ? "default" : "outline"
-                        : selectedOptions.includes(option) ? "default" : "outline"
-                    }
-                    className={`h-auto py-4 px-5 text-base justify-start font-medium smooth-transition ${
-                      (election.bill_config.ballotType === "single" ? selectedOptions[0] === option : selectedOptions.includes(option))
-                        ? "bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/20"
-                        : "bg-card/60 hover:bg-card/80 hover:border-primary/40"
-                    }`}
-                    onClick={() => {
-                      if (election.bill_config.ballotType === "single") {
-                        setSelectedOptions([option]);
-                      } else {
-                        if (selectedOptions.includes(option)) {
-                          setSelectedOptions(selectedOptions.filter((o) => o !== option));
-                        } else {
-                          setSelectedOptions([...selectedOptions, option]);
-                        }
-                      }
-                    }}
-                  >
-                    <span className="flex items-center gap-3">
-                      {(election.bill_config.ballotType === "single" ? selectedOptions[0] === option : selectedOptions.includes(option)) && (
-                        <span className="w-2 h-2 rounded-full bg-primary-foreground animate-pulse" />
-                      )}
-                      {option}
-                    </span>
-                  </Button>
-                ))}
-              </div>
-            ) : (
-              <Textarea
-                id="vote"
-                placeholder="Enter your vote (Yes/No or your choice)"
-                value={voteValue}
-                onChange={(e) => setVoteValue(e.target.value)}
-                required
-                rows={4}
-                className="bg-background resize-none"
-              />
-            )}
-            {election?.bill_config?.ballotType === "multiple" && selectedOptions.length > 0 && (
-              <div className="flex items-center gap-2 text-sm px-3 py-2 rounded-lg bg-accent/10 text-accent border border-accent/20 w-fit">
-                <span className="font-semibold">{selectedOptions.length}</span>
-                <span>option{selectedOptions.length !== 1 ? 's' : ''} selected</span>
-              </div>
-            )}
-          </div>
-
-          {/* Submit Button */}
-          <Button 
-            type="submit" 
-            className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/20" 
-            disabled={submitting}
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Submitting...
-              </>
-            ) : delegatorInfo && delegatorInfo.count > 0 ? (
-              <>
-                <Users className="w-5 h-5 mr-2" />
-                Cast {delegatorInfo.count + 1} Votes
-              </>
-            ) : (
-              <>
-                <VoteIcon className="w-5 h-5 mr-2" />
-                Cast Your Vote
-              </>
-            )}
-          </Button>
-        </>
-      )}
-
-      {isElectionClosed() && (
-        <div className="p-4 rounded-xl bg-muted/50 text-center">
-          <p className="text-sm text-muted-foreground">
-            This election has ended. No new votes can be cast.
-          </p>
-        </div>
-      )}
     </form>
   );
 
