@@ -735,6 +735,11 @@ const Vote = () => {
                       <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                       Submitting Vote...
                     </>
+                  ) : delegatorInfo && delegatorInfo.count > 0 ? (
+                    <>
+                      <Users className="w-5 h-5 mr-2" />
+                      Cast {delegatorInfo.count + 1} Votes (Your Power: {delegatorInfo.count + 1})
+                    </>
                   ) : (
                     <>
                       <VoteIcon className="w-5 h-5 mr-2" />
