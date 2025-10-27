@@ -102,7 +102,7 @@ export const NotificationsPanel = ({ unreadCount, onCountChange }: Notifications
         break;
       case 'delegation_received':
         if (notification.metadata?.delegator_id) {
-          navigate(`/dashboard/users/${notification.metadata.delegator_id}`);
+          navigate(`/profile/${notification.metadata.delegator_id}`);
         }
         break;
       case 'delegator_voted':
