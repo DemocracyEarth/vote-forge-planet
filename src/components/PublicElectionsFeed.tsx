@@ -489,7 +489,14 @@ export function PublicElectionsFeed() {
                           <Badge 
                             key={tag}
                             variant="secondary" 
-                            className="text-xs px-2 py-0.5 bg-primary/10 text-primary border border-primary/20"
+                            className="text-xs px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 cursor-pointer hover:bg-primary/20 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!selectedTags.includes(tag)) {
+                                setSelectedTags([...selectedTags, tag]);
+                              }
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
                           >
                             {t(`tags.${tag}`)}
                           </Badge>
