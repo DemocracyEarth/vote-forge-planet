@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { Calendar, FileText, Shield, Plus, X, List, Sparkles, Settings, Coins, Scale, Star } from "lucide-react";
+import { Calendar, FileText, Shield, Plus, X, List, Sparkles, Settings, Coins, Scale, Star, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -149,6 +149,29 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
   const lastGeneratedTitleRef = useRef<string>("");
   const [showFullForm, setShowFullForm] = useState(false);
   const [placeholder] = useState(() => placeholderExamples[Math.floor(Math.random() * placeholderExamples.length)]);
+  const [loadingMessage, setLoadingMessage] = useState(0);
+
+  const loadingMessages = [
+    "Analyzing your proposal from all angles...",
+    "Researching arguments for and against...",
+    "Identifying key stakeholders...",
+    "Considering potential outcomes...",
+    "Drafting balanced perspectives...",
+    "Structuring voting options...",
+    "Finalizing your proposal...",
+  ];
+
+  // Rotate loading messages while generating
+  useEffect(() => {
+    if (isGeneratingDescription) {
+      const interval = setInterval(() => {
+        setLoadingMessage((prev) => (prev + 1) % loadingMessages.length);
+      }, 2500);
+      return () => clearInterval(interval);
+    } else {
+      setLoadingMessage(0);
+    }
+  }, [isGeneratingDescription]);
 
   const handleAddOption = () => {
     setBallotOptions([...ballotOptions, ""]);
@@ -423,9 +446,6 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
           <div className="flex items-center justify-between">
             <Label htmlFor="description" className="text-sm sm:text-base">
               The Full Story
-              {isGeneratingDescription && (
-                <span className="ml-2 text-xs text-primary animate-pulse">✨ AI is writing...</span>
-              )}
             </Label>
             <div className="flex items-center gap-2">
               <span className={`text-xs ${description.length > 10000 ? 'text-destructive' : 'text-muted-foreground'}`}>
@@ -444,13 +464,41 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
               </Button>
             </div>
           </div>
-          <MarkdownEditor
-            value={description}
-            onChange={setDescription}
-            placeholder="AI will generate a comprehensive, neutral analysis once you finish writing the title... ✨"
-            disabled={!title.trim() && description.length === 0}
-            isGenerating={isGeneratingDescription}
-          />
+          
+          {isGeneratingDescription ? (
+            <div className="min-h-[220px] rounded-md border border-input bg-background/50 backdrop-blur-sm p-8 flex flex-col items-center justify-center space-y-4 animate-fade-in">
+              <div className="relative">
+                <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                <Sparkles className="w-4 h-4 text-primary absolute -top-1 -right-1 animate-pulse" />
+              </div>
+              <div className="text-center space-y-2">
+                <p className="text-base font-medium text-foreground animate-pulse">
+                  ✨ AI is drafting your proposal...
+                </p>
+                <p className="text-sm text-muted-foreground animate-fade-in max-w-md">
+                  {loadingMessages[loadingMessage]}
+                </p>
+              </div>
+              <div className="flex gap-1.5 mt-2">
+                {[...Array(7)].map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      i === loadingMessage ? 'w-8 bg-primary' : 'w-1.5 bg-primary/30'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <MarkdownEditor
+              value={description}
+              onChange={setDescription}
+              placeholder="AI will generate a comprehensive, neutral analysis once you finish writing the title... ✨"
+              disabled={!title.trim() && description.length === 0}
+              isGenerating={isGeneratingDescription}
+            />
+          )}
           {description.length > 10000 ? (
             <p className="text-xs text-destructive">
               Description must be 10,000 characters or less
