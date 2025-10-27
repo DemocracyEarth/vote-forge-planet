@@ -372,13 +372,22 @@ export function PublicElectionsFeed() {
                   )}
                 </div>
                 
-                <Button
-                  onClick={() => navigate(`/vote/${election.id}`)}
-                  className="w-full"
-                >
-                  View Details & Vote
-                  <ExternalLink className="ml-2 h-4 w-4" />
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => navigate(`/vote/${election.id}`)}
+                    className="flex-1"
+                  >
+                    Vote
+                  </Button>
+                  <Button
+                    onClick={() => navigate(`/vote/${election.id}`)}
+                    variant="secondary"
+                    className="flex-1"
+                  >
+                    View More
+                    <ExternalLink className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           );
