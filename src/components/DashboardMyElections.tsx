@@ -307,16 +307,24 @@ export function DashboardMyElections({ userId }: DashboardMyElectionsProps) {
                         {election.title}
                       </CardTitle>
                       {userProfile && (
-                        <div className="flex items-center gap-2 mb-3">
-                          <Avatar className="h-6 w-6 border border-primary/20">
-                            <AvatarImage src={userProfile.avatar_url || undefined} alt={userProfile.full_name} />
-                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                              {userProfile.full_name?.charAt(0) || "U"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-xs text-muted-foreground">
-                            by <span className="font-semibold text-foreground">{userProfile.full_name}</span>
-                          </span>
+                        <div className="flex items-center gap-3 mb-3 flex-wrap">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-6 w-6 border border-primary/20">
+                              <AvatarImage src={userProfile.avatar_url || undefined} alt={userProfile.full_name} />
+                              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                {userProfile.full_name?.charAt(0) || "U"}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-xs text-muted-foreground">
+                              by <span className="font-semibold text-foreground">{userProfile.full_name}</span>
+                            </span>
+                          </div>
+                          {identityConfig?.authenticationType && (
+                            <Badge variant="outline" className="text-xs gap-1.5 bg-background/50 border-primary/20">
+                              {getAuthMethodIcon(identityConfig.authenticationType)}
+                              <span>Requires {getAuthMethodLabel(identityConfig.authenticationType)} to vote</span>
+                            </Badge>
+                          )}
                         </div>
                       )}
                       <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">

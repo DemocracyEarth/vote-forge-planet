@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ExternalLink, Loader2, History as HistoryIcon, Share2, CheckCircle2, TrendingUp, Users, Calendar } from "lucide-react";
+import { ExternalLink, Loader2, History as HistoryIcon, Share2, CheckCircle2, TrendingUp, Users, Calendar, Mail, Phone, Chrome, Globe } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -58,7 +58,7 @@ export function DashboardParticipated({ userId }: DashboardParticipatedProps) {
     try {
       const { data, error } = await supabase
         .from("voter_registry")
-        .select("*, elections(*)")
+        .select("*, elections(*, identity_config)")
         .eq("voter_id", userId)
         .order("voted_at", { ascending: false });
 
@@ -161,6 +161,32 @@ export function DashboardParticipated({ userId }: DashboardParticipatedProps) {
     window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + link)}`, '_blank');
   };
 
+  const getAuthMethodIcon = (authType: string) => {
+    switch (authType) {
+      case 'email':
+        return <Mail className="h-3 w-3" />;
+      case 'phone':
+        return <Phone className="h-3 w-3" />;
+      case 'google':
+        return <Chrome className="h-3 w-3" />;
+      default:
+        return <Globe className="h-3 w-3" />;
+    }
+  };
+
+  const getAuthMethodLabel = (authType: string) => {
+    switch (authType) {
+      case 'email':
+        return 'Email';
+      case 'phone':
+        return 'Phone';
+      case 'google':
+        return 'Google';
+      default:
+        return 'World ID';
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -216,16 +242,24 @@ export function DashboardParticipated({ userId }: DashboardParticipatedProps) {
                         {election.title}
                       </CardTitle>
                       {record.creator && (
-                        <div className="flex items-center gap-2 mb-3">
-                          <Avatar className="h-6 w-6 border border-primary/20">
-                            <AvatarImage src={record.creator.avatar_url || undefined} alt={record.creator.full_name} />
-                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                              {record.creator.full_name?.charAt(0) || "U"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-xs text-muted-foreground">
-                            by <span className="font-semibold text-foreground">{record.creator.full_name}</span>
-                          </span>
+                        <div className="flex items-center gap-3 mb-3 flex-wrap">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-6 w-6 border border-primary/20">
+                              <AvatarImage src={record.creator.avatar_url || undefined} alt={record.creator.full_name} />
+                              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                {record.creator.full_name?.charAt(0) || "U"}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-xs text-muted-foreground">
+                              by <span className="font-semibold text-foreground">{record.creator.full_name}</span>
+                            </span>
+                          </div>
+                          {(election.identity_config as any)?.authenticationType && (
+                            <Badge variant="outline" className="text-xs gap-1.5 bg-background/50 border-primary/20">
+                              {getAuthMethodIcon((election.identity_config as any).authenticationType)}
+                              <span>Requires {getAuthMethodLabel((election.identity_config as any).authenticationType)} to vote</span>
+                            </Badge>
+                          )}
                         </div>
                       )}
                       <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
