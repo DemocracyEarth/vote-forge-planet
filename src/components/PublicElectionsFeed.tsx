@@ -9,6 +9,7 @@ import { Loader2, ExternalLink, Users, TrendingUp, Mail, Phone, Chrome, Globe, M
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ElectionCountdown } from "@/components/ElectionCountdown";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,19 +48,24 @@ interface ElectionCommentCount {
   comment_count: number;
 }
 
+type FilterType = "all" | "my-elections" | "participated";
+
 export function PublicElectionsFeed() {
   const [elections, setElections] = useState<PublicElection[]>([]);
   const [electionResults, setElectionResults] = useState<Record<string, ElectionResults[]>>({});
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<FilterType>("all");
+  const [userId, setUserId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     loadPublicElections();
-  }, []);
+  }, [filter]);
 
   const loadPublicElections = async () => {
+    setLoading(true);
     try {
       // Get current user
       const { data: { session } } = await supabase.auth.getSession();
@@ -69,13 +75,36 @@ export function PublicElectionsFeed() {
         return;
       }
 
-      // Load public elections with identity_config and voting_page_config
-      const { data: publicElections, error } = await supabase
+      setUserId(session.user.id);
+
+      let query = supabase
         .from("elections")
         .select("id, title, description, start_date, end_date, is_ongoing, is_public, status, created_at, identity_config, voting_page_config, bill_config, created_by")
-        .eq("is_public", true)
-        .eq("status", "active")
-        .order("created_at", { ascending: false });
+        .eq("status", "active");
+
+      // Apply filters
+      if (filter === "my-elections") {
+        query = query.eq("created_by", session.user.id);
+      } else if (filter === "participated") {
+        // Get elections user has voted in
+        const { data: voterRegistry } = await supabase
+          .from("voter_registry")
+          .select("election_id")
+          .eq("voter_id", session.user.id);
+        
+        const electionIds = voterRegistry?.map(v => v.election_id) || [];
+        if (electionIds.length === 0) {
+          setElections([]);
+          setLoading(false);
+          return;
+        }
+        query = query.in("id", electionIds);
+      } else {
+        // All public elections
+        query = query.eq("is_public", true);
+      }
+
+      const { data: publicElections, error } = await query.order("created_at", { ascending: false });
 
       if (error) throw error;
 
@@ -262,21 +291,51 @@ export function PublicElectionsFeed() {
     );
   }
 
+  const getFilterTitle = () => {
+    switch (filter) {
+      case "my-elections":
+        return "My Elections";
+      case "participated":
+        return "Participated Elections";
+      default:
+        return "Public Elections";
+    }
+  };
+
+  const getFilterDescription = () => {
+    switch (filter) {
+      case "my-elections":
+        return "Elections you have created";
+      case "participated":
+        return "Elections you have voted in";
+      default:
+        return "Discover and participate in global democratic decisions";
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
-            Public Elections
+            {getFilterTitle()}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Discover and participate in global democratic decisions
+            {getFilterDescription()}
           </p>
         </div>
         <div className="px-4 py-2 rounded-full bg-gradient-to-r from-green-500/20 to-green-500/10 border border-green-500/30">
           <span className="text-sm font-semibold text-green-600 dark:text-green-400">{elections.length} Active</span>
         </div>
       </div>
+
+      <Tabs value={filter} onValueChange={(v) => setFilter(v as FilterType)} className="w-full">
+        <TabsList className="grid w-full grid-cols-3 bg-muted/50">
+          <TabsTrigger value="all">All Public</TabsTrigger>
+          <TabsTrigger value="my-elections">My Elections</TabsTrigger>
+          <TabsTrigger value="participated">Participated</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       <div className="grid gap-6">
         {elections.map((election) => {

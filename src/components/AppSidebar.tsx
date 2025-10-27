@@ -1,4 +1,4 @@
-import { Home, Vote, PlusCircle, History, User, Users, MessageSquare } from "lucide-react";
+import { Home, PlusCircle, User, Users, MessageSquare, LogOut } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import logo from "@/assets/logo.png";
@@ -19,7 +19,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut } from "lucide-react";
 
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -33,16 +32,6 @@ export function AppSidebar() {
       title: t('dashboard.publicFeed'),
       url: "/dashboard",
       icon: Home,
-    },
-    {
-      title: t('dashboard.myElections'),
-      url: "/dashboard/my-elections",
-      icon: Vote,
-    },
-    {
-      title: t('dashboard.participated'),
-      url: "/dashboard/participated",
-      icon: History,
     },
     {
       title: "Discussions",

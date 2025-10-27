@@ -9,8 +9,6 @@ import { Loader2 } from "lucide-react";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { PublicElectionsFeed } from "@/components/PublicElectionsFeed";
-import { DashboardMyElections } from "@/components/DashboardMyElections";
-import { DashboardParticipated } from "@/components/DashboardParticipated";
 import { DashboardProfile } from "@/components/DashboardProfile";
 import { DashboardUsersFeed } from "@/components/DashboardUsersFeed";
 import { DashboardDiscussions } from "@/components/DashboardDiscussions";
@@ -71,8 +69,6 @@ const Dashboard = () => {
             <div className="max-w-7xl mx-auto">
               <Routes>
                 <Route path="/" element={<PublicElectionsFeed />} />
-                <Route path="/my-elections" element={<DashboardMyElections userId={user?.id} />} />
-                <Route path="/participated" element={<DashboardParticipated userId={user?.id} />} />
                 <Route path="/discussions" element={<DashboardDiscussions userId={user?.id} />} />
                 <Route path="/community" element={<DashboardUsersFeed />} />
                 <Route path="/user/:userId" element={<UserProfileView />} />
