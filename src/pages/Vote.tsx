@@ -467,10 +467,11 @@ const Vote = () => {
         <Button 
           variant="outline" 
           onClick={() => navigate(user ? '/dashboard' : '/')}
-          size="sm"
+          className="h-9"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          {user ? t('vote.backToDashboard') : t('vote.backToHome')}
+          <ArrowLeft className="w-4 h-4 mr-1.5" />
+          <span className="hidden sm:inline">{user ? 'Dashboard' : 'Home'}</span>
+          <span className="sm:hidden">Back</span>
         </Button>
       </div>
 
