@@ -222,39 +222,8 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
         });
         lastGeneratedTitleRef.current = title.trim();
 
-        // Generate illustration after successful description generation (if enabled)
-        if (illustrationEnabled) {
-          setIsGeneratingIllustration(true);
-          try {
-            console.log("Generating editorial illustration for proposal...");
-            const { data: imgData, error: imgError } = await supabase.functions.invoke(
-              "generate-proposal-illustration",
-              {
-                body: {
-                  title: title.trim(),
-                  description: data.description,
-                  ballotOptions: data.ballotOptions,
-                  customPrompt: customIllustrationPrompt || ""
-                }
-              }
-            );
-
-            if (!imgError && imgData?.url) {
-              console.log("Illustration generated:", imgData.url);
-              setIllustrationUrl(imgData.url);
-              toast({
-                title: "Illustration created! 🎨",
-                description: "Editorial illustration generated successfully.",
-              });
-            } else {
-              console.error("Failed to generate illustration:", imgError);
-            }
-          } catch (imgError) {
-            console.error("Error generating illustration:", imgError);
-          } finally {
-            setIsGeneratingIllustration(false);
-          }
-        }
+        // AI image generation removed per user request
+        // Illustration feature disabled
       }
     } catch (error: any) {
       console.error("Error generating description:", error);
@@ -315,46 +284,12 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
       return;
     }
 
-    setIsGeneratingIllustration(true);
-    try {
-      console.log("Regenerating editorial illustration...");
-      const { data: imgData, error: imgError } = await supabase.functions.invoke(
-        "generate-proposal-illustration",
-        {
-          body: {
-            title: title.trim(),
-            description: description,
-            ballotOptions: ballotOptions.filter(opt => opt.trim() !== ""),
-            customPrompt: customIllustrationPrompt
-          }
-        }
-      );
-
-      if (!imgError && imgData?.url) {
-        console.log("Illustration regenerated:", imgData.url);
-        setIllustrationUrl(imgData.url);
-        toast({
-          title: "Illustration regenerated! 🎨",
-          description: "New editorial illustration created successfully.",
-        });
-      } else {
-        console.error("Failed to regenerate illustration:", imgError);
-        toast({
-          title: "Generation failed",
-          description: imgError?.message || "Please try again.",
-          variant: "destructive",
-        });
-      }
-    } catch (imgError: any) {
-      console.error("Error regenerating illustration:", imgError);
-      toast({
-        title: "Failed to regenerate",
-        description: imgError.message || "Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGeneratingIllustration(false);
-    }
+    // AI image generation removed per user request
+    console.log("Illustration generation disabled");
+    toast({
+      title: "Feature disabled",
+      description: "Illustration generation has been removed.",
+    });
   };
 
   // Manual generation only - no auto-trigger
