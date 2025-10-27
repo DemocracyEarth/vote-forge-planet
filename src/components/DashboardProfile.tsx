@@ -4,16 +4,31 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Mail, Phone, Chrome, Globe, CheckCircle2, XCircle, ExternalLink, Upload, Video, Camera } from "lucide-react";
+import { Loader2, Mail, Phone, Chrome, Globe, CheckCircle2, XCircle, ExternalLink, Upload, Video, Camera, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Link } from "react-router-dom";
+import { format } from "date-fns";
 
 interface AuthProvider {
   id: string;
   provider: string;
   verified: boolean;
+}
+
+interface Delegator {
+  id: string;
+  delegator_id: string;
+  created_at: string;
+  active: boolean;
+  profiles: {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+    bio: string | null;
+  };
 }
 
 export function DashboardProfile() {
@@ -25,6 +40,7 @@ export function DashboardProfile() {
   const [providers, setProviders] = useState<AuthProvider[]>([]);
   const [uploading, setUploading] = useState(false);
   const [bio, setBio] = useState("");
+  const [delegators, setDelegators] = useState<Delegator[]>([]);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
@@ -71,6 +87,37 @@ export function DashboardProfile() {
       }
 
       setProviders(authProviders);
+
+      // Load delegators (users who delegated their vote to the current user)
+      const { data: delegatorsData } = await supabase
+        .from('delegations')
+        .select('id, delegator_id, created_at, active')
+        .eq('delegate_id', currentUser.id)
+        .eq('active', true);
+
+      // Fetch profiles for each delegator
+      if (delegatorsData && delegatorsData.length > 0) {
+        const delegatorIds = delegatorsData.map(d => d.delegator_id);
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url, bio')
+          .in('id', delegatorIds);
+
+        // Merge delegations with profiles
+        const enrichedDelegators = delegatorsData.map(delegation => ({
+          ...delegation,
+          profiles: profilesData?.find(p => p.id === delegation.delegator_id) || {
+            id: delegation.delegator_id,
+            full_name: null,
+            avatar_url: null,
+            bio: null
+          }
+        }));
+
+        setDelegators(enrichedDelegators);
+      } else {
+        setDelegators([]);
+      }
     } catch (error) {
       console.error("Error loading user data:", error);
     } finally {
@@ -526,6 +573,73 @@ export function DashboardProfile() {
               </Badge>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* My Delegators Card */}
+      <Card className="border-primary/20 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              My Delegators
+              {delegators.length > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  {delegators.length}
+                </Badge>
+              )}
+            </CardTitle>
+          </div>
+          <CardDescription>
+            Users who have delegated their voting power to you
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {delegators.length === 0 ? (
+            <div className="text-center py-8 space-y-2">
+              <Users className="h-12 w-12 mx-auto text-muted-foreground/50" />
+              <p className="text-sm text-muted-foreground">
+                No one has delegated their vote to you yet
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Build your profile and engage with the community to earn delegation trust
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {delegators.map((delegator) => (
+                <Link
+                  key={delegator.id}
+                  to={`/dashboard/users/${delegator.delegator_id}`}
+                  className="block"
+                >
+                  <div className="flex items-start gap-4 p-4 rounded-lg border border-primary/10 bg-background/50 hover:bg-background/80 transition-colors">
+                    <Avatar className="h-12 w-12 border border-primary/20">
+                      <AvatarImage src={delegator.profiles.avatar_url || ''} />
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground">
+                        {delegator.profiles.full_name?.[0]?.toUpperCase() || '?'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold">
+                        {delegator.profiles.full_name || 'Anonymous User'}
+                      </h4>
+                      {delegator.profiles.bio && (
+                        <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                          {delegator.profiles.bio.length > 100
+                            ? `${delegator.profiles.bio.substring(0, 100)}...`
+                            : delegator.profiles.bio}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Delegated on {format(new Date(delegator.created_at), 'PPP')}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
