@@ -146,6 +146,8 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
   });
   const [isPolishing, setIsPolishing] = useState(false);
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
+  const [isGeneratingIllustration, setIsGeneratingIllustration] = useState(false);
+  const [illustrationUrl, setIllustrationUrl] = useState("");
   const lastGeneratedTitleRef = useRef<string>("");
   const [showFullForm, setShowFullForm] = useState(false);
   const [placeholder] = useState(() => placeholderExamples[Math.floor(Math.random() * placeholderExamples.length)]);
@@ -215,6 +217,37 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
           description: "AI created a comprehensive, neutral analysis of your proposal.",
         });
         lastGeneratedTitleRef.current = title.trim();
+
+        // Generate illustration after successful description generation
+        setIsGeneratingIllustration(true);
+        try {
+          console.log("Generating WSJ-style illustration for proposal...");
+          const { data: imgData, error: imgError } = await supabase.functions.invoke(
+            "generate-proposal-illustration",
+            {
+              body: {
+                title: title.trim(),
+                description: data.description,
+                ballotOptions: data.ballotOptions
+              }
+            }
+          );
+
+          if (!imgError && imgData?.url) {
+            console.log("Illustration generated:", imgData.url);
+            setIllustrationUrl(imgData.url);
+            toast({
+              title: "Illustration created! 🎨",
+              description: "Editorial illustration generated in Wall Street Journal style.",
+            });
+          } else {
+            console.error("Failed to generate illustration:", imgError);
+          }
+        } catch (imgError) {
+          console.error("Error generating illustration:", imgError);
+        } finally {
+          setIsGeneratingIllustration(false);
+        }
       }
     } catch (error: any) {
       console.error("Error generating description:", error);
@@ -321,10 +354,11 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
         startDate,
         endDate,
         isOngoing,
+        illustrationUrl,
         ...modelSettings,
       });
     }
-  }, [title, description, ballotType, ballotOptions, startDate, endDate, isOngoing, votingModel, tokenSettings, quadraticSettings, reputationSettings, onDataChange]);
+  }, [title, description, ballotType, ballotOptions, startDate, endDate, isOngoing, illustrationUrl, votingModel, tokenSettings, quadraticSettings, reputationSettings, onDataChange]);
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -509,6 +543,33 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
             </p>
           )}
         </div>
+
+        {/* AI-Generated Illustration */}
+        {illustrationUrl && (
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2 text-sm sm:text-base">
+              <Sparkles className="w-4 h-4 text-primary" />
+              AI-Generated Editorial Illustration
+            </Label>
+            <div className="border rounded-lg overflow-hidden bg-muted/50">
+              <img 
+                src={illustrationUrl} 
+                alt="Proposal illustration in Wall Street Journal style"
+                className="w-full h-auto"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              This illustration will be used as the preview image when sharing on social media
+            </p>
+          </div>
+        )}
+
+        {isGeneratingIllustration && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground py-3">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Generating editorial illustration in Wall Street Journal style...
+          </div>
+        )}
 
         {/* Ballot Options */}
         <Card className="p-3 sm:p-4 space-y-3 sm:space-y-4">

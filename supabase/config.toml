@@ -8,3 +8,6 @@ verify_jwt = true
 
 [functions.generate-proposal-description]
 verify_jwt = true
+
+[functions.generate-proposal-illustration]
+verify_jwt = true

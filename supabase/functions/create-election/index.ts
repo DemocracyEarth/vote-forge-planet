@@ -214,6 +214,7 @@ Create a comprehensive JSON configuration that captures all these rules and defi
       .insert({
         title: (billConfig?.title && String(billConfig.title).trim()) || 'Untitled Election',
         description: billConfig?.description || null,
+        illustration_url: billConfig?.illustrationUrl || null,
         identity_config: identityConfig,
         voting_logic_config: votingLogicConfig,
         bill_config: billConfig,

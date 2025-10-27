@@ -130,6 +130,7 @@ export type Database = {
           end_date: string | null
           id: string
           identity_config: Json
+          illustration_url: string | null
           is_ongoing: boolean | null
           is_public: boolean
           start_date: string | null
@@ -146,6 +147,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           identity_config: Json
+          illustration_url?: string | null
           is_ongoing?: boolean | null
           is_public?: boolean
           start_date?: string | null
@@ -162,6 +164,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           identity_config?: Json
+          illustration_url?: string | null
           is_ongoing?: boolean | null
           is_public?: boolean
           start_date?: string | null
