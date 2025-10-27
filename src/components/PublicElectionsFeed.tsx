@@ -386,10 +386,8 @@ export function PublicElectionsFeed() {
           return (
             <Card 
               key={election.id} 
-              className="group border-primary/30 bg-gradient-to-br from-background via-background to-primary/5 hover:shadow-xl transition-all duration-300 hover:border-primary/40 backdrop-blur-sm overflow-hidden"
+              className="group border-primary/20 bg-gradient-to-br from-background via-background to-primary/5 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 hover:border-primary/30 hover:scale-[1.01] backdrop-blur-sm"
             >
-              {/* Subtle glow on hover */}
-              <div className="absolute -inset-px bg-gradient-to-r from-primary/0 via-primary/20 to-primary/0 rounded-lg opacity-0 group-hover:opacity-100 blur transition-opacity duration-300 -z-10" />
               
               <CardHeader className="relative pb-6">
                 <div className="flex items-start justify-between gap-4">
