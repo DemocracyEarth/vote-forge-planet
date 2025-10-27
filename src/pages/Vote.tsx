@@ -513,6 +513,19 @@ const Vote = () => {
                   )}
                 </div>
               </div>
+
+              {/* Social Media Preview Image */}
+              {election.bill_config?.illustrationUrl && (
+                <div className="mt-6">
+                  <div className="rounded-lg border overflow-hidden bg-muted/30" style={{ aspectRatio: '1.91/1' }}>
+                    <img
+                      src={election.bill_config.illustrationUrl}
+                      alt={`Illustration for ${election.title}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Election Details Grid */}
