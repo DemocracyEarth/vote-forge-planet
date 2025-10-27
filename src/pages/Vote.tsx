@@ -35,6 +35,8 @@ const Vote = () => {
   const [submitting, setSubmitting] = useState(false);
   const [voteResults, setVoteResults] = useState<Record<string, number>>({});
   const [creator, setCreator] = useState<any>(null);
+  const [hasVoted, setHasVoted] = useState(false);
+  const [previousVoteLoaded, setPreviousVoteLoaded] = useState(false);
 
   // Check if election is closed
   const isElectionClosed = () => {
@@ -48,6 +50,13 @@ const Vote = () => {
     loadElection();
     checkUser();
   }, [electionId]);
+
+  // Load previous vote when user and election are available
+  useEffect(() => {
+    if (user && election && !previousVoteLoaded) {
+      loadPreviousVote();
+    }
+  }, [user, election, previousVoteLoaded]);
 
   useEffect(() => {
     if (user && election) {
@@ -100,6 +109,48 @@ const Vote = () => {
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     setUser(user);
+  };
+
+  const loadPreviousVote = async () => {
+    if (!user || !election) return;
+    
+    try {
+      // Check if user has voted and get their vote
+      const { data: registry } = await supabase
+        .from('voter_registry')
+        .select('vote_id')
+        .eq('election_id', electionId)
+        .eq('voter_id', user.id)
+        .maybeSingle();
+
+      if (registry?.vote_id) {
+        setHasVoted(true);
+        
+        // Get the actual vote value
+        const { data: vote } = await supabase
+          .from('anonymous_votes')
+          .select('vote_value')
+          .eq('id', registry.vote_id)
+          .single();
+
+        if (vote?.vote_value) {
+          // Pre-populate the form with previous vote
+          if (election.bill_config?.ballotOptions) {
+            // For ballot options, split by comma if multiple choice
+            const previousSelections = vote.vote_value.split(", ").filter(Boolean);
+            setSelectedOptions(previousSelections);
+          } else {
+            // For free text
+            setVoteValue(vote.vote_value);
+          }
+        }
+      }
+      
+      setPreviousVoteLoaded(true);
+    } catch (error) {
+      console.error('Error loading previous vote:', error);
+      setPreviousVoteLoaded(true);
+    }
   };
 
   const loadVoteResults = async () => {
@@ -189,11 +240,7 @@ const Vote = () => {
         return;
       }
 
-      // Check if user has already voted
-      const { data: hasVoted } = await supabase.rpc('has_user_voted', { 
-        election_uuid: electionId 
-      });
-
+      // If user has already voted, update their vote
       if (hasVoted) {
         // Allow vote override if election is ongoing
         if (election.is_ongoing) {
@@ -210,55 +257,32 @@ const Vote = () => {
             .eq('voter_id', user.id)
             .single();
 
-          // Delete previous anonymous vote using the foreign key reference
+          // Update the existing vote instead of deleting and creating new
           if (previousVote?.vote_id) {
-            const { error: deleteVoteError } = await supabase
+            const { error: updateVoteError } = await supabase
               .from('anonymous_votes')
-              .delete()
+              .update({
+                vote_value: finalVoteValue,
+                voted_at: new Date().toISOString(),
+                metadata: {
+                  voted_at: new Date().toISOString(),
+                  updated: true
+                }
+              })
               .eq('id', previousVote.vote_id);
 
-            if (deleteVoteError) {
-              console.error('Error deleting previous vote:', deleteVoteError);
-              // Non-fatal: continue to insert the new vote
-            }
-          }
-
-          // Insert the new anonymous vote
-          const { data: newVote, error: voteError } = await supabase
-            .from('anonymous_votes')
-            .insert({
-              election_id: electionId,
-              vote_value: finalVoteValue,
-              metadata: {
-                voted_at: new Date().toISOString(),
-              }
-            })
-            .select('id')
-            .single();
-
-          if (voteError) throw voteError;
-
-          // Update voter registry with new vote_id
-          const { error: updateError } = await supabase
-            .from('voter_registry')
-            .update({ vote_id: newVote.id })
-            .eq('election_id', electionId)
-            .eq('voter_id', user.id);
-
-          if (updateError) {
-            console.error('Error updating voter registry:', updateError);
+            if (updateVoteError) throw updateVoteError;
           }
 
           toast({
             title: t('vote.voteRecorded'),
-            description: t('vote.voteRecordedDesc'),
+            description: "Your vote has been updated successfully",
           });
-          setVoterIdentifier("");
-          setVoteValue("");
-          setSelectedOptions([]);
           
           // Reload results to show updated voting data
           await loadVoteResults();
+          await loadPreviousVote(); // Reload to show updated selection
+          setSubmitting(false);
           return;
         } else {
           toast({
@@ -356,12 +380,11 @@ const Vote = () => {
         title: t('vote.voteRecorded'),
         description: t('vote.voteRecordedDesc'),
       });
-      setVoterIdentifier("");
-      setVoteValue("");
-      setSelectedOptions([]);
       
-      // Reload results to show updated voting data
+      // Mark as voted and reload
+      setHasVoted(true);
       await loadVoteResults();
+      await loadPreviousVote(); // Load the vote we just cast
     } catch (error) {
       console.error('Error submitting vote:', error);
       toast({
