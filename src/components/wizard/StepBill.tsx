@@ -603,8 +603,8 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
           )}
         </div>
 
-        {/* AI-Generated Illustration */}
-        <IllustrationSection
+        {/* AI-Generated Illustration - Temporarily hidden */}
+        {/* <IllustrationSection
           illustrationUrl={illustrationUrl}
           illustrationEnabled={illustrationEnabled}
           isGenerating={isGeneratingIllustration}
@@ -612,7 +612,7 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
           onToggleEnabled={setIllustrationEnabled}
           onCustomPromptChange={setCustomIllustrationPrompt}
           onRegenerate={handleRegenerateIllustration}
-        />
+        /> */}
 
         {/* Ballot Options */}
         <Card className="p-3 sm:p-4 space-y-3 sm:space-y-4">
