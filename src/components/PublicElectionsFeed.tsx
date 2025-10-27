@@ -396,24 +396,32 @@ export function PublicElectionsFeed() {
                       {election.title}
                     </CardTitle>
                     {election.profiles && (
-                      <div className="flex items-center gap-2 mb-3">
-                        <Avatar 
-                          className="h-6 w-6 border border-primary/20 cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => navigate(`/profile/${election.created_by}`)}
-                        >
-                          <AvatarImage src={election.profiles.avatar_url || undefined} alt={election.profiles.full_name} />
-                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                            {election.profiles.full_name?.charAt(0) || "U"}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-xs text-muted-foreground">
-                          by <span 
-                            className="font-semibold text-foreground cursor-pointer hover:text-primary transition-colors"
+                      <div className="flex items-center gap-3 mb-3 flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <Avatar 
+                            className="h-6 w-6 border border-primary/20 cursor-pointer hover:opacity-80 transition-opacity"
                             onClick={() => navigate(`/profile/${election.created_by}`)}
                           >
-                            {election.profiles.full_name}
+                            <AvatarImage src={election.profiles.avatar_url || undefined} alt={election.profiles.full_name} />
+                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                              {election.profiles.full_name?.charAt(0) || "U"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-xs text-muted-foreground">
+                            by <span 
+                              className="font-semibold text-foreground cursor-pointer hover:text-primary transition-colors"
+                              onClick={() => navigate(`/profile/${election.created_by}`)}
+                            >
+                              {election.profiles.full_name}
+                            </span>
                           </span>
-                        </span>
+                        </div>
+                        {election.identity_config?.authenticationType && (
+                          <Badge variant="outline" className="text-xs gap-1.5 bg-background/50 border-primary/20">
+                            {getAuthMethodIcon(election.identity_config.authenticationType)}
+                            <span>Requires {getAuthMethodLabel(election.identity_config.authenticationType)} to vote</span>
+                          </Badge>
+                        )}
                       </div>
                     )}
                     <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -502,20 +510,12 @@ export function PublicElectionsFeed() {
                 })()}
 
                 {/* Quick stats bar */}
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  {election.identity_config?.authenticationType && (
-                    <div className="flex items-center gap-1">
-                      {getAuthMethodIcon(election.identity_config.authenticationType)}
-                      <span>{getAuthMethodLabel(election.identity_config.authenticationType)}</span>
-                    </div>
-                  )}
-                  {commentCounts[election.id] > 0 && (
-                    <div className="flex items-center gap-1">
-                      <MessageSquare className="h-3 w-3" />
-                      <span>{commentCounts[election.id]}</span>
-                    </div>
-                  )}
-                </div>
+                {commentCounts[election.id] > 0 && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <MessageSquare className="h-3 w-3" />
+                    <span>{commentCounts[election.id]} {commentCounts[election.id] === 1 ? 'comment' : 'comments'}</span>
+                  </div>
+                )}
                 
                 <div className="flex gap-3">
                   <Button
