@@ -435,14 +435,6 @@ export function PublicElectionsFeed() {
                         {truncateText(election.description, 120)}
                       </CardDescription>
                     </div>
-                    
-                    {/* Comments counter */}
-                    {commentCounts[election.id] > 0 && (
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground mt-2">
-                        <MessageSquare className="h-3 w-3" />
-                        <span>{commentCounts[election.id]} {commentCounts[election.id] === 1 ? 'comment' : 'comments'}</span>
-                      </div>
-                    )}
                   </div>
                   {totalVotes > 0 && (
                     <div className="flex flex-col items-end gap-1 px-4 py-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30">
@@ -457,6 +449,14 @@ export function PublicElectionsFeed() {
               </CardHeader>
               
               <CardContent className="relative space-y-4">
+                {/* Comments counter */}
+                {commentCounts[election.id] > 0 && (
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <MessageSquare className="h-3 w-3" />
+                    <span>{commentCounts[election.id]} {commentCounts[election.id] === 1 ? 'comment' : 'comments'}</span>
+                  </div>
+                )}
+
                 {/* Compact Countdown */}
                 <div className="text-sm">
                   <ElectionCountdown 
