@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Vote as VoteIcon, ArrowLeft } from "lucide-react";
+import { Loader2, Vote as VoteIcon, ArrowLeft, Users } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -37,6 +37,10 @@ const Vote = () => {
   const [creator, setCreator] = useState<any>(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [previousVoteLoaded, setPreviousVoteLoaded] = useState(false);
+  const [delegatorInfo, setDelegatorInfo] = useState<{
+    count: number;
+    delegators: any[];
+  } | null>(null);
 
   // Check if election is closed
   const isElectionClosed = () => {
@@ -60,6 +64,7 @@ const Vote = () => {
   useEffect(() => {
     if (user && election && !previousVoteLoaded) {
       loadPreviousVote();
+      loadDelegatorInfo();
     }
   }, [user, election, previousVoteLoaded]);
 
@@ -180,6 +185,33 @@ const Vote = () => {
     }
   };
 
+  const loadDelegatorInfo = async () => {
+    if (!user || !election) return;
+    
+    try {
+      const { data, error } = await supabase
+        .rpc('get_valid_delegators_for_election', {
+          delegate_user_id: user.id,
+          election_id: electionId
+        });
+        
+      if (error) {
+        console.error('Error loading delegator info:', error);
+        return;
+      }
+      
+      const result = data?.[0];
+      const delegators = Array.isArray(result?.delegators) ? result.delegators : [];
+      
+      setDelegatorInfo({
+        count: result?.delegator_count || 0,
+        delegators: delegators
+      });
+    } catch (error) {
+      console.error('Error loading delegator info:', error);
+    }
+  };
+
   const loadElection = async () => {
     try {
       // Fetch only necessary fields to prevent sensitive config exposure
@@ -268,10 +300,12 @@ const Vote = () => {
               .from('anonymous_votes')
               .update({
                 vote_value: finalVoteValue,
+                vote_weight: (delegatorInfo?.count || 0) + 1,
                 voted_at: new Date().toISOString(),
                 metadata: {
                   voted_at: new Date().toISOString(),
-                  updated: true
+                  updated: true,
+                  delegations_count: delegatorInfo?.count || 0
                 }
               })
               .eq('id', previousVote.vote_id);
@@ -306,8 +340,10 @@ const Vote = () => {
         .insert({
           election_id: electionId,
           vote_value: finalVoteValue,
+          vote_weight: (delegatorInfo?.count || 0) + 1,
           metadata: {
             voted_at: new Date().toISOString(),
+            delegations_count: delegatorInfo?.count || 0
           }
         })
         .select('id')
@@ -551,6 +587,35 @@ const Vote = () => {
                 </p>
               </div>
             </div>
+
+            {/* Delegation Power Display */}
+            {!isElectionClosed() && delegatorInfo && delegatorInfo.count > 0 && (
+              <div className="p-5 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/30 backdrop-blur-sm">
+                <div className="flex items-center gap-3 mb-3">
+                  <Users className="w-6 h-6 text-primary" />
+                  <h3 className="font-semibold text-lg">Your Voting Power</h3>
+                </div>
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    You're representing <span className="font-bold text-primary">{delegatorInfo.count + 1}</span> {delegatorInfo.count + 1 === 1 ? 'person' : 'people'} in this vote
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 text-sm">
+                    <div className="p-3 rounded bg-card/50 border border-border/50">
+                      <p className="text-muted-foreground text-xs mb-1">Your vote</p>
+                      <p className="font-bold text-lg">1</p>
+                    </div>
+                    <div className="p-3 rounded bg-card/50 border border-border/50">
+                      <p className="text-muted-foreground text-xs mb-1">Delegated</p>
+                      <p className="font-bold text-primary text-lg">{delegatorInfo.count}</p>
+                    </div>
+                    <div className="p-3 rounded bg-primary/10 border border-primary/30">
+                      <p className="text-muted-foreground text-xs mb-1">Total power</p>
+                      <p className="font-bold text-primary text-lg">{delegatorInfo.count + 1}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Voting Form Section */}
             <form onSubmit={handleSubmitVote} className="space-y-8">
