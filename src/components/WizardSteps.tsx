@@ -184,68 +184,51 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
       <div className="mb-8 sm:mb-12">
         <div className="flex items-center justify-between relative px-2">
           {/* Background line */}
-          <div className="absolute top-6 left-0 right-0 h-1 bg-gradient-to-r from-border via-border to-border rounded-full -z-10 opacity-50" />
+          <div className="absolute top-5 left-0 right-0 h-0.5 bg-border/40 -z-10 rounded-full" />
           
-          {/* Animated progress line with gradient */}
+          {/* Progress line */}
           <div 
-            className="absolute top-6 left-0 h-1 rounded-full -z-10 transition-all duration-700 ease-out"
+            className="absolute top-5 left-0 h-0.5 rounded-full -z-10 transition-all duration-500 ease-out bg-primary/80"
             style={{ 
-              width: `${((currentStep - 1) / (steps.length - 1)) * 100}%`,
-              background: 'linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(var(--primary)) 100%)',
-              boxShadow: '0 0 12px hsla(var(--primary), 0.4)'
+              width: `${((currentStep - 1) / (steps.length - 1)) * 100}%`
             }}
           />
 
-          {steps.map((step, index) => (
+          {steps.map((step) => (
             <div 
               key={step.id} 
-              className="flex flex-col items-center relative group"
-              style={{ 
-                animation: step.id === currentStep ? 'pulse 2s ease-in-out infinite' : 'none'
-              }}
+              className="flex flex-col items-center relative"
             >
-              {/* Step circle with enhanced styling */}
+              {/* Step circle */}
               <div
-                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center border-2 transition-all duration-500 transform relative ${
+                className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center border transition-all duration-300 ${
                   step.id < currentStep
-                    ? "bg-primary border-primary text-primary-foreground scale-100 shadow-lg hover:scale-110"
+                    ? "bg-primary/90 border-primary/90 text-primary-foreground shadow-sm"
                     : step.id === currentStep
-                    ? "bg-primary border-primary text-primary-foreground scale-110 shadow-xl animate-scale-in"
-                    : "bg-card border-border text-muted-foreground scale-90 hover:scale-100 hover:border-primary/50"
+                    ? "bg-primary border-primary text-primary-foreground shadow-md"
+                    : "bg-background border-border text-muted-foreground"
                 }`}
-                style={{
-                  boxShadow: step.id === currentStep 
-                    ? '0 0 20px hsla(var(--primary), 0.5), 0 4px 12px rgba(0, 0, 0, 0.1)'
-                    : step.id < currentStep
-                    ? '0 4px 12px hsla(var(--primary), 0.3)'
-                    : '0 2px 4px rgba(0, 0, 0, 0.05)'
-                }}
               >
                 {step.id < currentStep ? (
-                  <Check className="w-5 h-5 sm:w-6 sm:h-6 animate-scale-in" />
+                  <Check className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
                 ) : (
-                  <span className="font-bold text-sm sm:text-base">{step.id}</span>
-                )}
-                
-                {/* Pulse ring for active step */}
-                {step.id === currentStep && (
-                  <div className="absolute inset-0 rounded-full border-2 border-primary animate-ping opacity-75" />
+                  <span className="font-semibold text-sm sm:text-base">{step.id}</span>
                 )}
               </div>
               
-              {/* Step text with improved styling */}
-              <div className="mt-3 sm:mt-4 text-center max-w-[90px] sm:max-w-[140px] transition-all duration-300">
-                <p className={`text-xs sm:text-sm font-semibold transition-colors duration-300 ${
+              {/* Step text */}
+              <div className="mt-3 text-center max-w-[90px] sm:max-w-[120px]">
+                <p className={`text-xs sm:text-sm font-medium transition-colors duration-200 ${
                   step.id === currentStep 
-                    ? "text-primary" 
+                    ? "text-foreground" 
                     : step.id < currentStep
-                    ? "text-foreground/80"
+                    ? "text-foreground/70"
                     : "text-muted-foreground"
                 }`}>
                   {step.title}
                 </p>
-                <p className={`text-[10px] sm:text-xs mt-1 hidden lg:block transition-opacity duration-300 ${
-                  step.id === currentStep ? "text-muted-foreground opacity-100" : "text-muted-foreground/60 opacity-80"
+                <p className={`text-[10px] sm:text-xs mt-0.5 hidden lg:block ${
+                  step.id === currentStep ? "text-muted-foreground/80" : "text-muted-foreground/60"
                 }`}>
                   {step.description}
                 </p>
