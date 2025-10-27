@@ -87,6 +87,17 @@
     "docs": "Documentação",
     "github": "GitHub"
   },
+  "tags": {
+    "governance": "Governança",
+    "environment": "Meio Ambiente",
+    "economy": "Economia",
+    "social": "Social",
+    "technology": "Tecnologia",
+    "community": "Comunidade",
+    "justice": "Justiça",
+    "sports": "Esportes",
+    "others": "Outros"
+  },
   "wizard": {
     "backToHome": "Voltar ao início",
     "back": "Voltar",

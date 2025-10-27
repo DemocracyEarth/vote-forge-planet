@@ -3,6 +3,9 @@ project_id = "qwmgzbgcpypwjenchfei"
 [functions.create-election]
 verify_jwt = true
 
+[functions.generate-election-tags]
+verify_jwt = false
+
 [functions.polish-proposal]
 verify_jwt = true
 

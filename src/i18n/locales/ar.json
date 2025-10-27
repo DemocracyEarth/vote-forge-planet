@@ -87,6 +87,17 @@
     "docs": "التوثيق",
     "github": "GitHub"
   },
+  "tags": {
+    "governance": "الحوكمة",
+    "environment": "البيئة",
+    "economy": "الاقتصاد",
+    "social": "اجتماعي",
+    "technology": "التكنولوجيا",
+    "community": "المجتمع",
+    "justice": "العدالة",
+    "sports": "الرياضة",
+    "others": "أخرى"
+  },
   "wizard": {
     "backToHome": "العودة إلى الصفحة الرئيسية",
     "back": "رجوع",

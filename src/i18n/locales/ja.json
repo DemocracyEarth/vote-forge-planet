@@ -87,6 +87,17 @@
     "docs": "ドキュメント",
     "github": "GitHub"
   },
+  "tags": {
+    "governance": "ガバナンス",
+    "environment": "環境",
+    "economy": "経済",
+    "social": "社会",
+    "technology": "技術",
+    "community": "コミュニティ",
+    "justice": "正義",
+    "sports": "スポーツ",
+    "others": "その他"
+  },
   "wizard": {
     "backToHome": "ホームに戻る",
     "back": "戻る",

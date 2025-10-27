@@ -10,6 +10,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ElectionCountdown } from "@/components/ElectionCountdown";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useTranslation } from "react-i18next";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +29,7 @@ interface PublicElection {
   status: string | null;
   created_at: string | null;
   created_by: string;
+  tags?: string[] | null;
   identity_config?: any;
   voting_page_config?: any;
   bill_config?: any;
@@ -60,6 +62,7 @@ export function PublicElectionsFeed() {
   const [userId, setUserId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     loadPublicElections();
@@ -85,7 +88,7 @@ export function PublicElectionsFeed() {
 
       let query = supabase
         .from("elections")
-        .select("id, title, description, start_date, end_date, is_ongoing, is_public, status, created_at, identity_config, voting_page_config, bill_config, created_by")
+        .select("id, title, description, start_date, end_date, is_ongoing, is_public, status, created_at, identity_config, voting_page_config, bill_config, created_by, tags")
         .eq("status", "active");
 
       // Apply filters
@@ -438,6 +441,28 @@ export function PublicElectionsFeed() {
                         {truncateText(election.description, 120)}
                       </CardDescription>
                     </div>
+                    {/* Tags Display */}
+                    {election.tags && election.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {election.tags.slice(0, 3).map((tag) => (
+                          <Badge 
+                            key={tag}
+                            variant="secondary" 
+                            className="text-xs px-2 py-0.5 bg-primary/10 text-primary border border-primary/20"
+                          >
+                            {t(`tags.${tag}`)}
+                          </Badge>
+                        ))}
+                        {election.tags.length > 3 && (
+                          <Badge 
+                            variant="secondary" 
+                            className="text-xs px-2 py-0.5 bg-muted text-muted-foreground"
+                          >
+                            +{election.tags.length - 3}
+                          </Badge>
+                        )}
+                      </div>
+                    )}
                   </div>
                   {totalVotes > 0 && (
                     <div className="flex flex-col items-end gap-1 px-4 py-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30">

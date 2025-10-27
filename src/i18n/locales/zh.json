@@ -87,6 +87,17 @@
     "docs": "文档",
     "github": "GitHub"
   },
+  "tags": {
+    "governance": "治理",
+    "environment": "环境",
+    "economy": "经济",
+    "social": "社会",
+    "technology": "技术",
+    "community": "社区",
+    "justice": "正义",
+    "sports": "体育",
+    "others": "其他"
+  },
   "wizard": {
     "backToHome": "返回主页",
     "back": "返回",

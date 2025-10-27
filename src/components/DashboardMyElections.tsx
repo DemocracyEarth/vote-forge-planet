@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useTranslation } from "react-i18next";
 import { 
   ExternalLink, 
   Loader2, 
@@ -60,6 +61,7 @@ export function DashboardMyElections({ userId }: DashboardMyElectionsProps) {
   const [userProfile, setUserProfile] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (userId) {
@@ -343,6 +345,28 @@ export function DashboardMyElections({ userId }: DashboardMyElectionsProps) {
                           {truncateText(election.description, 120)}
                         </CardDescription>
                       </div>
+                      {/* Tags Display */}
+                      {election.tags && election.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {election.tags.slice(0, 3).map((tag) => (
+                            <Badge 
+                              key={tag}
+                              variant="secondary" 
+                              className="text-xs px-2 py-0.5 bg-primary/10 text-primary border border-primary/20"
+                            >
+                              {t(`tags.${tag}`)}
+                            </Badge>
+                          ))}
+                          {election.tags.length > 3 && (
+                            <Badge 
+                              variant="secondary" 
+                              className="text-xs px-2 py-0.5 bg-muted text-muted-foreground"
+                            >
+                              +{election.tags.length - 3}
+                            </Badge>
+                          )}
+                        </div>
+                      )}
                     </div>
                     {totalVotes > 0 && (
                       <div className="flex flex-col items-end gap-1 px-4 py-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30">

@@ -87,6 +87,17 @@
     "docs": "Документация",
     "github": "GitHub"
   },
+  "tags": {
+    "governance": "Управление",
+    "environment": "Окружающая среда",
+    "economy": "Экономика",
+    "social": "Социальная",
+    "technology": "Технологии",
+    "community": "Сообщество",
+    "justice": "Справедливость",
+    "sports": "Спорт",
+    "others": "Другие"
+  },
   "wizard": {
     "backToHome": "Вернуться на главную",
     "back": "Назад",

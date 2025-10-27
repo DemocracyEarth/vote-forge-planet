@@ -135,6 +135,7 @@ export type Database = {
           is_public: boolean
           start_date: string | null
           status: string | null
+          tags: string[] | null
           title: string
           voting_logic_config: Json
           voting_page_config: Json
@@ -152,6 +153,7 @@ export type Database = {
           is_public?: boolean
           start_date?: string | null
           status?: string | null
+          tags?: string[] | null
           title: string
           voting_logic_config: Json
           voting_page_config: Json
@@ -169,6 +171,7 @@ export type Database = {
           is_public?: boolean
           start_date?: string | null
           status?: string | null
+          tags?: string[] | null
           title?: string
           voting_logic_config?: Json
           voting_page_config?: Json

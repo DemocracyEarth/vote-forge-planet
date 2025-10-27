@@ -87,6 +87,17 @@
     "docs": "डॉक्स",
     "github": "GitHub"
   },
+  "tags": {
+    "governance": "शासन",
+    "environment": "पर्यावरण",
+    "economy": "अर्थव्यवस्था",
+    "social": "सामाजिक",
+    "technology": "प्रौद्योगिकी",
+    "community": "समुदाय",
+    "justice": "न्याय",
+    "sports": "खेल",
+    "others": "अन्य"
+  },
   "wizard": {
     "backToHome": "होम पर वापस जाएं",
     "back": "वापस",

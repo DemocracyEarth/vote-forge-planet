@@ -29,6 +29,7 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
   const [isStep2Valid, setIsStep2Valid] = useState(false);
   const [isStep4Valid, setIsStep4Valid] = useState(false);
   const [isAiGenerated, setIsAiGenerated] = useState(false);
+  const [generatedTags, setGeneratedTags] = useState<string[]>([]);
 
   const handleStep2ValidationChange = useCallback((isValid: boolean) => {
     setIsStep2Valid(isValid);
@@ -63,10 +64,32 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
     // If AI content hasn't been generated yet, do that first
     if (!isAiGenerated) {
       setIsDeploying(true);
-      // TODO: Add actual AI generation logic here
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate AI generation
-      setIsAiGenerated(true);
-      setIsDeploying(false);
+      try {
+        // Generate tags using AI
+        if (billData.title) {
+          const { data: tagsData } = await supabase.functions.invoke('generate-election-tags', {
+            body: { 
+              title: billData.title,
+              description: billData.description 
+            }
+          });
+          
+          if (tagsData?.tags) {
+            setGeneratedTags(tagsData.tags);
+          } else {
+            setGeneratedTags(['others']);
+          }
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        setIsAiGenerated(true);
+      } catch (error) {
+        console.error('Error generating tags:', error);
+        setGeneratedTags(['others']);
+        setIsAiGenerated(true);
+      } finally {
+        setIsDeploying(false);
+      }
       return;
     }
 
@@ -154,6 +177,7 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
           identityConfig: { ...identityData, restrictions: authRestrictions },
           votingLogicConfig: votingLogicData,
           billConfig: formattedBillData,
+          tags: generatedTags,
         }
       });
 
@@ -244,6 +268,26 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
         {currentStep === 2 && <StepAuthRestrictions authenticationType={identityData.authenticationType} onDataChange={setAuthRestrictions} onValidationChange={handleStep2ValidationChange} />}
         {currentStep === 3 && <StepVotingLogic selectedModel={selectedVotingModel} onModelChange={setSelectedVotingModel} onDataChange={setVotingLogicData} />}
         {currentStep === 4 && <StepBill votingModel={selectedVotingModel} votingLogicData={votingLogicData} onDataChange={setBillData} onValidationChange={handleStep4ValidationChange} />}
+        
+        {/* Show generated tags after AI generation */}
+        {isAiGenerated && generatedTags.length > 0 && (
+          <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">AI Generated Tags:</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {generatedTags.map((tag) => (
+                <span 
+                  key={tag}
+                  className="px-3 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full border border-primary/20"
+                >
+                  {t(`tags.${tag}`)}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Navigation */}

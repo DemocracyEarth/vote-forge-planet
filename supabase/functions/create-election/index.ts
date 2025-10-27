@@ -43,6 +43,7 @@ const requestSchema = z.object({
   identityConfig: identityConfigSchema,
   votingLogicConfig: votingLogicConfigSchema,
   billConfig: billConfigSchema,
+  tags: z.array(z.string().max(30)).max(5).optional(),
 });
 
 serve(async (req) => {
@@ -90,7 +91,7 @@ serve(async (req) => {
       );
     }
 
-    const { identityConfig, votingLogicConfig, billConfig } = validationResult.data;
+    const { identityConfig, votingLogicConfig, billConfig, tags } = validationResult.data;
     const verifiedUserId = user.id; // Use authenticated user's ID
     
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -224,6 +225,7 @@ Create a comprehensive JSON configuration that captures all these rules and defi
         is_ongoing: !!billConfig?.isOngoing,
         is_public: billConfig?.isPublic ?? true, // Default to public
         created_by: verifiedUserId,
+        tags: tags && tags.length > 0 ? tags : ['others'],
       })
       .select()
       .single();

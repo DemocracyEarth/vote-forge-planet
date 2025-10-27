@@ -87,6 +87,17 @@
     "docs": "ডক্স",
     "github": "GitHub"
   },
+  "tags": {
+    "governance": "শাসন",
+    "environment": "পরিবেশ",
+    "economy": "অর্থনীতি",
+    "social": "সামাজিক",
+    "technology": "প্রযুক্তি",
+    "community": "সম্প্রদায়",
+    "justice": "ন্যায়বিচার",
+    "sports": "ক্রীড়া",
+    "others": "অন্যান্য"
+  },
   "wizard": {
     "backToHome": "হোমে ফিরে যান",
     "back": "পিছনে",

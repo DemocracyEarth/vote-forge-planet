@@ -92,6 +92,17 @@
     "paper": "Paper",
     "foundation": "Foundation"
   },
+  "tags": {
+    "governance": "Governance",
+    "environment": "Environment",
+    "economy": "Economy",
+    "social": "Social",
+    "technology": "Technology",
+    "community": "Community",
+    "justice": "Justice",
+    "sports": "Sports",
+    "others": "Others"
+  },
   "wizard": {
     "backToHome": "Back to Home",
     "back": "Back",
