@@ -467,7 +467,7 @@ const Vote = () => {
         <Button 
           variant="outline" 
           onClick={() => navigate(user ? '/dashboard' : '/')}
-          className="h-9"
+          className="h-10"
         >
           <ArrowLeft className="w-4 h-4 mr-1.5" />
           <span className="hidden sm:inline">{user ? 'Dashboard' : 'Home'}</span>
