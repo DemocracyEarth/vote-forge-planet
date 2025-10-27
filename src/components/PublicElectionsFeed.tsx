@@ -59,6 +59,7 @@ export function PublicElectionsFeed() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [contentLoading, setContentLoading] = useState(false);
   const [filter, setFilter] = useState<FilterType>("all");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -66,7 +67,7 @@ export function PublicElectionsFeed() {
 
   useEffect(() => {
     loadPublicElections();
-  }, [filter]);
+  }, [filter, selectedTags]);
 
   const loadPublicElections = async () => {
     // Only show full loading on initial load
@@ -112,6 +113,11 @@ export function PublicElectionsFeed() {
       } else {
         // All public elections
         query = query.eq("is_public", true);
+      }
+
+      // Apply tag filter if tags are selected
+      if (selectedTags.length > 0) {
+        query = query.overlaps("tags", selectedTags);
       }
 
       const { data: publicElections, error } = await query.order("created_at", { ascending: false });
@@ -379,6 +385,41 @@ export function PublicElectionsFeed() {
           <TabsTrigger value="participated">Participated</TabsTrigger>
         </TabsList>
       </Tabs>
+
+      {/* Tag Filter */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">Filter by tags:</p>
+          {selectedTags.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedTags([])}
+              className="h-7 text-xs"
+            >
+              Clear filters
+            </Button>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {['governance', 'environment', 'economy', 'social', 'technology', 'community', 'justice', 'sports', 'others'].map(tag => (
+            <Badge
+              key={tag}
+              variant={selectedTags.includes(tag) ? "default" : "outline"}
+              className="cursor-pointer transition-all hover:scale-105"
+              onClick={() => {
+                setSelectedTags(prev => 
+                  prev.includes(tag) 
+                    ? prev.filter(t => t !== tag)
+                    : [...prev, tag]
+                );
+              }}
+            >
+              {t(`tags.${tag}`)}
+            </Badge>
+          ))}
+        </div>
+      </div>
 
       {contentLoading ? renderSkeletonCards() : elections.length === 0 ? renderEmptyState() : (
         <div className="grid gap-6">
