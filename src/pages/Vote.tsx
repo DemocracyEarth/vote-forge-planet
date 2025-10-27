@@ -19,6 +19,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { DiscussionThread } from "@/components/DiscussionThread";
 import { LiveResults } from "@/components/LiveResults";
 import { ElectionCountdown } from "@/components/ElectionCountdown";
+import { marked } from "marked";
 
 const Vote = () => {
   const { t } = useTranslation();
@@ -442,7 +443,10 @@ const Vote = () => {
                     </div>
                   )}
                   {election.description && (
-                    <p className="text-muted-foreground text-lg leading-relaxed">{election.description}</p>
+                    <div 
+                      className="text-muted-foreground text-lg leading-relaxed prose max-w-none"
+                      dangerouslySetInnerHTML={{ __html: marked(election.description) }}
+                    />
                   )}
                 </div>
               </div>

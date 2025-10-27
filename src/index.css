@@ -253,4 +253,107 @@ All colors MUST be HSL.
     margin: 1.5em auto;
     border-radius: 0.5rem;
   }
+
+  /* Markdown prose styles for rendered content */
+  .prose {
+    line-height: 1.75;
+  }
+
+  .prose > * + * {
+    margin-top: 1.25em;
+  }
+
+  .prose p {
+    margin: 0 0 1.5em 0;
+  }
+
+  .prose p:last-child {
+    margin-bottom: 0;
+  }
+
+  .prose h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-top: 1.2em;
+    margin-bottom: 0.6em;
+    color: hsl(var(--foreground));
+  }
+
+  .prose h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-top: 1.2em;
+    margin-bottom: 0.6em;
+    color: hsl(var(--foreground));
+  }
+
+  .prose h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 1.1em;
+    margin-bottom: 0.5em;
+    color: hsl(var(--foreground));
+  }
+
+  .prose ul,
+  .prose ol {
+    padding-left: 1.5em;
+    margin: 0.25em 0 1.25em 0;
+  }
+
+  .prose li + li {
+    margin-top: 0.35em;
+  }
+
+  .prose blockquote {
+    border-left: 3px solid hsl(var(--border));
+    padding-left: 1em;
+    color: hsl(var(--muted-foreground));
+    font-style: italic;
+    margin: 1.25em 0 1.5em 0;
+  }
+
+  .prose hr {
+    border: none;
+    border-top: 1px solid hsl(var(--border));
+    margin: 2em 0;
+  }
+
+  .prose a {
+    color: hsl(var(--primary));
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .prose code {
+    background-color: hsl(var(--muted));
+    padding: 0.15em 0.35em;
+    border-radius: 0.25rem;
+    font-size: 0.95em;
+    color: hsl(var(--foreground));
+  }
+
+  .prose pre {
+    background-color: hsl(var(--secondary));
+    padding: 1em;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    border: 1px solid hsl(var(--border));
+    margin: 1.25em 0 1.5em 0;
+  }
+
+  .prose img {
+    display: block;
+    margin: 1.5em auto;
+    border-radius: 0.5rem;
+  }
+
+  .prose strong {
+    font-weight: 600;
+    color: hsl(var(--foreground));
+  }
+
+  .prose em {
+    font-style: italic;
+  }
 }
