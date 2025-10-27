@@ -145,23 +145,25 @@ export function DashboardUsersFeed() {
         
         setMyDelegation(null);
       } else {
-        // Create or update delegation
+        // Create or update delegation (upsert to handle re-delegation)
         if (myDelegation) {
-          // Update existing delegation
+          // Update existing active delegation to point to new delegate
           const { error } = await supabase
             .from("delegations")
-            .update({ delegate_id: delegateId })
+            .update({ delegate_id: delegateId, active: true })
             .eq("id", myDelegation.id);
 
           if (error) throw error;
         } else {
-          // Create new delegation
+          // Upsert delegation (creates new or reactivates existing)
           const { data, error } = await supabase
             .from("delegations")
-            .insert({
+            .upsert({
               delegator_id: currentUserId,
               delegate_id: delegateId,
               active: true
+            }, {
+              onConflict: 'delegator_id,delegate_id'
             })
             .select()
             .single();
