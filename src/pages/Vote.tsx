@@ -49,6 +49,11 @@ const Vote = () => {
   useEffect(() => {
     loadElection();
     checkUser();
+    // Reset previous vote state when election changes
+    setPreviousVoteLoaded(false);
+    setHasVoted(false);
+    setSelectedOptions([]);
+    setVoteValue("");
   }, [electionId]);
 
   // Load previous vote when user and election are available
