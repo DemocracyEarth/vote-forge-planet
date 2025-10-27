@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { title, description, ballotOptions } = await req.json();
+    const { title, description, ballotOptions, customPrompt } = await req.json();
 
     if (!title) {
       return new Response(
@@ -38,11 +38,11 @@ serve(async (req) => {
       : "";
 
     // Craft the prompt for WSJ-style illustration
-    const prompt = `Create a sophisticated editorial illustration in Wall Street Journal style.
+    const basePrompt = `Create a sophisticated editorial illustration in minimalist line art style.
 Topic: ${title}
 ${description ? `Description: ${description}` : ""}${contextInfo}
 
-Style requirements:
+Base style requirements:
 - Black ink line art on white background only
 - No colors, no shading, no gray tones
 - Clean, precise linework reminiscent of stippling or hatching
@@ -52,6 +52,11 @@ Style requirements:
 - Aspect ratio 1200x630 pixels (social media card format)
 - No text or typography in the image
 - Minimalist and elegant composition`;
+
+    // Append custom instructions if provided
+    const prompt = customPrompt 
+      ? `${basePrompt}\n\nAdditional instructions: ${customPrompt}`
+      : basePrompt;
 
     console.log("Calling Lovable AI for image generation...");
 

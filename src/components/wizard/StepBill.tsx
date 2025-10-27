@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { MarkdownEditor } from "@/components/ui/markdown-editor";
+import { IllustrationSection } from "./IllustrationSection";
 
 interface StepBillProps {
   votingModel: string;
@@ -148,6 +149,9 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
   const [isGeneratingIllustration, setIsGeneratingIllustration] = useState(false);
   const [illustrationUrl, setIllustrationUrl] = useState("");
+  const [illustrationEnabled, setIllustrationEnabled] = useState(true);
+  const [customIllustrationPrompt, setCustomIllustrationPrompt] = useState("");
+  const [showPromptDialog, setShowPromptDialog] = useState(false);
   const lastGeneratedTitleRef = useRef<string>("");
   const [showFullForm, setShowFullForm] = useState(false);
   const [placeholder] = useState(() => placeholderExamples[Math.floor(Math.random() * placeholderExamples.length)]);
@@ -218,35 +222,38 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
         });
         lastGeneratedTitleRef.current = title.trim();
 
-        // Generate illustration after successful description generation
-        setIsGeneratingIllustration(true);
-        try {
-          console.log("Generating WSJ-style illustration for proposal...");
-          const { data: imgData, error: imgError } = await supabase.functions.invoke(
-            "generate-proposal-illustration",
-            {
-              body: {
-                title: title.trim(),
-                description: data.description,
-                ballotOptions: data.ballotOptions
+        // Generate illustration after successful description generation (if enabled)
+        if (illustrationEnabled) {
+          setIsGeneratingIllustration(true);
+          try {
+            console.log("Generating editorial illustration for proposal...");
+            const { data: imgData, error: imgError } = await supabase.functions.invoke(
+              "generate-proposal-illustration",
+              {
+                body: {
+                  title: title.trim(),
+                  description: data.description,
+                  ballotOptions: data.ballotOptions,
+                  customPrompt: customIllustrationPrompt || ""
+                }
               }
-            }
-          );
+            );
 
-          if (!imgError && imgData?.url) {
-            console.log("Illustration generated:", imgData.url);
-            setIllustrationUrl(imgData.url);
-            toast({
-              title: "Illustration created! 🎨",
-              description: "Editorial illustration generated in Wall Street Journal style.",
-            });
-          } else {
-            console.error("Failed to generate illustration:", imgError);
+            if (!imgError && imgData?.url) {
+              console.log("Illustration generated:", imgData.url);
+              setIllustrationUrl(imgData.url);
+              toast({
+                title: "Illustration created! 🎨",
+                description: "Editorial illustration generated successfully.",
+              });
+            } else {
+              console.error("Failed to generate illustration:", imgError);
+            }
+          } catch (imgError) {
+            console.error("Error generating illustration:", imgError);
+          } finally {
+            setIsGeneratingIllustration(false);
           }
-        } catch (imgError) {
-          console.error("Error generating illustration:", imgError);
-        } finally {
-          setIsGeneratingIllustration(false);
         }
       }
     } catch (error: any) {
@@ -259,7 +266,7 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
     } finally {
       setIsGeneratingDescription(false);
     }
-  }, [title, toast]);
+  }, [title, toast, illustrationEnabled, customIllustrationPrompt]);
 
   const handlePolishProposal = async () => {
     if (!title && !description) {
@@ -295,6 +302,58 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
       });
     } finally {
       setIsPolishing(false);
+    }
+  };
+
+  const handleRegenerateIllustration = async () => {
+    if (!title.trim() || !description) {
+      toast({
+        title: "Cannot generate illustration",
+        description: "Please complete the title and description first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGeneratingIllustration(true);
+    try {
+      console.log("Regenerating editorial illustration...");
+      const { data: imgData, error: imgError } = await supabase.functions.invoke(
+        "generate-proposal-illustration",
+        {
+          body: {
+            title: title.trim(),
+            description: description,
+            ballotOptions: ballotOptions.filter(opt => opt.trim() !== ""),
+            customPrompt: customIllustrationPrompt
+          }
+        }
+      );
+
+      if (!imgError && imgData?.url) {
+        console.log("Illustration regenerated:", imgData.url);
+        setIllustrationUrl(imgData.url);
+        toast({
+          title: "Illustration regenerated! 🎨",
+          description: "New editorial illustration created successfully.",
+        });
+      } else {
+        console.error("Failed to regenerate illustration:", imgError);
+        toast({
+          title: "Generation failed",
+          description: imgError?.message || "Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (imgError: any) {
+      console.error("Error regenerating illustration:", imgError);
+      toast({
+        title: "Failed to regenerate",
+        description: imgError.message || "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingIllustration(false);
     }
   };
 
@@ -545,31 +604,15 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
         </div>
 
         {/* AI-Generated Illustration */}
-        {illustrationUrl && (
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2 text-sm sm:text-base">
-              <Sparkles className="w-4 h-4 text-primary" />
-              AI-Generated Editorial Illustration
-            </Label>
-            <div className="border rounded-lg overflow-hidden bg-muted/50">
-              <img 
-                src={illustrationUrl} 
-                alt="Proposal illustration in Wall Street Journal style"
-                className="w-full h-auto"
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              This illustration will be used as the preview image when sharing on social media
-            </p>
-          </div>
-        )}
-
-        {isGeneratingIllustration && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground py-3">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Generating editorial illustration in Wall Street Journal style...
-          </div>
-        )}
+        <IllustrationSection
+          illustrationUrl={illustrationUrl}
+          illustrationEnabled={illustrationEnabled}
+          isGenerating={isGeneratingIllustration}
+          customPrompt={customIllustrationPrompt}
+          onToggleEnabled={setIllustrationEnabled}
+          onCustomPromptChange={setCustomIllustrationPrompt}
+          onRegenerate={handleRegenerateIllustration}
+        />
 
         {/* Ballot Options */}
         <Card className="p-3 sm:p-4 space-y-3 sm:space-y-4">
