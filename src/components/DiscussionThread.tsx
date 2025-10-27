@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Card } from "@/components/ui/card";
+import { formatDistanceToNow } from "date-fns";
 
 interface Comment {
   id: string;
@@ -71,8 +72,11 @@ const CommentItem = ({
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-semibold text-sm">{comment.profile?.full_name || "Anonymous"}</p>
-                <p className="text-xs text-muted-foreground">
-                  {new Date(comment.created_at).toLocaleString()}
+                <p 
+                  className="text-xs text-muted-foreground" 
+                  title={new Date(comment.created_at).toLocaleString()}
+                >
+                  {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
                 </p>
               </div>
             </div>
