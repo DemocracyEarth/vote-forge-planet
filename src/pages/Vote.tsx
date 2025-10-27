@@ -257,10 +257,8 @@ const Vote = () => {
           setVoteValue("");
           setSelectedOptions([]);
           
-          // Redirect after successful update
-          setTimeout(() => {
-            navigate(user ? '/dashboard' : '/');
-          }, 1500);
+          // Reload results to show updated voting data
+          await loadVoteResults();
           return;
         } else {
           toast({
@@ -337,9 +335,9 @@ const Vote = () => {
             setVoterIdentifier("");
             setVoteValue("");
             setSelectedOptions([]);
-            setTimeout(() => {
-              navigate(user ? '/dashboard' : '/');
-            }, 1500);
+            
+            // Reload results to show updated voting data
+            await loadVoteResults();
             return;
           } else {
             toast({
@@ -362,10 +360,8 @@ const Vote = () => {
       setVoteValue("");
       setSelectedOptions([]);
       
-      // Redirect after successful vote
-      setTimeout(() => {
-        navigate(user ? '/dashboard' : '/');
-      }, 1500);
+      // Reload results to show updated voting data
+      await loadVoteResults();
     } catch (error) {
       console.error('Error submitting vote:', error);
       toast({
