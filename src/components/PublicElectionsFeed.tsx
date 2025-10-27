@@ -260,14 +260,22 @@ export function PublicElectionsFeed() {
                     </CardTitle>
                     {election.profiles && (
                       <div className="flex items-center gap-2 mb-3">
-                        <Avatar className="h-6 w-6 border border-primary/20">
+                        <Avatar 
+                          className="h-6 w-6 border border-primary/20 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => navigate(`/profile/${election.created_by}`)}
+                        >
                           <AvatarImage src={election.profiles.avatar_url || undefined} alt={election.profiles.full_name} />
                           <AvatarFallback className="bg-primary/10 text-primary text-xs">
                             {election.profiles.full_name?.charAt(0) || "U"}
                           </AvatarFallback>
                         </Avatar>
                         <span className="text-xs text-muted-foreground">
-                          by <span className="font-semibold text-foreground">{election.profiles.full_name}</span>
+                          by <span 
+                            className="font-semibold text-foreground cursor-pointer hover:text-primary transition-colors"
+                            onClick={() => navigate(`/profile/${election.created_by}`)}
+                          >
+                            {election.profiles.full_name}
+                          </span>
                         </span>
                       </div>
                     )}
