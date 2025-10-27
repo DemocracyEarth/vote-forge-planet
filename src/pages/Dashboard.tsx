@@ -65,8 +65,8 @@ const Dashboard = () => {
             </div>
           </header>
 
-          <main className="flex-1 p-8 relative">
-            <div className="max-w-7xl mx-auto">
+          <main className="flex-1 p-4 md:p-6 lg:p-8 relative">
+            <div className="max-w-7xl mx-auto px-2 md:px-0">
               <Routes>
                 <Route path="/" element={<PublicElectionsFeed />} />
                 <Route path="/discussions" element={<DashboardDiscussions userId={user?.id} />} />
