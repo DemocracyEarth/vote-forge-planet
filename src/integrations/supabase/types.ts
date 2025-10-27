@@ -284,6 +284,13 @@ export type Database = {
           vote_value: string
         }[]
       }
+      get_valid_delegators_for_election: {
+        Args: { delegate_user_id: string; election_id: string }
+        Returns: {
+          delegator_count: number
+          delegators: Json
+        }[]
+      }
       has_user_voted: { Args: { election_uuid: string }; Returns: boolean }
       is_valid_vote_value: {
         Args: { election_uuid: string; vote_val: string }
