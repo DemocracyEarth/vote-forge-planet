@@ -8,11 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Vote as VoteIcon, ArrowLeft, Users, CheckCircle2 } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Loader2, Vote as VoteIcon, ArrowLeft, Users } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import Footer from "@/components/Footer";
 import { useTranslation } from "react-i18next";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -26,7 +26,6 @@ const Vote = () => {
   const { electionId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const isMobile = useIsMobile();
   const [loading, setLoading] = useState(true);
   const [election, setElection] = useState<any>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -439,180 +438,6 @@ const Vote = () => {
     }
   };
 
-  // Voting Form Component (extracted for reuse)
-  const VotingFormContent = () => (
-    <form onSubmit={handleSubmitVote} className="space-y-6">
-      {/* Voting Power Summary */}
-      {!isElectionClosed() && delegatorInfo && delegatorInfo.count > 0 && (
-        <div className="p-4 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20">
-          <div className="flex items-center gap-2 mb-2">
-            <Users className="w-5 h-5 text-primary" />
-            <h4 className="font-semibold">Your Voting Power</h4>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">Total votes:</span>
-            <span className="font-bold text-primary text-lg">{delegatorInfo.count + 1}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Already Voted Indicator */}
-      {hasVoted && (
-        <div className="p-4 rounded-xl bg-gradient-to-br from-green-500/10 to-green-500/5 border border-green-500/20">
-          <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-            <CheckCircle2 className="w-5 h-5" />
-            <span className="font-semibold">You've already voted</span>
-          </div>
-          {election.is_ongoing && (
-            <p className="text-xs text-muted-foreground mt-2">
-              You can update your vote while the election is ongoing
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Vote Selection Section - PRIMARY ACTION */}
-      {!isElectionClosed() && (
-        <div className="space-y-5 p-6 rounded-2xl bg-gradient-to-br from-primary/5 to-accent/5 border-2 border-primary/20 shadow-lg">
-          <div className="flex items-center gap-2">
-            <VoteIcon className="w-6 h-6 text-primary" />
-            <Label className="text-2xl font-bold text-foreground">
-              Cast Your Vote
-            </Label>
-          </div>
-          
-          {election?.bill_config?.ballotOptions ? (
-            <div className="space-y-4">
-              {election.bill_config.ballotOptions.map((option: string, index: number) => (
-                <Button
-                  key={index}
-                  type="button"
-                  variant={
-                    election.bill_config.ballotType === "single"
-                      ? selectedOptions[0] === option ? "default" : "outline"
-                      : selectedOptions.includes(option) ? "default" : "outline"
-                  }
-                  className={`w-full h-auto py-4 px-5 text-base justify-start font-semibold transition-all duration-200 rounded-xl shadow-md whitespace-normal text-left ${
-                    (election.bill_config.ballotType === "single" ? selectedOptions[0] === option : selectedOptions.includes(option))
-                      ? "bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/30 scale-[1.02]"
-                      : "bg-background/80 hover:bg-background hover:border-primary/50 hover:shadow-md hover:scale-[1.01]"
-                  }`}
-                  onClick={() => {
-                    if (election.bill_config.ballotType === "single") {
-                      setSelectedOptions([option]);
-                    } else {
-                      if (selectedOptions.includes(option)) {
-                        setSelectedOptions(selectedOptions.filter((o) => o !== option));
-                      } else {
-                        setSelectedOptions([...selectedOptions, option]);
-                      }
-                    }
-                  }}
-                >
-                  <span className="flex items-start gap-3 w-full">
-                    {(election.bill_config.ballotType === "single" ? selectedOptions[0] === option : selectedOptions.includes(option)) && (
-                      <span className="w-2.5 h-2.5 rounded-full bg-primary-foreground animate-pulse flex-shrink-0 mt-1" />
-                    )}
-                    <span className="break-words flex-1">{option}</span>
-                  </span>
-                </Button>
-              ))}
-            </div>
-          ) : (
-            <Textarea
-              id="vote"
-              placeholder="Enter your vote (Yes/No or your choice)"
-              value={voteValue}
-              onChange={(e) => setVoteValue(e.target.value)}
-              required
-              rows={5}
-              className="bg-background/80 backdrop-blur-sm resize-none text-lg border-2"
-            />
-          )}
-          
-          {election?.bill_config?.ballotType === "multiple" && selectedOptions.length > 0 && (
-            <div className="flex items-center gap-2 text-sm px-3 py-2 rounded-lg bg-accent/10 text-accent border border-accent/20 w-fit">
-              <span className="font-semibold">{selectedOptions.length}</span>
-              <span>option{selectedOptions.length !== 1 ? 's' : ''} selected</span>
-            </div>
-          )}
-
-          {/* Submit Button - MOST PROMINENT */}
-          <Button 
-            type="submit" 
-            className="w-full h-16 text-lg font-bold bg-gradient-to-r from-primary via-primary to-accent hover:from-primary/90 hover:via-accent/90 hover:to-primary shadow-xl shadow-primary/30 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] mt-2" 
-            disabled={submitting || (election?.bill_config?.ballotOptions ? selectedOptions.length === 0 : !voteValue)}
-          >
-            {submitting ? (
-              <>
-                <Loader2 className="w-6 h-6 mr-2 animate-spin" />
-                Submitting...
-              </>
-            ) : delegatorInfo && delegatorInfo.count > 0 ? (
-              <>
-                <Users className="w-6 h-6 mr-2" />
-                Cast {delegatorInfo.count + 1} Votes
-              </>
-            ) : (
-              <>
-                <VoteIcon className="w-6 h-6 mr-2" />
-                Cast Your Vote
-              </>
-            )}
-          </Button>
-        </div>
-      )}
-
-      {isElectionClosed() && (
-        <div className="p-4 rounded-xl bg-muted/50 text-center">
-          <p className="text-sm text-muted-foreground">
-            This election has ended. No new votes can be cast.
-          </p>
-        </div>
-      )}
-
-      {/* Identifier Section - DE-EMPHASIZED */}
-      <div className="space-y-2 pt-4 border-t border-border/50">
-        <Label htmlFor="identifier" className="text-xs text-muted-foreground font-normal">
-          Your Identifier
-        </Label>
-        <Input
-          id="identifier"
-          type="text"
-          placeholder={user ? "Auto-filled from your account" : "Enter your email, ID, or identifier"}
-          value={voterIdentifier}
-          onChange={(e) => setVoterIdentifier(e.target.value)}
-          readOnly={!!user}
-          required
-          className={user ? "bg-muted/50 cursor-not-allowed h-9 text-sm" : "bg-background h-9 text-sm"}
-        />
-        <div className="text-xs space-y-1.5">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <span>Required:</span>
-            <span className="px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border/50 text-xs">
-              {election.identity_config?.verificationType || 'Email'}
-            </span>
-          </div>
-          {user && (() => {
-            const authMethod = user.app_metadata?.provider || 'email';
-            const requiredType = election.identity_config?.verificationType?.toLowerCase() || 'email';
-            const userType = authMethod === 'google' ? 'email' : authMethod;
-            const matches = requiredType.includes(userType) || userType.includes(requiredType);
-            
-            return (
-              <div className={`flex items-center gap-2 px-2 py-1.5 rounded-lg border ${matches ? "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20" : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"}`}>
-                <span className="text-xs">{matches ? "✓" : "⚠"}</span>
-                <span className="text-xs">
-                  {matches ? "Authentication matches" : "Authentication type may not match"}
-                </span>
-              </div>
-            );
-          })()}
-        </div>
-      </div>
-    </form>
-  );
-
   if (loading) {
     return (
       <div className="min-h-screen aurora-bg flex items-center justify-center">
@@ -642,7 +467,7 @@ const Vote = () => {
         <ThemeToggle />
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
         <Button 
           variant="outline" 
           onClick={() => navigate(user ? '/dashboard' : '/')} 
@@ -652,292 +477,387 @@ const Vote = () => {
           {user ? t('vote.backToDashboard') : t('vote.backToHome')}
         </Button>
 
-        <div className="flex gap-6 relative">
-          {/* Main Content */}
-          <div className="flex-1 max-w-4xl">
-            <Card className="relative overflow-hidden border-border/50 bg-card/40 backdrop-blur-xl">
-              {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
-              
-              <div className="relative p-6 sm:p-8">
-                {/* Header Section */}
-                <div className="mb-8 pb-6 border-b border-border/50">
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 backdrop-blur-sm">
-                      <VoteIcon className="w-8 h-8 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <h1 className="text-3xl sm:text-4xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-                        {election.title}
-                      </h1>
-                      {creator && (
-                        <div className="flex items-center gap-3 mb-3">
-                          <Avatar className="h-8 w-8 border-2 border-primary/20">
-                            <AvatarImage src={creator.avatar_url} alt={creator.full_name} />
-                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                              {creator.full_name?.charAt(0) || "U"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="text-sm text-muted-foreground">
-                            Created by <span className="font-semibold text-foreground">{creator.full_name}</span>
-                          </div>
-                        </div>
-                      )}
-                      {election.description && (
-                        <div 
-                          className="text-muted-foreground text-lg leading-relaxed prose max-w-none"
-                          dangerouslySetInnerHTML={{ __html: marked(election.description) }}
-                        />
-                      )}
-                    </div>
-                  </div>
+        <Card className="relative overflow-hidden border-border/50 bg-card/40 backdrop-blur-xl">
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+          
+          <div className="relative p-6 sm:p-8">
+            {/* Header Section */}
+            <div className="mb-8 pb-6 border-b border-border/50">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 backdrop-blur-sm">
+                  <VoteIcon className="w-8 h-8 text-primary" />
                 </div>
-
-                {/* Election Details Grid */}
-                <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Countdown Component */}
-                  <div className="md:col-span-2">
-                    <ElectionCountdown 
-                      startDate={election.start_date}
-                      endDate={election.end_date}
-                      isOngoing={election.is_ongoing}
-                    />
-                  </div>
-                  
-                  {/* Closed Election Banner */}
-                  {isElectionClosed() && (
-                    <div className="md:col-span-2 p-4 rounded-xl bg-gradient-to-r from-gray-500/20 to-gray-500/10 border-2 border-gray-500/30">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-gray-500/20">
-                          <VoteIcon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                        </div>
-                        <div>
-                          <p className="font-bold text-gray-600 dark:text-gray-400">Election Closed</p>
-                          <p className="text-sm text-muted-foreground">
-                            This election ended on {new Date(election.end_date!).toLocaleString()}. You can view results but cannot cast new votes.
-                          </p>
-                        </div>
+                <div className="flex-1">
+                  <h1 className="text-3xl sm:text-4xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                    {election.title}
+                  </h1>
+                  {creator && (
+                    <div className="flex items-center gap-3 mb-3">
+                      <Avatar className="h-8 w-8 border-2 border-primary/20">
+                        <AvatarImage src={creator.avatar_url} alt={creator.full_name} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                          {creator.full_name?.charAt(0) || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="text-sm text-muted-foreground">
+                        Created by <span className="font-semibold text-foreground">{creator.full_name}</span>
                       </div>
                     </div>
                   )}
-                  
-                  <div className="group p-4 rounded-xl bg-gradient-to-br from-card/60 to-card/30 backdrop-blur-sm border border-border/50 hover:border-primary/30 smooth-transition">
-                    <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider flex items-center gap-2">
-                      <div className="w-1 h-4 bg-primary rounded-full" />
-                      {t('vote.electionDetails')}
-                    </h3>
-                    <div className="space-y-2 text-sm">
-                      {election.start_date && (
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <span className="w-20 font-medium">Start:</span>
-                          <span>{new Date(election.start_date).toLocaleString()}</span>
-                        </div>
-                      )}
-                      {election.is_ongoing ? (
-                        <div className="flex items-center gap-2">
-                          <span className="w-20 font-medium text-muted-foreground">Status:</span>
-                          <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-semibold text-xs border border-primary/20">
-                            ● Ongoing Election
-                          </span>
-                        </div>
-                      ) : election.end_date ? (
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <span className="w-20 font-medium">End:</span>
-                          <span>{new Date(election.end_date).toLocaleString()}</span>
-                        </div>
-                      ) : null}
-                      {!election.is_ongoing && (
-                        <div className="flex items-center gap-2">
-                          <span className="w-20 font-medium text-muted-foreground">Status:</span>
-                          <span className="capitalize font-semibold">{election.status}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="group p-4 rounded-xl bg-gradient-to-br from-card/60 to-card/30 backdrop-blur-sm border border-border/50 hover:border-accent/30 smooth-transition">
-                    <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider flex items-center gap-2">
-                      <div className="w-1 h-4 bg-accent rounded-full" />
-                      Voting Model
-                    </h3>
-                    <p className="text-sm font-medium capitalize px-3 py-2 rounded-lg bg-accent/10 text-accent border border-accent/20 inline-block">
-                      {election.voting_logic_config?.model || 'Direct Voting'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Delegation Power Display */}
-                {!isElectionClosed() && delegatorInfo && delegatorInfo.count > 0 && (
-                  <div className="mb-8 p-5 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/30 backdrop-blur-sm">
-                    <div className="flex items-center gap-3 mb-3">
-                      <Users className="w-6 h-6 text-primary" />
-                      <h3 className="font-semibold text-lg">Your Voting Power</h3>
-                    </div>
-                    <div className="space-y-3">
-                      <p className="text-sm text-muted-foreground">
-                        You're representing <span className="font-bold text-primary">{delegatorInfo.count + 1}</span> {delegatorInfo.count + 1 === 1 ? 'person' : 'people'} in this vote
-                      </p>
-                      <div className="grid grid-cols-3 gap-2 text-sm">
-                        <div className="p-3 rounded bg-card/50 border border-border/50">
-                          <p className="text-muted-foreground text-xs mb-1">Your vote</p>
-                          <p className="font-bold text-lg">1</p>
-                        </div>
-                        <div className="p-3 rounded bg-card/50 border border-border/50">
-                          <p className="text-muted-foreground text-xs mb-1">Delegated</p>
-                          <p className="font-bold text-primary text-lg">{delegatorInfo.count}</p>
-                        </div>
-                        <div className="p-3 rounded bg-primary/10 border border-primary/30">
-                          <p className="text-muted-foreground text-xs mb-1">Total power</p>
-                          <p className="font-bold text-primary text-lg">{delegatorInfo.count + 1}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Results Section */}
-                {Object.keys(voteResults).length > 0 && (
-                  <div className="p-6 rounded-xl bg-gradient-to-br from-primary/10 via-transparent to-accent/10 border border-primary/20 backdrop-blur-sm">
-                    <div className="flex items-center gap-3 mb-5">
-                      {election?.is_ongoing && (
-                        <div className="relative">
-                          <div className="w-3 h-3 rounded-full bg-primary animate-pulse" />
-                          <div className="absolute inset-0 w-3 h-3 rounded-full bg-primary animate-ping" />
-                        </div>
-                      )}
-                      <h4 className="font-semibold text-lg">
-                        {election?.is_ongoing ? 'Live Results' : 'Final Results'}
-                      </h4>
-                    </div>
-                    <div className="space-y-4">
-                      {Object.entries(voteResults)
-                        .sort(([, a], [, b]) => b - a)
-                        .map(([option, count], index) => {
-                          const total = Object.values(voteResults).reduce((sum, val) => sum + val, 0);
-                          const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : "0.0";
-                          return (
-                            <div key={option} className="space-y-2 p-4 rounded-lg bg-card/40 backdrop-blur-sm border border-border/50 hover:border-primary/30 smooth-transition">
-                              <div className="flex justify-between items-center">
-                                <div className="flex items-center gap-2">
-                                  {index === 0 && total > 0 && (
-                                    <span className="text-lg">🥇</span>
-                                  )}
-                                  <span className="font-semibold text-base">{option}</span>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                  <span className="text-sm text-muted-foreground font-medium">{count} votes</span>
-                                  <span className="text-lg font-bold text-primary">{percentage}%</span>
-                                </div>
-                              </div>
-                              <div className="h-3 bg-muted/50 rounded-full overflow-hidden relative">
-                                <div 
-                                  className="h-full bg-gradient-to-r from-primary via-primary to-accent transition-all duration-700 ease-out rounded-full shadow-lg shadow-primary/30"
-                                  style={{ width: `${percentage}%` }}
-                                />
-                              </div>
-                            </div>
-                          );
-                        })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Share Section */}
-                <div className="mt-6 p-5 rounded-xl bg-gradient-to-br from-accent/10 to-transparent border border-accent/20 backdrop-blur-sm">
-                  <h4 className="font-semibold mb-3 text-sm uppercase tracking-wider flex items-center gap-2">
-                    <div className="w-1 h-4 bg-accent rounded-full" />
-                    {t('vote.shareElection')}
-                  </h4>
-                  <div className="flex gap-2 mb-3">
-                    <Input 
-                      value={`https://ai.democracy.earth/vote/${electionId}`} 
-                      readOnly 
-                      className="text-xs bg-background/50 backdrop-blur-sm border-border/50"
+                  {election.description && (
+                    <div 
+                      className="text-muted-foreground text-lg leading-relaxed prose max-w-none"
+                      dangerouslySetInnerHTML={{ __html: marked(election.description) }}
                     />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="bg-accent/10 hover:bg-accent/20 border-accent/30 hover:border-accent text-accent font-medium smooth-transition"
-                      onClick={() => {
-                        navigator.clipboard.writeText(`https://ai.democracy.earth/vote/${electionId}`);
-                        toast({
-                          title: t('vote.linkCopied'),
-                          description: t('vote.linkCopiedDesc'),
-                        });
-                      }}
-                    >
-                      {t('vote.copy')}
-                    </Button>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="bg-[#1DA1F2]/10 hover:bg-[#1DA1F2]/20 border-[#1DA1F2]/30 hover:border-[#1DA1F2] text-[#1DA1F2] font-medium smooth-transition"
-                    onClick={() => {
-                      const url = `https://ai.democracy.earth/vote/${electionId}`;
-                      const text = `Vote on: ${election.title}`;
-                      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
-                    }}
-                  >
-                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                    {t('vote.shareOnX')}
-                  </Button>
+                  )}
                 </div>
               </div>
-            </Card>
-
-            {/* Live Results Component */}
-            <div className="mt-6">
-              <LiveResults 
-                voteResults={voteResults}
-                votingLogicConfig={election.voting_logic_config}
-                ballotOptions={election.bill_config?.ballotOptions}
-              />
             </div>
 
-            {/* Discussion Thread */}
-            <div className="mt-6">
-              <DiscussionThread electionId={electionId!} userId={user?.id || null} />
+            {/* Election Details Grid */}
+            <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Countdown Component */}
+              <div className="md:col-span-2">
+                <ElectionCountdown 
+                  startDate={election.start_date}
+                  endDate={election.end_date}
+                  isOngoing={election.is_ongoing}
+                />
+              </div>
+              
+              {/* Closed Election Banner */}
+              {isElectionClosed() && (
+                <div className="md:col-span-2 p-4 rounded-xl bg-gradient-to-r from-gray-500/20 to-gray-500/10 border-2 border-gray-500/30">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-gray-500/20">
+                      <VoteIcon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-600 dark:text-gray-400">Election Closed</p>
+                      <p className="text-sm text-muted-foreground">
+                        This election ended on {new Date(election.end_date!).toLocaleString()}. You can view results but cannot cast new votes.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="group p-4 rounded-xl bg-gradient-to-br from-card/60 to-card/30 backdrop-blur-sm border border-border/50 hover:border-primary/30 smooth-transition">
+                <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider flex items-center gap-2">
+                  <div className="w-1 h-4 bg-primary rounded-full" />
+                  {t('vote.electionDetails')}
+                </h3>
+                <div className="space-y-2 text-sm">
+                  {election.start_date && (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <span className="w-20 font-medium">Start:</span>
+                      <span>{new Date(election.start_date).toLocaleString()}</span>
+                    </div>
+                  )}
+                  {election.is_ongoing ? (
+                    <div className="flex items-center gap-2">
+                      <span className="w-20 font-medium text-muted-foreground">Status:</span>
+                      <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-semibold text-xs border border-primary/20">
+                        ● Ongoing Election
+                      </span>
+                    </div>
+                  ) : election.end_date ? (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <span className="w-20 font-medium">End:</span>
+                      <span>{new Date(election.end_date).toLocaleString()}</span>
+                    </div>
+                  ) : null}
+                  {!election.is_ongoing && (
+                    <div className="flex items-center gap-2">
+                      <span className="w-20 font-medium text-muted-foreground">Status:</span>
+                      <span className="capitalize font-semibold">{election.status}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="group p-4 rounded-xl bg-gradient-to-br from-card/60 to-card/30 backdrop-blur-sm border border-border/50 hover:border-accent/30 smooth-transition">
+                <h3 className="font-semibold mb-3 text-sm uppercase tracking-wider flex items-center gap-2">
+                  <div className="w-1 h-4 bg-accent rounded-full" />
+                  Voting Model
+                </h3>
+                <p className="text-sm font-medium capitalize px-3 py-2 rounded-lg bg-accent/10 text-accent border border-accent/20 inline-block">
+                  {election.voting_logic_config?.model || 'Direct Voting'}
+                </p>
+              </div>
             </div>
+
+            {/* Delegation Power Display */}
+            {!isElectionClosed() && delegatorInfo && delegatorInfo.count > 0 && (
+              <div className="p-5 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/30 backdrop-blur-sm">
+                <div className="flex items-center gap-3 mb-3">
+                  <Users className="w-6 h-6 text-primary" />
+                  <h3 className="font-semibold text-lg">Your Voting Power</h3>
+                </div>
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    You're representing <span className="font-bold text-primary">{delegatorInfo.count + 1}</span> {delegatorInfo.count + 1 === 1 ? 'person' : 'people'} in this vote
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 text-sm">
+                    <div className="p-3 rounded bg-card/50 border border-border/50">
+                      <p className="text-muted-foreground text-xs mb-1">Your vote</p>
+                      <p className="font-bold text-lg">1</p>
+                    </div>
+                    <div className="p-3 rounded bg-card/50 border border-border/50">
+                      <p className="text-muted-foreground text-xs mb-1">Delegated</p>
+                      <p className="font-bold text-primary text-lg">{delegatorInfo.count}</p>
+                    </div>
+                    <div className="p-3 rounded bg-primary/10 border border-primary/30">
+                      <p className="text-muted-foreground text-xs mb-1">Total power</p>
+                      <p className="font-bold text-primary text-lg">{delegatorInfo.count + 1}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Voting Form Section */}
+            <form onSubmit={handleSubmitVote} className="space-y-8">
+              {/* Identifier Section */}
+              <div className="space-y-3 p-5 rounded-xl bg-gradient-to-br from-muted/30 to-muted/10 border border-border/50">
+                <Label htmlFor="identifier" className="text-base font-semibold flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-primary" />
+                  Your Identifier
+                </Label>
+                <Input
+                  id="identifier"
+                  type="text"
+                  placeholder={user ? "Auto-filled from your account" : "Enter your email, ID, or identifier"}
+                  value={voterIdentifier}
+                  onChange={(e) => setVoterIdentifier(e.target.value)}
+                  readOnly={!!user}
+                  required
+                  className={user ? "bg-muted/50 cursor-not-allowed border-border/50" : "bg-background/50 backdrop-blur-sm"}
+                />
+                <div className="text-xs space-y-2 pl-1">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <span className="font-medium">Required:</span>
+                    <span className="px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                      {election.identity_config?.verificationType || 'Email'}
+                    </span>
+                  </div>
+                  {user && (() => {
+                    const authMethod = user.app_metadata?.provider || 'email';
+                    const requiredType = election.identity_config?.verificationType?.toLowerCase() || 'email';
+                    const userType = authMethod === 'google' ? 'email' : authMethod;
+                    const matches = requiredType.includes(userType) || userType.includes(requiredType);
+                    
+                    return (
+                      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${matches ? "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20" : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"}`}>
+                        <span className="font-medium">{matches ? "✓" : "⚠"}</span>
+                        <span className="text-xs">
+                          {matches ? "Your authentication matches the election requirements" : "Your authentication type may not match the election requirements"}
+                        </span>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Vote Selection Section */}
+              {!isElectionClosed() && (
+                <>
+                  <div className="space-y-4">
+                    <Label className="text-base font-semibold flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-accent" />
+                      Your Vote
+                    </Label>
+                {election?.bill_config?.ballotOptions ? (
+                  <div className="grid gap-3">
+                    {election.bill_config.ballotOptions.map((option: string, index: number) => (
+                      <Button
+                        key={index}
+                        type="button"
+                        variant={
+                          election.bill_config.ballotType === "single"
+                            ? selectedOptions[0] === option ? "default" : "outline"
+                            : selectedOptions.includes(option) ? "default" : "outline"
+                        }
+                        className={`h-auto py-5 px-6 text-lg justify-start font-medium smooth-transition ${
+                          (election.bill_config.ballotType === "single" ? selectedOptions[0] === option : selectedOptions.includes(option))
+                            ? "bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/20 border-primary"
+                            : "bg-card/60 backdrop-blur-sm hover:bg-card/80 hover:border-primary/40"
+                        }`}
+                        onClick={() => {
+                          if (election.bill_config.ballotType === "single") {
+                            setSelectedOptions([option]);
+                          } else {
+                            if (selectedOptions.includes(option)) {
+                              setSelectedOptions(selectedOptions.filter((o) => o !== option));
+                            } else {
+                              setSelectedOptions([...selectedOptions, option]);
+                            }
+                          }
+                        }}
+                      >
+                        <span className="flex items-center gap-3">
+                          {(election.bill_config.ballotType === "single" ? selectedOptions[0] === option : selectedOptions.includes(option)) && (
+                            <span className="w-2 h-2 rounded-full bg-primary-foreground animate-pulse" />
+                          )}
+                          {option}
+                        </span>
+                      </Button>
+                    ))}
+                  </div>
+                ) : (
+                  <Textarea
+                    id="vote"
+                    placeholder="Enter your vote (Yes/No or your choice)"
+                    value={voteValue}
+                    onChange={(e) => setVoteValue(e.target.value)}
+                    required
+                    rows={4}
+                    className="bg-background/50 backdrop-blur-sm resize-none"
+                  />
+                )}
+                {election?.bill_config?.ballotType === "multiple" && selectedOptions.length > 0 && (
+                  <div className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg bg-accent/10 text-accent border border-accent/20 w-fit">
+                      <span className="font-semibold">{selectedOptions.length}</span>
+                      <span>option{selectedOptions.length !== 1 ? 's' : ''} selected</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Submit Button */}
+                <Button 
+                  type="submit" 
+                  className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/20 smooth-transition" 
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                      Submitting Vote...
+                    </>
+                  ) : delegatorInfo && delegatorInfo.count > 0 ? (
+                    <>
+                      <Users className="w-5 h-5 mr-2" />
+                      Cast {delegatorInfo.count + 1} Votes (Your Power: {delegatorInfo.count + 1})
+                    </>
+                  ) : (
+                    <>
+                      <VoteIcon className="w-5 h-5 mr-2" />
+                      Cast Your Vote
+                    </>
+                  )}
+                </Button>
+                </>
+              )}
+            </form>
+
+            {/* Results Section */}
+            {Object.keys(voteResults).length > 0 && (
+              <div className="mt-8 p-6 rounded-xl bg-gradient-to-br from-primary/10 via-transparent to-accent/10 border border-primary/20 backdrop-blur-sm">
+                <div className="flex items-center gap-3 mb-5">
+                  {election?.is_ongoing && (
+                    <div className="relative">
+                      <div className="w-3 h-3 rounded-full bg-primary animate-pulse" />
+                      <div className="absolute inset-0 w-3 h-3 rounded-full bg-primary animate-ping" />
+                    </div>
+                  )}
+                  <h4 className="font-semibold text-lg">
+                    {election?.is_ongoing ? 'Live Results' : 'Final Results'}
+                  </h4>
+                </div>
+                <div className="space-y-4">
+                  {Object.entries(voteResults)
+                    .sort(([, a], [, b]) => b - a)
+                    .map(([option, count], index) => {
+                      const total = Object.values(voteResults).reduce((sum, val) => sum + val, 0);
+                      const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : "0.0";
+                      return (
+                        <div key={option} className="space-y-2 p-4 rounded-lg bg-card/40 backdrop-blur-sm border border-border/50 hover:border-primary/30 smooth-transition">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                              {index === 0 && total > 0 && (
+                                <span className="text-lg">🥇</span>
+                              )}
+                              <span className="font-semibold text-base">{option}</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-sm text-muted-foreground font-medium">{count} votes</span>
+                              <span className="text-lg font-bold text-primary">{percentage}%</span>
+                            </div>
+                          </div>
+                          <div className="h-3 bg-muted/50 rounded-full overflow-hidden relative">
+                            <div 
+                              className="h-full bg-gradient-to-r from-primary via-primary to-accent transition-all duration-700 ease-out rounded-full shadow-lg shadow-primary/30"
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Right Sidebar - Desktop */}
-          {!isMobile && (
-            <aside className="hidden lg:block w-[380px] sticky top-20 h-fit">
-              <Card className="p-6 border-border/50 bg-card/40 backdrop-blur-xl">
-                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <VoteIcon className="w-5 h-5 text-primary" />
-                  Your Vote
-                </h3>
-                <VotingFormContent />
-              </Card>
-            </aside>
-          )}
+          {/* Share Section */}
+          <div className="mt-6 p-5 rounded-xl bg-gradient-to-br from-accent/10 to-transparent border border-accent/20 backdrop-blur-sm">
+            <h4 className="font-semibold mb-3 text-sm uppercase tracking-wider flex items-center gap-2">
+              <div className="w-1 h-4 bg-accent rounded-full" />
+              {t('vote.shareElection')}
+            </h4>
+            <div className="flex gap-2 mb-3">
+              <Input 
+                value={`https://ai.democracy.earth/vote/${electionId}`} 
+                readOnly 
+                className="text-xs bg-background/50 backdrop-blur-sm border-border/50"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-accent/10 hover:bg-accent/20 border-accent/30 hover:border-accent text-accent font-medium smooth-transition"
+                onClick={() => {
+                  navigator.clipboard.writeText(`https://ai.democracy.earth/vote/${electionId}`);
+                  toast({
+                    title: t('vote.linkCopied'),
+                    description: t('vote.linkCopiedDesc'),
+                  });
+                }}
+              >
+                {t('vote.copy')}
+              </Button>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-[#1DA1F2]/10 hover:bg-[#1DA1F2]/20 border-[#1DA1F2]/30 hover:border-[#1DA1F2] text-[#1DA1F2] font-medium smooth-transition"
+              onClick={() => {
+                const url = `https://ai.democracy.earth/vote/${electionId}`;
+                const text = `Vote on: ${election.title}`;
+                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+              }}
+            >
+              <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              Share on X
+            </Button>
+          </div>
+        </Card>
 
-          {/* Mobile Sheet */}
-          {isMobile && !isElectionClosed() && (
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button
-                  size="lg"
-                  className="fixed bottom-6 right-6 lg:hidden z-40 h-14 px-6 shadow-2xl bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary"
-                >
-                  <VoteIcon className="w-5 h-5 mr-2" />
-                  Cast Vote
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-                <div className="py-6">
-                  <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                    <VoteIcon className="w-5 h-5 text-primary" />
-                    Your Vote
-                  </h3>
-                  <VotingFormContent />
-                </div>
-              </SheetContent>
-            </Sheet>
-          )}
+        {/* Live Results Section */}
+        <div className="mt-8">
+          <LiveResults 
+            voteResults={voteResults}
+            votingLogicConfig={election.voting_logic_config}
+            ballotOptions={election.bill_config?.ballotOptions}
+          />
         </div>
+
+        {/* Discussion Section */}
+        <Card className="relative overflow-hidden border-border/50 bg-card/40 backdrop-blur-xl mt-8">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+          <div className="relative p-6 sm:p-8">
+            <DiscussionThread electionId={electionId!} userId={user?.id || null} />
+          </div>
+        </Card>
       </div>
 
       <Footer />

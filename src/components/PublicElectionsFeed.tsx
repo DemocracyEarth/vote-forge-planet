@@ -394,7 +394,7 @@ export function PublicElectionsFeed() {
                   <div className="flex-1">
                     <CardTitle 
                       className="text-2xl font-bold group-hover:text-primary transition-colors duration-300 mb-3 cursor-pointer"
-                      onClick={() => navigate(`/vote/${election.id}`)}
+                      onClick={() => navigate(`/vote?id=${election.id}`)}
                     >
                       {election.title}
                     </CardTitle>
