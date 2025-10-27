@@ -392,7 +392,10 @@ export function PublicElectionsFeed() {
               <CardHeader className="relative pb-6">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <CardTitle className="text-2xl font-bold group-hover:text-primary transition-colors duration-300 mb-3">
+                    <CardTitle 
+                      className="text-2xl font-bold group-hover:text-primary transition-colors duration-300 mb-3 cursor-pointer"
+                      onClick={() => navigate(`/vote?id=${election.id}`)}
+                    >
                       {election.title}
                     </CardTitle>
                     {election.profiles && (
