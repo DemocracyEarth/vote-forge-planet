@@ -5,9 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
-import { Loader2, ExternalLink, Users, TrendingUp, Mail, Phone, Chrome, Globe, MessageSquare } from "lucide-react";
+import { Loader2, ExternalLink, Users, TrendingUp, Mail, Phone, Chrome, Globe, MessageSquare, Share2 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ElectionCountdown } from "@/components/ElectionCountdown";
+import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface PublicElection {
   id: string;
@@ -46,6 +53,7 @@ export function PublicElectionsFeed() {
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     loadPublicElections();
@@ -198,6 +206,37 @@ export function PublicElectionsFeed() {
       'CL': 'Chile',
     };
     return countryNames[countryCode.toUpperCase()] || countryCode;
+  };
+
+  const copyElectionLink = (electionId: string) => {
+    const link = `${window.location.origin}/vote/${electionId}`;
+    navigator.clipboard.writeText(link);
+    toast({
+      title: "Link copied!",
+      description: "Election link copied to clipboard.",
+    });
+  };
+
+  const shareToTwitter = (election: PublicElection) => {
+    const link = `${window.location.origin}/vote/${election.id}`;
+    const text = `Vote on: ${election.title}`;
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(link)}`, '_blank');
+  };
+
+  const shareToFacebook = (election: PublicElection) => {
+    const link = `${window.location.origin}/vote/${election.id}`;
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`, '_blank');
+  };
+
+  const shareToLinkedIn = (election: PublicElection) => {
+    const link = `${window.location.origin}/vote/${election.id}`;
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(link)}`, '_blank');
+  };
+
+  const shareToWhatsApp = (election: PublicElection) => {
+    const link = `${window.location.origin}/vote/${election.id}`;
+    const text = `Vote on: ${election.title}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + link)}`, '_blank');
   };
 
 
@@ -380,21 +419,44 @@ export function PublicElectionsFeed() {
                   )}
                 </div>
                 
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                   <Button
+                    variant="default"
                     onClick={() => navigate(`/vote/${election.id}`)}
-                    className="flex-1"
+                    className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-300"
                   >
+                    <ExternalLink className="mr-2 h-4 w-4" />
                     Vote
                   </Button>
-                  <Button
-                    onClick={() => navigate(`/vote/${election.id}`)}
-                    variant="secondary"
-                    className="flex-1"
-                  >
-                    View More
-                    <ExternalLink className="ml-2 h-4 w-4" />
-                  </Button>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="bg-background border-border hover:bg-muted hover:border-border transition-all duration-300"
+                      >
+                        <Share2 className="mr-2 h-4 w-4" />
+                        Share
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuItem onClick={() => copyElectionLink(election.id)}>
+                        Copy Link
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => shareToTwitter(election)}>
+                        Share on Twitter
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => shareToFacebook(election)}>
+                        Share on Facebook
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => shareToLinkedIn(election)}>
+                        Share on LinkedIn
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => shareToWhatsApp(election)}>
+                        Share on WhatsApp
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </CardContent>
             </Card>
