@@ -28,6 +28,7 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
   const [isDeploying, setIsDeploying] = useState(false);
   const [isStep2Valid, setIsStep2Valid] = useState(false);
   const [isStep4Valid, setIsStep4Valid] = useState(false);
+  const [isAiGenerated, setIsAiGenerated] = useState(false);
 
   const handleStep2ValidationChange = useCallback((isValid: boolean) => {
     setIsStep2Valid(isValid);
@@ -56,6 +57,12 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
     } else {
       onBack();
     }
+  };
+
+  const handleGenerate = async () => {
+    setIsDeploying(true);
+    setIsAiGenerated(true);
+    setIsDeploying(false);
   };
 
   const handleDeploy = async () => {
@@ -238,11 +245,11 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
             <span className="xs:hidden">{t('wizard.next')}</span>
             <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
           </Button>
-        ) : (
+        ) : !isAiGenerated ? (
           <Button
-            onClick={handleDeploy}
+            onClick={handleGenerate}
             disabled={isDeploying || !isStep4Valid}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground glow-border smooth-transition text-xs sm:text-sm"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground smooth-transition text-xs sm:text-sm"
             size="sm"
           >
             {isDeploying ? (
@@ -255,6 +262,22 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
                 <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 {t('wizard.generateWithAI') || 'Generate with AI'}
               </>
+            )}
+          </Button>
+        ) : (
+          <Button
+            onClick={handleDeploy}
+            disabled={isDeploying}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground glow-border smooth-transition text-xs sm:text-sm"
+            size="sm"
+          >
+            {isDeploying ? (
+              <>
+                <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
+                {t('wizard.deploying') || 'Deploying...'}
+              </>
+            ) : (
+              t('wizard.deploy') || 'Deploy to Earth 🌎'
             )}
           </Button>
         )}
