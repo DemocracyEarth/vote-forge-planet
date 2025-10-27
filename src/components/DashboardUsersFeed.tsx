@@ -122,6 +122,9 @@ export function DashboardUsersFeed() {
     setFilteredUsers(filtered);
   };
 
+  const delegatedUsers = filteredUsers.filter(user => user.is_delegated_by_me);
+  const otherUsers = filteredUsers.filter(user => !user.is_delegated_by_me);
+
   const handleDelegate = async (delegateId: string) => {
     if (!currentUserId) return;
 
@@ -229,20 +232,6 @@ export function DashboardUsersFeed() {
         </p>
       </div>
 
-      {myDelegation && (
-        <Card className="glass-card border-primary/50 bg-primary/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Star className="h-5 w-5 fill-primary text-primary" />
-              Active Delegation
-            </CardTitle>
-            <CardDescription>
-              You are currently delegating your vote to a trusted member
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      )}
-
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
@@ -253,7 +242,130 @@ export function DashboardUsersFeed() {
         />
       </div>
 
-      {filteredUsers.length === 0 ? (
+      {delegatedUsers.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Star className="h-5 w-5 fill-primary text-primary" />
+            <h2 className="text-2xl font-semibold">My Delegates</h2>
+            <Badge variant="secondary" className="ml-2">{delegatedUsers.length}</Badge>
+          </div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {delegatedUsers.map((user) => (
+              <Card 
+                key={user.id} 
+                className="glass-card border-primary/50 bg-primary/5 ring-2 ring-primary/20 hover:ring-primary/40 transition-all duration-300"
+              >
+                <CardHeader>
+                  <Link to={`/dashboard/user/${user.id}`} className="block">
+                    <div className="flex items-start gap-4 cursor-pointer group">
+                      <div className="relative">
+                        <Avatar className="h-16 w-16 border-2 border-primary/50 group-hover:border-primary transition-colors">
+                          <AvatarImage src={user.avatar_url || undefined} alt={user.full_name || "User"} />
+                          <AvatarFallback className="text-lg">
+                            {user.full_name?.[0]?.toUpperCase() || "?"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <Star className="absolute -top-1 -right-1 h-5 w-5 fill-primary text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start gap-2 mb-1">
+                          <CardTitle className="text-lg truncate group-hover:text-primary transition-colors">
+                            {user.full_name || "Anonymous"}
+                          </CardTitle>
+                          {user.is_verified && (
+                            <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Users className="h-4 w-4" />
+                          <span>{user.delegation_count} delegator{user.delegation_count !== 1 ? 's' : ''}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {user.bio && (
+                    <p className="text-sm text-muted-foreground line-clamp-3">
+                      {user.bio}
+                    </p>
+                  )}
+                  <Button
+                    onClick={() => handleDelegate(user.id)}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <UserX className="h-4 w-4 mr-2" />
+                    Revoke Delegation
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {otherUsers.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            <h2 className="text-2xl font-semibold">All Members</h2>
+            <Badge variant="secondary" className="ml-2">{otherUsers.length}</Badge>
+          </div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {otherUsers.map((user) => (
+              <Card 
+                key={user.id} 
+                className="glass-card hover:border-primary/50 transition-all duration-300"
+              >
+                <CardHeader>
+                  <Link to={`/dashboard/user/${user.id}`} className="block">
+                    <div className="flex items-start gap-4 cursor-pointer group">
+                      <Avatar className="h-16 w-16 border-2 border-primary/20 group-hover:border-primary/50 transition-colors">
+                        <AvatarImage src={user.avatar_url || undefined} alt={user.full_name || "User"} />
+                        <AvatarFallback className="text-lg">
+                          {user.full_name?.[0]?.toUpperCase() || "?"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start gap-2 mb-1">
+                          <CardTitle className="text-lg truncate group-hover:text-primary transition-colors">
+                            {user.full_name || "Anonymous"}
+                          </CardTitle>
+                          {user.is_verified && (
+                            <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Users className="h-4 w-4" />
+                          <span>{user.delegation_count} delegator{user.delegation_count !== 1 ? 's' : ''}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {user.bio && (
+                    <p className="text-sm text-muted-foreground line-clamp-3">
+                      {user.bio}
+                    </p>
+                  )}
+                  <Button
+                    onClick={() => handleDelegate(user.id)}
+                    variant="default"
+                    className="w-full"
+                  >
+                    <UserCheck className="h-4 w-4 mr-2" />
+                    Delegate Vote
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {filteredUsers.length === 0 && (
         <Card className="glass-card">
           <CardContent className="py-12 text-center">
             <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
@@ -262,73 +374,6 @@ export function DashboardUsersFeed() {
             </p>
           </CardContent>
         </Card>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredUsers.map((user) => (
-            <Card 
-              key={user.id} 
-              className={`glass-card hover:border-primary/50 transition-all duration-300 ${
-                user.is_delegated_by_me ? 'border-primary/50 bg-primary/5 ring-2 ring-primary/20' : ''
-              }`}
-            >
-              <CardHeader>
-                <Link to={`/dashboard/user/${user.id}`} className="block">
-                  <div className="flex items-start gap-4 cursor-pointer group">
-                    <div className="relative">
-                      <Avatar className="h-16 w-16 border-2 border-primary/20 group-hover:border-primary/50 transition-colors">
-                        <AvatarImage src={user.avatar_url || undefined} alt={user.full_name || "User"} />
-                        <AvatarFallback className="text-lg">
-                          {user.full_name?.[0]?.toUpperCase() || "?"}
-                        </AvatarFallback>
-                      </Avatar>
-                      {user.is_delegated_by_me && (
-                        <Star className="absolute -top-1 -right-1 h-5 w-5 fill-primary text-primary" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start gap-2 mb-1">
-                        <CardTitle className="text-lg truncate group-hover:text-primary transition-colors">
-                          {user.full_name || "Anonymous"}
-                        </CardTitle>
-                        {user.is_verified && (
-                          <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Users className="h-4 w-4" />
-                        <span>{user.delegation_count} delegator{user.delegation_count !== 1 ? 's' : ''}</span>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {user.bio && (
-                  <p className="text-sm text-muted-foreground line-clamp-3">
-                    {user.bio}
-                  </p>
-                )}
-                <Button
-                  onClick={() => handleDelegate(user.id)}
-                  variant={user.is_delegated_by_me ? "outline" : "default"}
-                  className="w-full"
-                >
-                  {user.is_delegated_by_me ? (
-                    <>
-                      <UserX className="h-4 w-4 mr-2" />
-                      Revoke Delegation
-                    </>
-                  ) : (
-                    <>
-                      <UserCheck className="h-4 w-4 mr-2" />
-                      Delegate Vote
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
       )}
     </div>
   );
