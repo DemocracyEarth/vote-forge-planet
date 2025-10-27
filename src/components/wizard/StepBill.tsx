@@ -129,7 +129,7 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
   const [ballotOptions, setBallotOptions] = useState<string[]>(["YES", "NO", "ABSTENTION"]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [isOngoing, setIsOngoing] = useState(false);
+  const [isOngoing, setIsOngoing] = useState(true);
   // Voting model-specific settings
   const [tokenSettings, setTokenSettings] = useState({
     blockchain: "ethereum",
