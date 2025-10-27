@@ -386,7 +386,7 @@ export function PublicElectionsFeed() {
           return (
             <Card 
               key={election.id} 
-              className="group border-primary/20 bg-gradient-to-br from-background via-background to-primary/5 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 hover:border-primary/30 hover:scale-[1.01] backdrop-blur-sm"
+              className="group border-primary/20 bg-gradient-to-br from-background via-background to-primary/5 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 hover:border-primary/30 backdrop-blur-sm"
             >
               
               <CardHeader className="relative pb-6">
