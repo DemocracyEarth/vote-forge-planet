@@ -59,13 +59,18 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
     }
   };
 
-  const handleGenerate = async () => {
-    setIsDeploying(true);
-    setIsAiGenerated(true);
-    setIsDeploying(false);
-  };
-
   const handleDeploy = async () => {
+    // If AI content hasn't been generated yet, do that first
+    if (!isAiGenerated) {
+      setIsDeploying(true);
+      // TODO: Add actual AI generation logic here
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate AI generation
+      setIsAiGenerated(true);
+      setIsDeploying(false);
+      return;
+    }
+
+    // Proceed with actual deployment
     setIsDeploying(true);
     try {
       // Check if user is authenticated
@@ -245,36 +250,17 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
             <span className="xs:hidden">{t('wizard.next')}</span>
             <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
           </Button>
-        ) : !isAiGenerated ? (
-          <Button
-            onClick={handleGenerate}
-            disabled={isDeploying || !isStep4Valid}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground smooth-transition text-xs sm:text-sm"
-            size="sm"
-          >
-            {isDeploying ? (
-              <>
-                <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
-                {t('wizard.generating') || 'Generating...'}
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                {t('wizard.generateWithAI') || 'Generate with AI'}
-              </>
-            )}
-          </Button>
         ) : (
           <Button
             onClick={handleDeploy}
-            disabled={isDeploying}
+            disabled={isDeploying || !isStep4Valid}
             className="bg-primary hover:bg-primary/90 text-primary-foreground glow-border smooth-transition text-xs sm:text-sm"
             size="sm"
           >
             {isDeploying ? (
               <>
                 <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
-                {t('wizard.deploying') || 'Deploying...'}
+                {!isAiGenerated ? (t('wizard.generating') || 'Generating...') : (t('wizard.deploying') || 'Deploying...')}
               </>
             ) : (
               t('wizard.deploy') || 'Deploy to Earth 🌎'
