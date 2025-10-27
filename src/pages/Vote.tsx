@@ -492,7 +492,7 @@ const Vote = () => {
                       ? selectedOptions[0] === option ? "default" : "outline"
                       : selectedOptions.includes(option) ? "default" : "outline"
                   }
-                  className={`h-auto py-6 px-7 text-lg justify-start font-semibold transition-all duration-200 rounded-xl shadow-md whitespace-normal text-left ${
+                  className={`w-full h-auto py-4 px-5 text-base justify-start font-semibold transition-all duration-200 rounded-xl shadow-md whitespace-normal text-left ${
                     (election.bill_config.ballotType === "single" ? selectedOptions[0] === option : selectedOptions.includes(option))
                       ? "bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/30 scale-[1.02]"
                       : "bg-background/80 hover:bg-background hover:border-primary/50 hover:shadow-md hover:scale-[1.01]"
