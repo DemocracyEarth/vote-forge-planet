@@ -481,33 +481,33 @@ const Vote = () => {
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
           
-          <div className="relative p-6 sm:p-8">
+          <div className="relative p-4 sm:p-6 lg:p-8">
             {/* Header Section */}
-            <div className="mb-8 pb-6 border-b border-border/50">
-              <div className="flex items-start gap-4 mb-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 backdrop-blur-sm">
-                  <VoteIcon className="w-8 h-8 text-primary" />
+            <div className="mb-4 sm:mb-8 pb-4 sm:pb-6 border-b border-border/50">
+              <div className="flex items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
+                <div className="p-2 sm:p-3 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 backdrop-blur-sm flex-shrink-0">
+                  <VoteIcon className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
                 </div>
-                <div className="flex-1">
-                  <h1 className="text-3xl sm:text-4xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
                     {election.title}
                   </h1>
                   {creator && (
-                    <div className="flex items-center gap-3 mb-3">
-                      <Avatar className="h-8 w-8 border-2 border-primary/20">
+                    <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                      <Avatar className="h-6 w-6 sm:h-8 sm:w-8 border-2 border-primary/20">
                         <AvatarImage src={creator.avatar_url} alt={creator.full_name} />
                         <AvatarFallback className="bg-primary/10 text-primary text-xs">
                           {creator.full_name?.charAt(0) || "U"}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-xs sm:text-sm text-muted-foreground">
                         Created by <span className="font-semibold text-foreground">{creator.full_name}</span>
                       </div>
                     </div>
                   )}
                   {election.description && (
                     <div 
-                      className="text-muted-foreground text-lg leading-relaxed prose max-w-none"
+                      className="text-muted-foreground text-sm sm:text-base lg:text-lg leading-relaxed prose prose-sm sm:prose max-w-none"
                       dangerouslySetInnerHTML={{ __html: marked(election.description) }}
                     />
                   )}
@@ -516,7 +516,7 @@ const Vote = () => {
 
               {/* Social Media Preview Image */}
               {election.bill_config?.illustrationUrl && (
-                <div className="mt-6">
+                <div className="mt-4 sm:mt-6">
                   <div className="max-w-md mx-auto rounded-lg border overflow-hidden bg-muted/30 shadow-sm" style={{ aspectRatio: '1.91/1' }}>
                     <img
                       src={election.bill_config.illustrationUrl}
@@ -529,7 +529,7 @@ const Vote = () => {
             </div>
 
             {/* Election Details Grid */}
-            <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="mb-6 sm:mb-8 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               {/* Countdown Component */}
               <div className="md:col-span-2">
                 <ElectionCountdown 
