@@ -611,7 +611,7 @@ export function DashboardProfile() {
               {delegators.map((delegator) => (
                 <Link
                   key={delegator.id}
-                  to={`/dashboard/users/${delegator.delegator_id}`}
+                  to={`/profile/${delegator.delegator_id}`}
                   className="block"
                 >
                   <div className="flex items-start gap-4 p-4 rounded-lg border border-primary/10 bg-background/50 hover:bg-background/80 transition-colors">
