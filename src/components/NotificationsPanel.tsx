@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
-import { Bell, MessageSquare, UserPlus, Check, Eye } from "lucide-react";
+import { Bell, MessageSquare, UserPlus, Check, Eye, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -21,6 +21,8 @@ interface NotificationMetadata {
   delegate_name?: string;
   election_title?: string;
   delegate_id?: string;
+  creator_name?: string;
+  restriction_type?: string;
 }
 
 interface Notification {
@@ -110,6 +112,11 @@ export const NotificationsPanel = ({ unreadCount, onCountChange }: Notifications
           navigate(`/vote/${notification.election_id}`);
         }
         break;
+      case 'election_invitation':
+        if (notification.election_id) {
+          navigate(`/vote/${notification.election_id}`);
+        }
+        break;
     }
   };
 
@@ -121,6 +128,8 @@ export const NotificationsPanel = ({ unreadCount, onCountChange }: Notifications
         return <UserPlus className="h-4 w-4" />;
       case 'delegator_voted':
         return <Check className="h-4 w-4" />;
+      case 'election_invitation':
+        return <Mail className="h-4 w-4" />;
       default:
         return <Bell className="h-4 w-4" />;
     }
@@ -142,6 +151,11 @@ export const NotificationsPanel = ({ unreadCount, onCountChange }: Notifications
         return {
           title: `${notification.metadata?.delegate_name || 'Your delegate'} voted on your behalf`,
           description: notification.metadata?.election_title,
+        };
+      case 'election_invitation':
+        return {
+          title: `You've been invited to vote in ${notification.metadata?.election_title || 'an election'}`,
+          description: `${notification.metadata?.creator_name || 'Someone'} invited you to participate`,
         };
       default:
         return { title: 'New notification', description: '' };

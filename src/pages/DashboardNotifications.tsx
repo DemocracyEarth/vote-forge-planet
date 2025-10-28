@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
-import { Bell, MessageSquare, UserPlus, Check, Eye, Filter } from "lucide-react";
+import { Bell, MessageSquare, UserPlus, Check, Eye, Filter, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,6 +15,8 @@ interface NotificationMetadata {
   delegate_name?: string;
   election_title?: string;
   delegate_id?: string;
+  creator_name?: string;
+  restriction_type?: string;
 }
 
 interface Notification {
@@ -99,6 +101,11 @@ export default function DashboardNotifications() {
           navigate(`/vote/${notification.election_id}`);
         }
         break;
+      case 'election_invitation':
+        if (notification.election_id) {
+          navigate(`/vote/${notification.election_id}`);
+        }
+        break;
     }
   };
 
@@ -110,6 +117,8 @@ export default function DashboardNotifications() {
         return <UserPlus className="h-5 w-5" />;
       case 'delegator_voted':
         return <Check className="h-5 w-5" />;
+      case 'election_invitation':
+        return <Mail className="h-5 w-5" />;
       default:
         return <Bell className="h-5 w-5" />;
     }
@@ -131,6 +140,11 @@ export default function DashboardNotifications() {
         return {
           title: `${notification.metadata?.delegate_name || 'Your delegate'} voted on your behalf`,
           description: notification.metadata?.election_title,
+        };
+      case 'election_invitation':
+        return {
+          title: `You've been invited to vote in ${notification.metadata?.election_title || 'an election'}`,
+          description: `${notification.metadata?.creator_name || 'Someone'} invited you to participate`,
         };
       default:
         return { title: 'New notification', description: '' };

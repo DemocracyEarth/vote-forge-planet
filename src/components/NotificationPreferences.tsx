@@ -42,6 +42,11 @@ const notificationTypes = [
     label: 'Election Ended',
     description: 'Get notified when an election ends',
   },
+  {
+    type: 'election_invitation',
+    label: 'Election Invitations',
+    description: 'Get notified when you\'re invited to participate in a restricted election',
+  },
 ];
 
 export const NotificationPreferences = () => {
