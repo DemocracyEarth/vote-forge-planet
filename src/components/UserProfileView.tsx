@@ -192,6 +192,14 @@ export function UserProfileView() {
         
         setMyDelegation(null);
         setIsDelegatedByMe(false);
+        
+        // Update delegation count without reloading entire page
+        const { data: delegations } = await supabase
+          .from("delegations")
+          .select("*")
+          .eq("delegate_id", userId)
+          .eq("active", true);
+        setDelegationCount(delegations?.length || 0);
       } else {
         // DELEGATE: Use UPSERT to handle both create and update cases
         // First, deactivate any existing delegations for this user
@@ -225,10 +233,15 @@ export function UserProfileView() {
         });
         
         setIsDelegatedByMe(true);
+        
+        // Update delegation count without reloading entire page
+        const { data: delegations } = await supabase
+          .from("delegations")
+          .select("*")
+          .eq("delegate_id", userId)
+          .eq("active", true);
+        setDelegationCount(delegations?.length || 0);
       }
-
-      // Reload to update delegation count
-      await loadUserData();
     } catch (error) {
       console.error("Error managing delegation:", error);
       toast({
