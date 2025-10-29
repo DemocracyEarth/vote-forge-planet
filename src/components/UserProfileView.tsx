@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Users, FileText, MessageSquare, Calendar, CheckCircle2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import { DelegateButton } from "@/components/DelegateButton";
 
 interface UserProfile {
   id: string;
@@ -162,95 +163,6 @@ export function UserProfileView() {
     }
   };
 
-  const handleDelegate = async () => {
-    if (!currentUserId || !userId) return;
-    
-    // Prevent self-delegation
-    if (currentUserId === userId) {
-      toast({
-        title: "Cannot delegate to yourself",
-        description: "You cannot delegate your vote to your own account",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      if (isDelegatedByMe) {
-        // REVOKE: Delete the delegation
-        const { error } = await supabase
-          .from("delegations")
-          .delete()
-          .eq("id", myDelegation.id);
-
-        if (error) throw error;
-
-        toast({
-          title: "Delegation revoked",
-          description: `You are no longer delegating to ${profile?.full_name}`,
-        });
-        
-        setMyDelegation(null);
-        setIsDelegatedByMe(false);
-        
-        // Update delegation count without reloading entire page
-        const { data: delegations } = await supabase
-          .from("delegations")
-          .select("*")
-          .eq("delegate_id", userId)
-          .eq("active", true);
-        setDelegationCount(delegations?.length || 0);
-      } else {
-        // DELEGATE: Use UPSERT to handle both create and update cases
-        // First, deactivate any existing delegations for this user
-        if (myDelegation) {
-          await supabase
-            .from("delegations")
-            .update({ active: false })
-            .eq("id", myDelegation.id);
-        }
-
-        // Now create/update the delegation to the new delegate
-        const { data, error } = await supabase
-          .from("delegations")
-          .upsert({
-            delegator_id: currentUserId,
-            delegate_id: userId,
-            active: true
-          }, {
-            onConflict: 'delegator_id,delegate_id',
-            ignoreDuplicates: false
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
-        setMyDelegation(data);
-
-        toast({
-          title: "Vote delegated",
-          description: `You are now delegating your vote to ${profile?.full_name}`,
-        });
-        
-        setIsDelegatedByMe(true);
-        
-        // Update delegation count without reloading entire page
-        const { data: delegations } = await supabase
-          .from("delegations")
-          .select("*")
-          .eq("delegate_id", userId)
-          .eq("active", true);
-        setDelegationCount(delegations?.length || 0);
-      }
-    } catch (error) {
-      console.error("Error managing delegation:", error);
-      toast({
-        title: "Error",
-        description: "Failed to manage delegation",
-        variant: "destructive",
-      });
-    }
-  };
 
   if (loading) {
     return (
@@ -314,14 +226,27 @@ export function UserProfileView() {
               {/* Delegation Button */}
               {currentUserId && currentUserId !== userId && (
                 <div className="mt-4">
-                  <Button
-                    onClick={handleDelegate}
-                    variant={isDelegatedByMe ? "outline" : "default"}
+                  <DelegateButton
+                    delegateId={userId}
+                    delegateName={profile?.full_name || "this user"}
+                    currentUserId={currentUserId}
+                    myDelegation={myDelegation}
+                    onDelegationChange={(newDelegation) => {
+                      setMyDelegation(newDelegation);
+                      setIsDelegatedByMe(newDelegation?.delegate_id === userId);
+                      
+                      // Refresh delegation count
+                      supabase
+                        .from("delegations")
+                        .select("*")
+                        .eq("delegate_id", userId)
+                        .eq("active", true)
+                        .then(({ data }) => setDelegationCount(data?.length || 0));
+                    }}
+                    variant="default"
+                    showIcon={true}
                     className="gap-2"
-                  >
-                    <Users className="h-4 w-4" />
-                    {isDelegatedByMe ? "Revoke Delegation" : "Delegate Vote"}
-                  </Button>
+                  />
                 </div>
               )}
             </div>

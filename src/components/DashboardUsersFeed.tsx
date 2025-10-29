@@ -3,22 +3,12 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Search, UserCheck, UserX, Shield, Users, CheckCircle2, Star, Loader2 } from "lucide-react";
+import { Search, Users, CheckCircle2, Star, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { DelegateButton } from "@/components/DelegateButton";
 
 interface UserProfile {
   id: string;
@@ -38,8 +28,6 @@ export function DashboardUsersFeed() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [myDelegation, setMyDelegation] = useState<{ id: string; delegate_id: string } | null>(null);
-  const [pendingDelegateId, setPendingDelegateId] = useState<string | null>(null);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const { toast } = useToast();
   const { t } = useTranslation();
 
@@ -134,122 +122,6 @@ export function DashboardUsersFeed() {
   const delegatedUsers = filteredUsers.filter(user => user.is_delegated_by_me);
   const otherUsers = filteredUsers.filter(user => !user.is_delegated_by_me);
 
-  const handleDelegate = async (delegateId: string) => {
-    if (!currentUserId) return;
-
-    // If already delegated to this person, revoke
-    if (myDelegation?.delegate_id === delegateId) {
-      try {
-        const { error } = await supabase
-          .from("delegations")
-          .update({ active: false })
-          .eq("delegator_id", currentUserId)
-          .eq("delegate_id", delegateId);
-
-        if (error) throw error;
-
-        toast({
-          title: "Delegation revoked",
-          description: "You have revoked your vote delegation",
-        });
-        
-        setMyDelegation(null);
-        
-        // Update users list without reloading
-        setUsers(prevUsers => 
-          prevUsers.map(u => 
-            u.id === delegateId 
-              ? { ...u, delegation_count: Math.max(0, u.delegation_count - 1), is_delegated_by_me: false }
-              : u
-          )
-        );
-      } catch (error) {
-        console.error("Error revoking delegation:", error);
-        toast({
-          title: "Error",
-          description: "Failed to revoke delegation",
-          variant: "destructive",
-        });
-      }
-      return;
-    }
-
-    // If already delegated to someone else, show confirmation
-    if (myDelegation && myDelegation.delegate_id !== delegateId) {
-      setPendingDelegateId(delegateId);
-      setShowConfirmDialog(true);
-      return;
-    }
-
-    // Otherwise, delegate directly
-    await performDelegation(delegateId);
-  };
-
-  const performDelegation = async (delegateId: string) => {
-    if (!currentUserId) return;
-
-    try {
-      // Deactivate any existing delegations
-      await supabase
-        .from("delegations")
-        .update({ active: false })
-        .eq("delegator_id", currentUserId)
-        .eq("active", true);
-
-      // UPSERT the new delegation
-      const { error } = await supabase
-        .from("delegations")
-        .upsert(
-          {
-            delegator_id: currentUserId,
-            delegate_id: delegateId,
-            active: true,
-          },
-          {
-            onConflict: 'delegator_id,delegate_id',
-            ignoreDuplicates: false
-          }
-        );
-
-      if (error) throw error;
-
-      setMyDelegation({ id: '', delegate_id: delegateId });
-
-      toast({
-        title: "Delegation updated",
-        description: "You are now delegating your vote",
-      });
-
-      // Update users list without reloading
-      setUsers(prevUsers => 
-        prevUsers.map(u => {
-          if (u.id === delegateId) {
-            return { ...u, delegation_count: u.delegation_count + 1, is_delegated_by_me: true };
-          }
-          if (u.id === myDelegation?.delegate_id) {
-            return { ...u, delegation_count: Math.max(0, u.delegation_count - 1), is_delegated_by_me: false };
-          }
-          return u;
-        })
-      );
-    } catch (error) {
-      console.error("Error managing delegation:", error);
-      toast({
-        title: "Error",
-        description: "Failed to manage delegation",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleConfirmSwitch = async () => {
-    setShowConfirmDialog(false);
-    if (pendingDelegateId) {
-      await performDelegation(pendingDelegateId);
-      setPendingDelegateId(null);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -259,23 +131,7 @@ export function DashboardUsersFeed() {
   }
 
   return (
-    <>
-      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Switch Delegation?</AlertDialogTitle>
-            <AlertDialogDescription>
-              You are currently delegating your vote to another member. Do you want to switch your delegation to this new member?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setPendingDelegateId(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmSwitch}>Switch Delegation</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <div className="space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
@@ -355,15 +211,39 @@ export function DashboardUsersFeed() {
                       {user.bio}
                     </p>
                   )}
-                  <Button
-                    onClick={() => handleDelegate(user.id)}
+                  <DelegateButton
+                    delegateId={user.id}
+                    delegateName={user.full_name || "this user"}
+                    currentUserId={currentUserId!}
+                    myDelegation={myDelegation}
+                    onDelegationChange={(newDelegation) => {
+                      setMyDelegation(newDelegation);
+                      
+                      // Update users list optimistically
+                      setUsers(prevUsers => 
+                        prevUsers.map(u => {
+                          if (u.id === user.id) {
+                            return { 
+                              ...u, 
+                              delegation_count: newDelegation ? u.delegation_count + 1 : Math.max(0, u.delegation_count - 1),
+                              is_delegated_by_me: !!newDelegation 
+                            };
+                          }
+                          if (u.id === myDelegation?.delegate_id) {
+                            return { 
+                              ...u, 
+                              delegation_count: Math.max(0, u.delegation_count - 1),
+                              is_delegated_by_me: false 
+                            };
+                          }
+                          return u;
+                        })
+                      );
+                    }}
                     variant="outline"
-                    size="sm"
+                    showIcon={true}
                     className="w-full border-red-500/30 text-red-600 hover:bg-red-500/10 hover:border-red-500/50 transition-all duration-300"
-                  >
-                    <UserX className="h-4 w-4 mr-2" />
-                    Revoke Delegation
-                  </Button>
+                  />
                 </CardContent>
               </Card>
             ))}
@@ -421,15 +301,39 @@ export function DashboardUsersFeed() {
                       {user.bio}
                     </p>
                   )}
-                  <Button
-                    onClick={() => handleDelegate(user.id)}
+                  <DelegateButton
+                    delegateId={user.id}
+                    delegateName={user.full_name || "this user"}
+                    currentUserId={currentUserId!}
+                    myDelegation={myDelegation}
+                    onDelegationChange={(newDelegation) => {
+                      setMyDelegation(newDelegation);
+                      
+                      // Update users list optimistically
+                      setUsers(prevUsers => 
+                        prevUsers.map(u => {
+                          if (u.id === user.id) {
+                            return { 
+                              ...u, 
+                              delegation_count: newDelegation ? u.delegation_count + 1 : Math.max(0, u.delegation_count - 1),
+                              is_delegated_by_me: !!newDelegation 
+                            };
+                          }
+                          if (u.id === myDelegation?.delegate_id) {
+                            return { 
+                              ...u, 
+                              delegation_count: Math.max(0, u.delegation_count - 1),
+                              is_delegated_by_me: false 
+                            };
+                          }
+                          return u;
+                        })
+                      );
+                    }}
                     variant="default"
-                    size="sm"
+                    showIcon={true}
                     className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-300"
-                  >
-                    <UserCheck className="h-4 w-4 mr-2" />
-                    Delegate Vote
-                  </Button>
+                  />
                 </CardContent>
               </Card>
             ))}
@@ -452,7 +356,6 @@ export function DashboardUsersFeed() {
           </CardContent>
         </Card>
       )}
-      </div>
-    </>
+    </div>
   );
 }
