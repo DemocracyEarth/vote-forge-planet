@@ -9,6 +9,16 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Search, UserCheck, UserX, Shield, Users, CheckCircle2, Star, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface UserProfile {
   id: string;
@@ -28,6 +38,8 @@ export function DashboardUsersFeed() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [myDelegation, setMyDelegation] = useState<{ id: string; delegate_id: string } | null>(null);
+  const [pendingDelegateId, setPendingDelegateId] = useState<string | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const { toast } = useToast();
   const { t } = useTranslation();
 
@@ -125,13 +137,14 @@ export function DashboardUsersFeed() {
   const handleDelegate = async (delegateId: string) => {
     if (!currentUserId) return;
 
-    try {
-      if (myDelegation?.delegate_id === delegateId) {
-        // Delete delegation entirely
+    // If already delegated to this person, revoke
+    if (myDelegation?.delegate_id === delegateId) {
+      try {
         const { error } = await supabase
           .from("delegations")
-          .delete()
-          .eq("id", myDelegation.id);
+          .update({ active: false })
+          .eq("delegator_id", currentUserId)
+          .eq("delegate_id", delegateId);
 
         if (error) throw error;
 
@@ -141,39 +154,84 @@ export function DashboardUsersFeed() {
         });
         
         setMyDelegation(null);
-      } else {
-        // Create or update delegation
-        if (myDelegation) {
-          // Update existing delegation to point to new delegate
-          const { error } = await supabase
-            .from("delegations")
-            .update({ delegate_id: delegateId })
-            .eq("id", myDelegation.id);
-
-          if (error) throw error;
-        } else {
-          // Create new delegation
-          const { data, error } = await supabase
-            .from("delegations")
-            .insert({
-              delegator_id: currentUserId,
-              delegate_id: delegateId,
-              active: true
-            })
-            .select()
-            .single();
-
-          if (error) throw error;
-          setMyDelegation(data);
-        }
-
+        
+        // Update users list without reloading
+        setUsers(prevUsers => 
+          prevUsers.map(u => 
+            u.id === delegateId 
+              ? { ...u, delegation_count: Math.max(0, u.delegation_count - 1), is_delegated_by_me: false }
+              : u
+          )
+        );
+      } catch (error) {
+        console.error("Error revoking delegation:", error);
         toast({
-          title: "Delegation updated",
-          description: "You are now delegating your vote",
+          title: "Error",
+          description: "Failed to revoke delegation",
+          variant: "destructive",
         });
       }
+      return;
+    }
 
-      await loadUsers();
+    // If already delegated to someone else, show confirmation
+    if (myDelegation && myDelegation.delegate_id !== delegateId) {
+      setPendingDelegateId(delegateId);
+      setShowConfirmDialog(true);
+      return;
+    }
+
+    // Otherwise, delegate directly
+    await performDelegation(delegateId);
+  };
+
+  const performDelegation = async (delegateId: string) => {
+    if (!currentUserId) return;
+
+    try {
+      // Deactivate any existing delegations
+      await supabase
+        .from("delegations")
+        .update({ active: false })
+        .eq("delegator_id", currentUserId)
+        .eq("active", true);
+
+      // UPSERT the new delegation
+      const { error } = await supabase
+        .from("delegations")
+        .upsert(
+          {
+            delegator_id: currentUserId,
+            delegate_id: delegateId,
+            active: true,
+          },
+          {
+            onConflict: 'delegator_id,delegate_id',
+            ignoreDuplicates: false
+          }
+        );
+
+      if (error) throw error;
+
+      setMyDelegation({ id: '', delegate_id: delegateId });
+
+      toast({
+        title: "Delegation updated",
+        description: "You are now delegating your vote",
+      });
+
+      // Update users list without reloading
+      setUsers(prevUsers => 
+        prevUsers.map(u => {
+          if (u.id === delegateId) {
+            return { ...u, delegation_count: u.delegation_count + 1, is_delegated_by_me: true };
+          }
+          if (u.id === myDelegation?.delegate_id) {
+            return { ...u, delegation_count: Math.max(0, u.delegation_count - 1), is_delegated_by_me: false };
+          }
+          return u;
+        })
+      );
     } catch (error) {
       console.error("Error managing delegation:", error);
       toast({
@@ -181,6 +239,14 @@ export function DashboardUsersFeed() {
         description: "Failed to manage delegation",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleConfirmSwitch = async () => {
+    setShowConfirmDialog(false);
+    if (pendingDelegateId) {
+      await performDelegation(pendingDelegateId);
+      setPendingDelegateId(null);
     }
   };
 
@@ -193,7 +259,23 @@ export function DashboardUsersFeed() {
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Switch Delegation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You are currently delegating your vote to another member. Do you want to switch your delegation to this new member?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingDelegateId(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmSwitch}>Switch Delegation</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
@@ -370,6 +452,7 @@ export function DashboardUsersFeed() {
           </CardContent>
         </Card>
       )}
-    </div>
+      </div>
+    </>
   );
 }
