@@ -42,6 +42,11 @@ const Vote = () => {
     count: number;
     delegators: any[];
   } | null>(null);
+  const [userDelegation, setUserDelegation] = useState<{
+    delegate_id: string;
+    delegate_name: string;
+    delegate_avatar: string;
+  } | null>(null);
 
   // Check if election is closed
   const isElectionClosed = () => {
@@ -66,6 +71,7 @@ const Vote = () => {
     if (user && election && !previousVoteLoaded) {
       loadPreviousVote();
       loadDelegatorInfo();
+      loadUserDelegation();
     }
   }, [user, election, previousVoteLoaded]);
 
@@ -190,12 +196,11 @@ const Vote = () => {
     if (!user || !election) return;
     
     try {
-      const { data, error } = await supabase
-        .rpc('get_valid_delegators_for_election', {
-          delegate_user_id: user.id,
-          election_id: electionId
-        });
-        
+      const { data, error } = await supabase.rpc('get_valid_delegators_for_election', {
+        delegate_user_id: user.id,
+        election_id: electionId
+      });
+      
       if (error) {
         console.error('Error loading delegator info:', error);
         return;
@@ -210,6 +215,35 @@ const Vote = () => {
       });
     } catch (error) {
       console.error('Error loading delegator info:', error);
+    }
+  };
+
+  const loadUserDelegation = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('delegations')
+        .select('delegate_id, profiles:profiles!delegations_delegate_id_fkey(full_name, avatar_url)')
+        .eq('delegator_id', user.id)
+        .eq('active', true)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error loading user delegation:', error);
+        return;
+      }
+      
+      if (data) {
+        const profile = Array.isArray(data.profiles) ? data.profiles[0] : data.profiles;
+        setUserDelegation({
+          delegate_id: data.delegate_id,
+          delegate_name: profile?.full_name || 'Unknown',
+          delegate_avatar: profile?.avatar_url || ''
+        });
+      }
+    } catch (error) {
+      console.error('Error loading user delegation:', error);
     }
   };
 
@@ -319,8 +353,9 @@ const Vote = () => {
             description: "Your vote has been updated successfully",
           });
           
-          // Reload results to show updated voting data
+          // Reload results and delegation info to show updated voting data
           await loadVoteResults();
+          await loadDelegatorInfo(); // Reload to show updated delegation count
           await loadPreviousVote(); // Reload to show updated selection
           setSubmitting(false);
           return;
@@ -426,6 +461,7 @@ const Vote = () => {
       // Mark as voted and reload
       setHasVoted(true);
       await loadVoteResults();
+      await loadDelegatorInfo(); // Reload to show updated delegation count
       await loadPreviousVote(); // Load the vote we just cast
     } catch (error) {
       console.error('Error submitting vote:', error);
@@ -623,6 +659,28 @@ const Vote = () => {
               </div>
             </div>
 
+            {/* User Delegation Override Notice */}
+            {!isElectionClosed() && userDelegation && !hasVoted && (
+              <div className="p-5 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/30 backdrop-blur-sm">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-amber-500/20 mt-0.5">
+                    <Users className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <h3 className="font-semibold text-amber-900 dark:text-amber-100">You've Delegated Your Vote</h3>
+                    <p className="text-sm text-amber-800 dark:text-amber-200">
+                      You've delegated your voting power to <span className="font-bold">{userDelegation.delegate_name}</span>. 
+                      By voting yourself, you'll override this delegation and reduce their voting power by 1 in this election.
+                    </p>
+                    <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-300 bg-amber-500/10 rounded-lg p-2 border border-amber-500/20">
+                      <span>ℹ️</span>
+                      <span>Your delegate's voting power will be automatically updated after you vote.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Delegation Power Display */}
             {!isElectionClosed() && delegatorInfo && delegatorInfo.count > 0 && (
               <div className="p-5 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/30 backdrop-blur-sm">
@@ -648,6 +706,9 @@ const Vote = () => {
                       <p className="font-bold text-primary text-lg">{delegatorInfo.count + 1}</p>
                     </div>
                   </div>
+                  <p className="text-xs text-muted-foreground italic">
+                    Note: This count only includes delegators who haven't voted yet in this election.
+                  </p>
                 </div>
               </div>
             )}
