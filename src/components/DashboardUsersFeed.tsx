@@ -53,6 +53,7 @@ export function DashboardUsersFeed() {
         .from("delegations")
         .select("id, delegate_id")
         .eq("delegator_id", user.id)
+        .eq("active", true)
         .maybeSingle();
       
       setMyDelegation(delegationData);
@@ -69,7 +70,8 @@ export function DashboardUsersFeed() {
       // Get delegation counts for all users
       const { data: delegations, error: delegationsError } = await supabase
         .from("delegations")
-        .select("delegate_id");
+        .select("delegate_id")
+        .eq("active", true);
 
       if (delegationsError) throw delegationsError;
 
