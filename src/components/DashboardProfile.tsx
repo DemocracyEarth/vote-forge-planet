@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { NotificationPreferences } from "./NotificationPreferences";
+import { DelegateButton } from "./DelegateButton";
 
 interface AuthProvider {
   id: string;
@@ -42,6 +43,18 @@ export function DashboardProfile() {
   const [uploading, setUploading] = useState(false);
   const [bio, setBio] = useState("");
   const [delegators, setDelegators] = useState<Delegator[]>([]);
+  const [myDelegate, setMyDelegate] = useState<{
+    id: string;
+    delegate_id: string;
+    created_at: string;
+    active: boolean;
+    profiles: {
+      id: string;
+      full_name: string | null;
+      avatar_url: string | null;
+      bio: string | null;
+    };
+  } | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
@@ -88,6 +101,32 @@ export function DashboardProfile() {
       }
 
       setProviders(authProviders);
+
+      // Load my delegation (who I delegated my vote to)
+      const { data: myDelegateData } = await supabase
+        .from('delegations')
+        .select('id, delegate_id, created_at, active')
+        .eq('delegator_id', currentUser.id)
+        .eq('active', true)
+        .maybeSingle();
+
+      if (myDelegateData) {
+        // Fetch the delegate's profile
+        const { data: delegateProfile } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url, bio')
+          .eq('id', myDelegateData.delegate_id)
+          .single();
+
+        if (delegateProfile) {
+          setMyDelegate({
+            ...myDelegateData,
+            profiles: delegateProfile
+          });
+        }
+      } else {
+        setMyDelegate(null);
+      }
 
       // Load delegators (users who delegated their vote to the current user)
       const { data: delegatorsData } = await supabase
@@ -274,6 +313,11 @@ export function DashboardProfile() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleDelegationChange = () => {
+    // Reload to get updated delegation info
+    loadUserData();
   };
 
   if (loading) {
@@ -574,6 +618,77 @@ export function DashboardProfile() {
               </Badge>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* My Delegate Card */}
+      <Card className="border-primary/20 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              My Delegate
+            </CardTitle>
+          </div>
+          <CardDescription>
+            The person you've delegated your voting power to
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!myDelegate ? (
+            <div className="text-center py-8 space-y-2">
+              <Users className="h-12 w-12 mx-auto text-muted-foreground/50" />
+              <p className="text-sm text-muted-foreground">
+                You haven't delegated your vote to anyone
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Visit the Community page to delegate your vote to a trusted member
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <Link
+                to={`/profile/${myDelegate.delegate_id}`}
+                className="block"
+              >
+                <div className="flex items-start gap-4 p-4 rounded-lg border border-primary/10 bg-background/50 hover:bg-background/80 transition-colors">
+                  <Avatar className="h-12 w-12 border border-primary/20">
+                    <AvatarImage src={myDelegate.profiles.avatar_url || ''} />
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground">
+                      {myDelegate.profiles.full_name?.[0]?.toUpperCase() || '?'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold">
+                      {myDelegate.profiles.full_name || 'Anonymous User'}
+                    </h4>
+                    {myDelegate.profiles.bio && (
+                      <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                        {myDelegate.profiles.bio.length > 100
+                          ? `${myDelegate.profiles.bio.substring(0, 100)}...`
+                          : myDelegate.profiles.bio}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Delegated on {format(new Date(myDelegate.created_at), 'PPP')}
+                    </p>
+                  </div>
+                </div>
+              </Link>
+              
+              {/* Revoke Button */}
+              <DelegateButton
+                delegateId={myDelegate.delegate_id}
+                delegateName={myDelegate.profiles.full_name || 'this user'}
+                currentUserId={user.id}
+                myDelegation={{ id: myDelegate.id, delegate_id: myDelegate.delegate_id }}
+                onDelegationChange={handleDelegationChange}
+                variant="outline"
+                className="w-full"
+                showIcon={true}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
