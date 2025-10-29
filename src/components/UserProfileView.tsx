@@ -193,30 +193,31 @@ export function UserProfileView() {
         setMyDelegation(null);
         setIsDelegatedByMe(false);
       } else {
-        // DELEGATE: Create or update delegation
+        // DELEGATE: Use UPSERT to handle both create and update cases
+        // First, deactivate any existing delegations for this user
         if (myDelegation) {
-          // Update existing delegation to new delegate
-          const { error } = await supabase
+          await supabase
             .from("delegations")
-            .update({ delegate_id: userId })
+            .update({ active: false })
             .eq("id", myDelegation.id);
-
-          if (error) throw error;
-        } else {
-          // Create new delegation
-          const { data, error } = await supabase
-            .from("delegations")
-            .insert({
-              delegator_id: currentUserId,
-              delegate_id: userId,
-              active: true
-            })
-            .select()
-            .single();
-
-          if (error) throw error;
-          setMyDelegation(data);
         }
+
+        // Now create/update the delegation to the new delegate
+        const { data, error } = await supabase
+          .from("delegations")
+          .upsert({
+            delegator_id: currentUserId,
+            delegate_id: userId,
+            active: true
+          }, {
+            onConflict: 'delegator_id,delegate_id',
+            ignoreDuplicates: false
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        setMyDelegation(data);
 
         toast({
           title: "Vote delegated",
