@@ -17,6 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { VotersListModal } from "./VotersListModal";
 
 interface PublicElection {
   id: string;
@@ -61,6 +62,10 @@ export function PublicElectionsFeed() {
   const [filter, setFilter] = useState<FilterType>("all");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
+  const [selectedElectionForVoters, setSelectedElectionForVoters] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -525,7 +530,11 @@ export function PublicElectionsFeed() {
                     )}
                   </div>
                   {totalVotes > 0 && (
-                    <div className="flex flex-col items-end gap-1 px-4 py-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30">
+                    <div 
+                      className="flex flex-col items-end gap-1 px-4 py-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30 cursor-pointer hover:bg-primary/15 transition-colors"
+                      onClick={() => setSelectedElectionForVoters({ id: election.id, title: election.title })}
+                      title="Click to view voters"
+                    >
                       <div className="flex items-center gap-1.5">
                         <Users className="h-4 w-4 text-primary" />
                         <span className="text-2xl font-bold text-primary">{totalVotes}</span>
@@ -649,6 +658,17 @@ export function PublicElectionsFeed() {
           );
         })}
         </div>
+      )}
+
+      {/* Voters List Modal */}
+      {selectedElectionForVoters && (
+        <VotersListModal
+          electionId={selectedElectionForVoters.id}
+          electionTitle={selectedElectionForVoters.title}
+          isOpen={true}
+          onClose={() => setSelectedElectionForVoters(null)}
+          totalVotes={electionResults[selectedElectionForVoters.id]?.[0]?.total_votes || 0}
+        />
       )}
     </div>
   );
