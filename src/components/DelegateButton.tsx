@@ -102,13 +102,14 @@ export function DelegateButton({
     try {
       setIsLoading(true);
 
-      // First, deactivate any existing delegations for this user
-      if (myDelegation) {
-        await supabase
-          .from("delegations")
-          .update({ active: false })
-          .eq("id", myDelegation.id);
-      }
+      // First, deactivate ALL existing active delegations for this user
+      const { error: deactivateError } = await supabase
+        .from("delegations")
+        .update({ active: false })
+        .eq("delegator_id", currentUserId)
+        .eq("active", true);
+
+      if (deactivateError) throw deactivateError;
 
       // Now create/update the delegation to the new delegate
       const { data, error } = await supabase
