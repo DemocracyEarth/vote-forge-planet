@@ -56,6 +56,9 @@ export function UserProfileView() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [delegationCount, setDelegationCount] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [myDelegation, setMyDelegation] = useState<any>(null);
+  const [isDelegatedByMe, setIsDelegatedByMe] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -130,6 +133,23 @@ export function UserProfileView() {
       if (delegationsError) throw delegationsError;
       setDelegationCount(delegations?.length || 0);
 
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
+
+      // If there's a current user, check their delegation
+      if (user?.id) {
+        const { data: delegation } = await supabase
+          .from("delegations")
+          .select("*")
+          .eq("delegator_id", user.id)
+          .eq("active", true)
+          .maybeSingle();
+        
+        setMyDelegation(delegation);
+        setIsDelegatedByMe(delegation?.delegate_id === userId);
+      }
+
     } catch (error) {
       console.error("Error loading user data:", error);
       toast({
@@ -139,6 +159,82 @@ export function UserProfileView() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelegate = async () => {
+    if (!currentUserId || !userId) return;
+    
+    // Prevent self-delegation
+    if (currentUserId === userId) {
+      toast({
+        title: "Cannot delegate to yourself",
+        description: "You cannot delegate your vote to your own account",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      if (isDelegatedByMe) {
+        // REVOKE: Delete the delegation
+        const { error } = await supabase
+          .from("delegations")
+          .delete()
+          .eq("id", myDelegation.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Delegation revoked",
+          description: `You are no longer delegating to ${profile?.full_name}`,
+        });
+        
+        setMyDelegation(null);
+        setIsDelegatedByMe(false);
+      } else {
+        // DELEGATE: Create or update delegation
+        if (myDelegation) {
+          // Update existing delegation to new delegate
+          const { error } = await supabase
+            .from("delegations")
+            .update({ delegate_id: userId })
+            .eq("id", myDelegation.id);
+
+          if (error) throw error;
+        } else {
+          // Create new delegation
+          const { data, error } = await supabase
+            .from("delegations")
+            .insert({
+              delegator_id: currentUserId,
+              delegate_id: userId,
+              active: true
+            })
+            .select()
+            .single();
+
+          if (error) throw error;
+          setMyDelegation(data);
+        }
+
+        toast({
+          title: "Vote delegated",
+          description: `You are now delegating your vote to ${profile?.full_name}`,
+        });
+        
+        setIsDelegatedByMe(true);
+      }
+
+      // Reload to update delegation count
+      await loadUserData();
+    } catch (error) {
+      console.error("Error managing delegation:", error);
+      toast({
+        title: "Error",
+        description: "Failed to manage delegation",
+        variant: "destructive",
+      });
     }
   };
 
@@ -199,6 +295,20 @@ export function UserProfileView() {
               </div>
               {profile.bio && (
                 <p className="text-muted-foreground mt-4">{profile.bio}</p>
+              )}
+              
+              {/* Delegation Button */}
+              {currentUserId && currentUserId !== userId && (
+                <div className="mt-4">
+                  <Button
+                    onClick={handleDelegate}
+                    variant={isDelegatedByMe ? "outline" : "default"}
+                    className="gap-2"
+                  >
+                    <Users className="h-4 w-4" />
+                    {isDelegatedByMe ? "Revoke Delegation" : "Delegate Vote"}
+                  </Button>
+                </div>
               )}
             </div>
           </div>
