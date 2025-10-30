@@ -21,6 +21,7 @@ import { DiscussionThread } from "@/components/DiscussionThread";
 import { LiveResults } from "@/components/LiveResults";
 import { ElectionCountdown } from "@/components/ElectionCountdown";
 import { marked } from "marked";
+import { QuadraticVotingInterface } from "@/components/QuadraticVotingInterface";
 
 const Vote = () => {
   const { t } = useTranslation();
@@ -51,6 +52,13 @@ const Vote = () => {
     canVote: boolean;
     reason: string;
   } | null>(null);
+
+  // Voting model state (will support 'direct', 'quadratic', 'ranked', 'token')
+  const [votingModel, setVotingModel] = useState<'direct' | 'quadratic' | 'ranked' | 'token'>('direct');
+
+  // Quadratic voting specific state
+  const [quadraticCredits, setQuadraticCredits] = useState<Record<string, number>>({});
+  const [totalCredits] = useState(100); // Default credit pool
 
   // Check if election is closed
   const isElectionClosed = () => {
@@ -148,22 +156,52 @@ const Vote = () => {
       if (registry?.vote_id) {
         setHasVoted(true);
         
-        // Get the actual vote value
-        const { data: vote } = await supabase
-          .from('anonymous_votes')
-          .select('vote_value')
-          .eq('id', registry.vote_id)
-          .single();
+        // Check voting model to determine how to load vote
+        if (votingModel === 'quadratic') {
+          // Fetch ALL votes from this user for this election
+          const { data: allRegistries } = await supabase
+            .from('voter_registry')
+            .select('vote_id')
+            .eq('voter_id', user.id)
+            .eq('election_id', electionId);
 
-        if (vote?.vote_value) {
-          // Pre-populate the form with previous vote
-          if (election.bill_config?.ballotOptions) {
-            // For ballot options, split by comma if multiple choice
-            const previousSelections = vote.vote_value.split(", ").filter(Boolean);
-            setSelectedOptions(previousSelections);
-          } else {
-            // For free text
-            setVoteValue(vote.vote_value);
+          if (allRegistries && allRegistries.length > 0) {
+            const voteIds = allRegistries.map(r => r.vote_id);
+            
+            const { data: votes } = await supabase
+              .from('anonymous_votes')
+              .select('vote_value, vote_weight, metadata')
+              .in('id', voteIds);
+
+            // Reconstruct credit allocation from base_votes
+            const creditsMap: Record<string, number> = {};
+            votes?.forEach(vote => {
+              const metadata = vote.metadata as any;
+              const baseVotes = metadata?.base_votes || Math.sqrt(metadata?.credits_spent || vote.vote_weight);
+              creditsMap[vote.vote_value] = Math.round(baseVotes);
+            });
+            
+            setQuadraticCredits(creditsMap);
+            console.log('📊 Loaded previous quadratic vote:', creditsMap);
+          }
+        } else {
+          // Existing direct voting load logic
+          const { data: vote } = await supabase
+            .from('anonymous_votes')
+            .select('vote_value')
+            .eq('id', registry.vote_id)
+            .single();
+
+          if (vote?.vote_value) {
+            // Pre-populate the form with previous vote
+            if (election.bill_config?.ballotOptions) {
+              // For ballot options, split by comma if multiple choice
+              const previousSelections = vote.vote_value.split(", ").filter(Boolean);
+              setSelectedOptions(previousSelections);
+            } else {
+              // For free text
+              setVoteValue(vote.vote_value);
+            }
           }
         }
       }
@@ -183,13 +221,36 @@ const Vote = () => {
       if (error) throw error;
 
       // Convert RPC results to the format expected by LiveResults
-      const results: Record<string, number> = {};
-      data?.forEach((item: any) => {
-        // Filter out null vote values (when there are no votes yet)
-        if (item.vote_value !== null) {
-          results[item.vote_value] = item.vote_count;
-        }
-      });
+      const results: Record<string, any> = {};
+
+      if (votingModel === 'quadratic') {
+        // For quadratic, also fetch credits spent
+        const { data: voteData } = await supabase
+          .from('anonymous_votes')
+          .select('vote_value, vote_weight, metadata')
+          .eq('election_id', electionId);
+
+        voteData?.forEach(vote => {
+          if (vote.vote_value !== null) {
+            if (!results[vote.vote_value]) {
+              results[vote.vote_value] = {
+                votes: 0,
+                credits: 0
+              };
+            }
+            const metadata = vote.metadata as any;
+            results[vote.vote_value].votes += vote.vote_weight || 0;
+            results[vote.vote_value].credits += metadata?.credits_spent || 0;
+          }
+        });
+      } else {
+        // Direct voting (existing logic)
+        data?.forEach((item: any) => {
+          if (item.vote_value !== null) {
+            results[item.vote_value] = item.vote_count;
+          }
+        });
+      }
 
       setVoteResults(results);
     } catch (error) {
@@ -294,6 +355,12 @@ const Vote = () => {
           setCreator(profileData);
         }
       }
+
+      // Detect voting model from election configuration
+      const config = data.voting_logic_config as any;
+      const model = config?.model || 'direct';
+      setVotingModel(model);
+      console.log('📊 Voting model detected:', model);
     } catch (error) {
       console.error('Error loading election:', error);
       toast({
@@ -333,6 +400,123 @@ const Vote = () => {
           variant: "destructive",
         });
         return;
+      }
+
+      // Handle quadratic voting submission
+      if (votingModel === 'quadratic') {
+        // Validate credit allocation
+        const totalSpent = Object.values(quadraticCredits).reduce(
+          (sum, votes) => sum + (votes * votes), 
+          0
+        );
+        
+        if (totalSpent > totalCredits) {
+          toast({
+            title: "Credit Limit Exceeded",
+            description: `You've used ${totalSpent} credits (limit: ${totalCredits})`,
+            variant: "destructive",
+          });
+          setSubmitting(false);
+          return;
+        }
+
+        if (totalSpent === 0) {
+          toast({
+            title: "No Votes Allocated",
+            description: t('vote.noCreditsAllocated'),
+            variant: "destructive",
+          });
+          setSubmitting(false);
+          return;
+        }
+
+        // Create vote entries for each option with votes > 0
+        const voteEntries = Object.entries(quadraticCredits)
+          .filter(([_, votes]) => votes > 0)
+          .map(([option, votes]) => ({
+            election_id: electionId,
+            vote_value: option,
+            vote_weight: votes * (1 + (delegatorInfo?.count || 0)), // Scale by delegation
+            metadata: {
+              voted_at: new Date().toISOString(),
+              voting_model: 'quadratic',
+              credits_spent: votes * votes,
+              base_votes: votes,
+              delegations_count: delegatorInfo?.count || 0,
+              related_votes: [] as string[] // Will store IDs of all votes in this batch
+            }
+          }));
+
+        // Handle update vs insert
+        if (hasVoted) {
+          // For updates, delete old votes and insert new ones
+          const { data: previousVotes } = await supabase
+            .from('voter_registry')
+            .select('vote_id')
+            .eq('voter_id', user.id)
+            .eq('election_id', electionId);
+
+          if (previousVotes && previousVotes.length > 0) {
+            // Delete old anonymous votes
+            await supabase
+              .from('anonymous_votes')
+              .delete()
+              .in('id', previousVotes.map(v => v.vote_id));
+
+            // Delete old registry entries
+            await supabase
+              .from('voter_registry')
+              .delete()
+              .eq('voter_id', user.id)
+              .eq('election_id', electionId);
+          }
+        }
+
+        // Insert new votes
+        const { data: newVotes, error: voteError } = await supabase
+          .from('anonymous_votes')
+          .insert(voteEntries)
+          .select('id');
+
+        if (voteError) throw voteError;
+
+        // Update metadata to cross-reference all votes in this batch
+        const voteIds = newVotes.map(v => v.id);
+        await supabase
+          .from('anonymous_votes')
+          .update({
+            metadata: {
+              ...voteEntries[0].metadata,
+              related_votes: voteIds
+            }
+          })
+          .in('id', voteIds);
+
+        // Register in voter_registry (one entry per vote for tracking)
+        const registryEntries = voteIds.map(voteId => ({
+          election_id: electionId,
+          voter_id: user.id,
+          vote_id: voteId
+        }));
+
+        const { error: registryError } = await supabase
+          .from('voter_registry')
+          .insert(registryEntries);
+
+        if (registryError) throw registryError;
+
+        toast({
+          title: hasVoted ? "Vote Updated!" : t('vote.voteRecorded'),
+          description: hasVoted 
+            ? "Your quadratic vote allocation has been updated" 
+            : "Your votes have been recorded using quadratic voting",
+        });
+        
+        setHasVoted(true);
+        await loadVoteResults();
+        await loadDelegatorInfo();
+        setSubmitting(false);
+        return; // Exit early to prevent direct voting logic from running
       }
 
       // If user has already voted, update their vote
@@ -786,7 +970,16 @@ const Vote = () => {
                       <div className="w-2 h-2 rounded-full bg-accent" />
                       Your Vote
                     </Label>
-                {election?.bill_config?.ballotOptions ? (
+                {/* Conditional Voting Interface Based on Model */}
+                {votingModel === 'quadratic' && election?.bill_config?.ballotOptions ? (
+                  <QuadraticVotingInterface
+                    options={election.bill_config.ballotOptions}
+                    credits={quadraticCredits}
+                    onCreditsChange={setQuadraticCredits}
+                    totalCredits={totalCredits}
+                    disabled={!eligibilityStatus?.canVote || submitting || isElectionClosed()}
+                  />
+                ) : election?.bill_config?.ballotOptions ? (
                   <div className="grid gap-3">
                     {election.bill_config.ballotOptions.map((option: string, index: number) => (
                       <Button
@@ -848,10 +1041,15 @@ const Vote = () => {
                   className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/20 smooth-transition" 
                   disabled={submitting || !eligibilityStatus?.canVote}
                 >
-                  {submitting ? (
+                {submitting ? (
                     <>
                       <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Submitting Vote...
+                      {votingModel === 'quadratic' ? 'Submitting Votes...' : 'Submitting Vote...'}
+                    </>
+                  ) : votingModel === 'quadratic' ? (
+                    <>
+                      <VoteIcon className="w-5 h-5 mr-2" />
+                      Cast Quadratic Votes
                     </>
                   ) : delegatorInfo && delegatorInfo.count > 0 ? (
                     <>
@@ -885,9 +1083,24 @@ const Vote = () => {
                 </div>
                 <div className="space-y-4">
                   {Object.entries(voteResults)
-                    .sort(([, a], [, b]) => b - a)
-                    .map(([option, count], index) => {
-                      const total = Object.values(voteResults).reduce((sum, val) => sum + val, 0);
+                    .filter(([, value]) => value !== null)
+                    .sort(([, a], [, b]) => {
+                      if (a === null || b === null) return 0;
+                      const aVal = typeof a === 'object' ? a.votes : a;
+                      const bVal = typeof b === 'object' ? b.votes : b;
+                      return bVal - aVal;
+                    })
+                    .map(([option, data], index) => {
+                      if (data === null) return null;
+                      const count = typeof data === 'object' ? data.votes : data;
+                      const credits = typeof data === 'object' ? data.credits : null;
+                      const total = Object.values(voteResults)
+                        .filter(v => v !== null)
+                        .reduce((sum, val) => {
+                          if (val === null) return sum;
+                          const voteCount = typeof val === 'object' ? val.votes : val;
+                          return sum + voteCount;
+                        }, 0);
                       const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : "0.0";
                       return (
                         <div key={option} className="space-y-2 p-4 rounded-lg bg-card/40 backdrop-blur-sm border border-border/50 hover:border-primary/30 smooth-transition">
@@ -899,7 +1112,14 @@ const Vote = () => {
                               <span className="font-semibold text-base">{option}</span>
                             </div>
                             <div className="flex items-center gap-3">
-                              <span className="text-sm text-muted-foreground font-medium">{count} votes</span>
+                              <div className="text-right">
+                                <span className="text-sm text-muted-foreground font-medium">{count} votes</span>
+                                {votingModel === 'quadratic' && credits !== null && (
+                                  <span className="text-xs text-muted-foreground block">
+                                    ({credits} {t('vote.creditsSpent')})
+                                  </span>
+                                )}
+                              </div>
                               <span className="text-lg font-bold text-primary">{percentage}%</span>
                             </div>
                           </div>
@@ -911,7 +1131,7 @@ const Vote = () => {
                           </div>
                         </div>
                       );
-                    })}
+                    }).filter(el => el !== null)}
                 </div>
               </div>
             )}

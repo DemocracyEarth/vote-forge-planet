@@ -59,7 +59,16 @@
     "voteRecorded": "Vote Recorded",
     "voteRecordedDesc": "Your vote has been successfully recorded",
     "failedToLoad": "Failed to load election details",
-    "failedToSubmit": "Failed to submit vote"
+    "failedToSubmit": "Failed to submit vote",
+    "quadraticVoting": "Quadratic Voting",
+    "distributeCredits": "Distribute Your Credits",
+    "remainingCredits": "Remaining Credits",
+    "votesForOption": "votes",
+    "creditsCost": "Cost",
+    "creditsExceeded": "You've exceeded your credit limit!",
+    "noCreditsAllocated": "You must allocate at least one vote",
+    "quadraticExplainer": "💡 The more votes you give to an option, the more credits it costs. This helps express how strongly you feel about each choice.",
+    "creditsSpent": "credits"
   },
   "dashboard": {
     "publicFeed": "Public Feed",
