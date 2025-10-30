@@ -502,16 +502,15 @@ const Vote = () => {
           })
           .in('id', voteIds);
 
-        // Register in voter_registry (one entry per vote for tracking)
-        const registryEntries = voteIds.map(voteId => ({
-          election_id: electionId,
-          voter_id: user.id,
-          vote_id: voteId
-        }));
-
+        // Register in voter_registry (single entry per voter per election)
+        // We store the first vote_id as reference, metadata contains all related votes
         const { error: registryError } = await supabase
           .from('voter_registry')
-          .insert(registryEntries);
+          .insert({
+            election_id: electionId,
+            voter_id: user.id,
+            vote_id: voteIds[0] // Reference the first vote, all votes are linked via metadata
+          });
 
         if (registryError) throw registryError;
 
