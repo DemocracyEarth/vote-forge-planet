@@ -467,13 +467,23 @@ const Vote = () => {
             .eq('election_id', electionId);
 
           if (previousVotes && previousVotes.length > 0) {
-            // Delete old anonymous votes
+            // Get all related vote IDs from the first vote's metadata
+            const { data: firstVote } = await supabase
+              .from('anonymous_votes')
+              .select('metadata')
+              .eq('id', previousVotes[0].vote_id)
+              .single();
+
+            const metadata = firstVote?.metadata as any;
+            const relatedVoteIds = metadata?.related_votes || [previousVotes[0].vote_id];
+
+            // Delete all related anonymous votes
             await supabase
               .from('anonymous_votes')
               .delete()
-              .in('id', previousVotes.map(v => v.vote_id));
+              .in('id', relatedVoteIds);
 
-            // Delete old registry entries
+            // Delete the single registry entry
             await supabase
               .from('voter_registry')
               .delete()
