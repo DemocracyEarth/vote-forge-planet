@@ -47,6 +47,10 @@ const Vote = () => {
     delegate_name: string;
     delegate_avatar: string;
   } | null>(null);
+  const [eligibilityStatus, setEligibilityStatus] = useState<{
+    canVote: boolean;
+    reason: string;
+  } | null>(null);
 
   // Check if election is closed
   const isElectionClosed = () => {
@@ -90,6 +94,7 @@ const Vote = () => {
       }
       
       setVoterIdentifier(identifier);
+      checkEligibility();
     }
   }, [user, election]);
 
@@ -244,6 +249,24 @@ const Vote = () => {
       }
     } catch (error) {
       console.error('Error loading user delegation:', error);
+    }
+  };
+
+  const checkEligibility = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('check-voter-eligibility', {
+        body: { electionId: election.id }
+      });
+
+      if (error) throw error;
+      
+      setEligibilityStatus(data);
+    } catch (error) {
+      console.error('Error checking eligibility:', error);
+      setEligibilityStatus({
+        canVote: false,
+        reason: 'Unable to verify eligibility'
+      });
     }
   };
 
@@ -731,28 +754,27 @@ const Vote = () => {
                   required
                   className={user ? "bg-muted/50 cursor-not-allowed border-border/50" : "bg-background/50 backdrop-blur-sm"}
                 />
-                <div className="text-xs space-y-2 pl-1">
+                  <div className="text-xs space-y-2 pl-1">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <span className="font-medium">Required:</span>
                     <span className="px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
                       {election.identity_config?.verificationType || 'Email'}
                     </span>
                   </div>
-                  {user && (() => {
-                    const authMethod = user.app_metadata?.provider || 'email';
-                    const requiredType = election.identity_config?.verificationType?.toLowerCase() || 'email';
-                    const userType = authMethod === 'google' ? 'email' : authMethod;
-                    const matches = requiredType.includes(userType) || userType.includes(requiredType);
-                    
-                    return (
-                      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${matches ? "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20" : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"}`}>
-                        <span className="font-medium">{matches ? "✓" : "⚠"}</span>
-                        <span className="text-xs">
-                          {matches ? "Your authentication matches the election requirements" : "Your authentication type may not match the election requirements"}
+                  {user && eligibilityStatus && (
+                    <div className={`flex items-start gap-2 px-3 py-2 rounded-lg border ${
+                      eligibilityStatus.canVote 
+                        ? "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20" 
+                        : "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20"
+                    }`}>
+                      <span className="font-medium text-base">{eligibilityStatus.canVote ? "✓" : "✗"}</span>
+                      <div className="flex-1 space-y-1">
+                        <span className="text-xs font-semibold block">
+                          {eligibilityStatus.reason}
                         </span>
                       </div>
-                    );
-                  })()}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -824,7 +846,7 @@ const Vote = () => {
                 <Button 
                   type="submit" 
                   className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/20 smooth-transition" 
-                  disabled={submitting}
+                  disabled={submitting || !eligibilityStatus?.canVote}
                 >
                   {submitting ? (
                     <>

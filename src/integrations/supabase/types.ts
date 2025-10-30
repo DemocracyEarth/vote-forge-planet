@@ -318,6 +318,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_user_vote_in_election: {
+        Args: { p_election_id: string; p_user_id?: string }
+        Returns: boolean
+      }
       get_election_results: {
         Args: { election_uuid: string }
         Returns: {
