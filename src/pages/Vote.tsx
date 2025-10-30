@@ -517,28 +517,28 @@ const Vote = () => {
           }
         }
 
-        // Insert new votes
-        const { data: newVotes, error: voteError } = await supabase
+        // Pre-generate vote IDs so we can include related_votes in initial insert
+        const voteIds = voteEntries.map(() => crypto.randomUUID());
+        
+        // Add IDs and complete metadata to all vote entries BEFORE insert
+        const voteEntriesWithMetadata = voteEntries.map((entry, index) => ({
+          ...entry,
+          id: voteIds[index],
+          metadata: {
+            ...entry.metadata,
+            related_votes: voteIds // Include all related vote IDs in metadata from the start
+          }
+        }));
+
+        // Insert all votes with complete metadata in one operation
+        const { error: voteError } = await supabase
           .from('anonymous_votes')
-          .insert(voteEntries)
-          .select('id');
+          .insert(voteEntriesWithMetadata);
 
         if (voteError) throw voteError;
 
-        // Update metadata to cross-reference all votes in this batch
-        const voteIds = newVotes.map(v => v.id);
-        await supabase
-          .from('anonymous_votes')
-          .update({
-            metadata: {
-              ...voteEntries[0].metadata,
-              related_votes: voteIds
-            }
-          })
-          .in('id', voteIds);
-
         // Register in voter_registry (single entry per voter per election)
-        // We store the first vote_id as reference, metadata contains all related votes
+        // We store the first vote_id as reference, all votes are linked via metadata
         const { error: registryError } = await supabase
           .from('voter_registry')
           .insert({
