@@ -477,33 +477,40 @@ const Vote = () => {
           if (registryEntry?.vote_id) {
             console.log('📍 Found registry vote_id:', registryEntry.vote_id);
             
-            // Step 2: Get the related_votes array from the referenced vote
-            const { data: referenceVote, error: voteError } = await supabase
+            // Step 2: Find ALL votes that reference this vote_id in their related_votes array
+            // This catches both single votes and multi-vote batches
+            const { data: allRelatedVotes, error: voteError } = await supabase
               .from('anonymous_votes')
-              .select('metadata')
-              .eq('id', registryEntry.vote_id)
-              .maybeSingle();
+              .select('id, metadata')
+              .eq('election_id', electionId);
 
             if (voteError) {
-              console.error('Error fetching reference vote:', voteError);
+              console.error('Error fetching votes:', voteError);
               throw voteError;
             }
 
-            const relatedVoteIds = (referenceVote?.metadata as any)?.related_votes || [];
-            console.log('🔗 Found related votes:', relatedVoteIds);
+            // Filter votes that contain the registry vote_id in their related_votes array
+            const voteIdsToDelete = allRelatedVotes
+              ?.filter(vote => {
+                const relatedVotes = (vote.metadata as any)?.related_votes || [];
+                return relatedVotes.includes(registryEntry.vote_id);
+              })
+              .map(vote => vote.id) || [];
+
+            console.log('🔗 Found related votes to delete:', voteIdsToDelete);
 
             // Step 3: Delete ALL related votes
-            if (relatedVoteIds.length > 0) {
+            if (voteIdsToDelete.length > 0) {
               const { error: deleteVotesError } = await supabase
                 .from('anonymous_votes')
                 .delete()
-                .in('id', relatedVoteIds);
+                .in('id', voteIdsToDelete);
 
               if (deleteVotesError) {
                 console.error('❌ Failed to delete votes:', deleteVotesError);
                 throw deleteVotesError;
               }
-              console.log(`✅ Deleted ${relatedVoteIds.length} votes`);
+              console.log(`✅ Deleted ${voteIdsToDelete.length} votes`);
             }
           }
 
@@ -521,7 +528,7 @@ const Vote = () => {
           console.log('✅ Registry entry deleted');
 
           // Add a small delay to ensure deletions complete
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
 
         // Pre-generate vote IDs so we can include related_votes in initial insert
