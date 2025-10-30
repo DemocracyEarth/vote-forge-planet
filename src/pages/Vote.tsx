@@ -159,32 +159,34 @@ const Vote = () => {
         
         // Check voting model to determine how to load vote
         if (votingModel === 'quadratic') {
-          // Fetch ALL votes from this user for this election
-          const { data: allRegistries } = await supabase
-            .from('voter_registry')
-            .select('vote_id')
-            .eq('voter_id', user.id)
-            .eq('election_id', electionId);
+          // Get the reference vote to find all related votes
+          const { data: referenceVote } = await supabase
+            .from('anonymous_votes')
+            .select('metadata')
+            .eq('id', registry.vote_id)
+            .single();
 
-          if (allRegistries && allRegistries.length > 0) {
-            const voteIds = allRegistries.map(r => r.vote_id);
-            
-            const { data: votes } = await supabase
-              .from('anonymous_votes')
-              .select('vote_value, vote_weight, metadata')
-              .in('id', voteIds);
+          const metadata = referenceVote?.metadata as any;
+          const relatedVoteIds = metadata?.related_votes || [registry.vote_id];
+          
+          console.log('📍 Found related vote IDs:', relatedVoteIds);
 
-            // Reconstruct credit allocation from base_votes
-            const creditsMap: Record<string, number> = {};
-            votes?.forEach(vote => {
-              const metadata = vote.metadata as any;
-              const baseVotes = metadata?.base_votes || Math.sqrt(metadata?.credits_spent || vote.vote_weight);
-              creditsMap[vote.vote_value] = Math.round(baseVotes);
-            });
-            
-            setQuadraticCredits(creditsMap);
-            console.log('📊 Loaded previous quadratic vote:', creditsMap);
-          }
+          // Fetch ALL related votes using the related_votes array
+          const { data: votes } = await supabase
+            .from('anonymous_votes')
+            .select('vote_value, vote_weight, metadata')
+            .in('id', relatedVoteIds);
+
+          // Reconstruct credit allocation from base_votes
+          const creditsMap: Record<string, number> = {};
+          votes?.forEach(vote => {
+            const voteMetadata = vote.metadata as any;
+            const baseVotes = voteMetadata?.base_votes || Math.sqrt(voteMetadata?.credits_spent || vote.vote_weight);
+            creditsMap[vote.vote_value] = Math.round(baseVotes);
+          });
+          
+          setQuadraticCredits(creditsMap);
+          console.log('📊 Loaded previous quadratic vote:', creditsMap);
         } else {
           // Existing direct voting load logic
           const { data: vote } = await supabase
@@ -461,22 +463,52 @@ const Vote = () => {
         if (hasVoted) {
           console.log('🔄 Updating existing quadratic vote...');
           
-          // Step 1: Get ALL vote_ids for this user in this election from registry
+          // Step 1: Get the registry entry to find the reference vote_id
           const { data: existingRegistry, error: fetchError } = await supabase
             .from('voter_registry')
             .select('vote_id')
             .eq('voter_id', user.id)
-            .eq('election_id', electionId);
+            .eq('election_id', electionId)
+            .single();
 
           if (fetchError) {
             console.error('Error fetching existing registry:', fetchError);
             throw fetchError;
           }
 
-          const voteIdsToDelete = existingRegistry?.map(r => r.vote_id) || [];
-          console.log('🗑️ Will delete votes:', voteIdsToDelete);
+          if (existingRegistry?.vote_id) {
+            console.log('📍 Found registry vote_id:', existingRegistry.vote_id);
+            
+            // Step 2: Query the reference vote to get all related_votes
+            const { data: referenceVote, error: refVoteError } = await supabase
+              .from('anonymous_votes')
+              .select('metadata')
+              .eq('id', existingRegistry.vote_id)
+              .single();
+            
+            if (refVoteError) throw refVoteError;
 
-          // Step 2: Delete registry entries
+            const metadata = referenceVote?.metadata as any;
+            const relatedVoteIds = metadata?.related_votes || [existingRegistry.vote_id];
+            
+            console.log('🗑️ Will delete related votes:', relatedVoteIds);
+
+            // Step 3: Delete ALL related votes
+            if (relatedVoteIds.length > 0) {
+              const { error: deleteVotesError } = await supabase
+                .from('anonymous_votes')
+                .delete()
+                .in('id', relatedVoteIds);
+
+              if (deleteVotesError) {
+                console.error('❌ Failed to delete votes:', deleteVotesError);
+                throw deleteVotesError;
+              }
+              console.log('✅ All related votes deleted');
+            }
+          }
+
+          // Step 4: Delete registry entry (will be recreated below)
           const { error: deleteRegistryError } = await supabase
             .from('voter_registry')
             .delete()
@@ -487,21 +519,7 @@ const Vote = () => {
             console.error('❌ Failed to delete registry:', deleteRegistryError);
             throw deleteRegistryError;
           }
-          console.log('✅ Registry entries deleted');
-
-          // Step 3: Delete all the votes (don't rely on metadata)
-          if (voteIdsToDelete.length > 0) {
-            const { error: deleteVotesError } = await supabase
-              .from('anonymous_votes')
-              .delete()
-              .in('id', voteIdsToDelete);
-
-            if (deleteVotesError) {
-              console.error('❌ Failed to delete votes:', deleteVotesError);
-              throw deleteVotesError;
-            }
-            console.log('✅ Votes deleted');
-          }
+          console.log('✅ Registry entry deleted');
 
           // Add a small delay to ensure deletions complete
           await new Promise(resolve => setTimeout(resolve, 100));
