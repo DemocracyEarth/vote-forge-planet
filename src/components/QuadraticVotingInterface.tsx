@@ -10,6 +10,7 @@ interface QuadraticVotingInterfaceProps {
   credits: Record<string, number>;
   onCreditsChange: (credits: Record<string, number>) => void;
   totalCredits: number;
+  costFormula?: 'quadratic' | 'linear' | 'exponential';
   disabled?: boolean;
 }
 
@@ -18,11 +19,19 @@ export function QuadraticVotingInterface({
   credits,
   onCreditsChange,
   totalCredits,
+  costFormula = 'quadratic',
   disabled = false
 }: QuadraticVotingInterfaceProps) {
   const { t } = useTranslation();
   
-  const calculateCost = (votes: number) => votes * votes;
+  const calculateCost = (votes: number) => {
+    switch(costFormula) {
+      case 'linear': return votes * 10; // 10 credits per vote
+      case 'exponential': return Math.pow(2, votes); // 2^votes
+      case 'quadratic':
+      default: return votes * votes; // votes²
+    }
+  };
   
   const totalSpent = Object.values(credits).reduce(
     (sum, votes) => sum + calculateCost(votes), 
@@ -83,7 +92,11 @@ export function QuadraticVotingInterface({
                 {/* Cost Display */}
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>{t('vote.creditsCost')}: {cost} {t('vote.creditsSpent')}</span>
-                  <span>({votes}² = {cost})</span>
+                  <span>
+                    {costFormula === 'quadratic' && `(${votes}² = ${cost})`}
+                    {costFormula === 'linear' && `(${votes} × 10 = ${cost})`}
+                    {costFormula === 'exponential' && `(2^${votes} = ${cost})`}
+                  </span>
                 </div>
               </div>
             </Card>

@@ -191,10 +191,6 @@
         "title": "Allow Liquid Delegation",
         "description": "Enable voters to delegate their voting power to trusted representatives who can vote on their behalf."
       },
-      "quadraticCredits": {
-        "title": "Total Credits Per Voter",
-        "description": "Set the credit budget each voter receives (votes cost credits²)"
-      },
       "output": "Output:",
       "outputDesc": "Smart contract ABI or JSON logic definition will be generated based on your selection."
     },

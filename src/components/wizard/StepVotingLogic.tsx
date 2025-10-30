@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Vote, Scale, ListOrdered, Coins } from "lucide-react";
 
 const votingModels = [
@@ -34,17 +33,15 @@ interface StepVotingLogicProps {
 const StepVotingLogic = ({ selectedModel, onModelChange, onDataChange }: StepVotingLogicProps) => {
   const { t } = useTranslation();
   const [allowLiquidDelegation, setAllowLiquidDelegation] = useState(false);
-  const [quadraticCredits, setQuadraticCredits] = useState(100);
 
   useEffect(() => {
     if (onDataChange) {
       onDataChange({
         model: selectedModel,
         allowLiquidDelegation,
-        quadraticCredits: selectedModel === 'quadratic' ? quadraticCredits : undefined,
       });
     }
-  }, [selectedModel, allowLiquidDelegation, quadraticCredits, onDataChange]);
+  }, [selectedModel, allowLiquidDelegation, onDataChange]);
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -86,27 +83,6 @@ const StepVotingLogic = ({ selectedModel, onModelChange, onDataChange }: StepVot
           );
         })}
       </div>
-
-      {/* Quadratic Credits Input (only for quadratic voting) */}
-      {selectedModel === 'quadratic' && (
-        <div className="p-5 rounded-xl bg-gradient-to-br from-primary/5 to-transparent border border-primary/20 backdrop-blur-sm">
-          <Label htmlFor="quadratic-credits" className="text-base font-semibold">
-            {t('steps.voting.quadraticCredits.title')}
-          </Label>
-          <p className="text-sm text-muted-foreground mt-1 mb-3">
-            {t('steps.voting.quadraticCredits.description')}
-          </p>
-          <Input
-            id="quadratic-credits"
-            type="number"
-            min={1}
-            max={1000}
-            value={quadraticCredits}
-            onChange={(e) => setQuadraticCredits(Number(e.target.value))}
-            className="max-w-xs"
-          />
-        </div>
-      )}
 
       {/* Liquid Delegation Toggle */}
       <div className="mt-6 p-5 rounded-xl bg-gradient-to-br from-accent/10 to-transparent border border-accent/20 backdrop-blur-sm">

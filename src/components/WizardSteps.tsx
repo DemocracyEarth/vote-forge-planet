@@ -138,10 +138,19 @@ const WizardSteps = ({ onBack }: WizardStepsProps) => {
           : "",
       };
 
+      // Merge quadratic settings from billData into votingLogicConfig
+      const votingLogicConfigWithSettings = {
+        ...votingLogicData,
+        ...(selectedVotingModel === 'quadratic' && billData.quadraticSettings ? {
+          quadraticCredits: Number(billData.quadraticSettings.creditsPerVoter) || 100,
+          voteCostFormula: billData.quadraticSettings.voteCostFormula || 'quadratic'
+        } : {})
+      };
+
       const { data, error } = await supabase.functions.invoke('create-election', {
         body: {
           identityConfig: { ...identityData, restrictions: authRestrictions },
-          votingLogicConfig: votingLogicData,
+          votingLogicConfig: votingLogicConfigWithSettings,
           billConfig: formattedBillData,
           tags: billData.tags || ['others'],
         }
