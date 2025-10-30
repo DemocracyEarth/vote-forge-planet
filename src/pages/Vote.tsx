@@ -460,11 +460,13 @@ const Vote = () => {
         // Handle update vs insert
         if (hasVoted) {
           // For updates, delete old votes and insert new ones
-          const { data: previousVotes } = await supabase
+          const { data: previousVotes, error: fetchError } = await supabase
             .from('voter_registry')
             .select('vote_id')
             .eq('voter_id', user.id)
             .eq('election_id', electionId);
+
+          if (fetchError) throw fetchError;
 
           if (previousVotes && previousVotes.length > 0) {
             // Get all related vote IDs from the first vote's metadata
@@ -472,23 +474,27 @@ const Vote = () => {
               .from('anonymous_votes')
               .select('metadata')
               .eq('id', previousVotes[0].vote_id)
-              .single();
+              .maybeSingle();
 
             const metadata = firstVote?.metadata as any;
             const relatedVoteIds = metadata?.related_votes || [previousVotes[0].vote_id];
 
-            // Delete all related anonymous votes
-            await supabase
-              .from('anonymous_votes')
-              .delete()
-              .in('id', relatedVoteIds);
-
-            // Delete the single registry entry
-            await supabase
+            // Delete the single registry entry FIRST
+            const { error: deleteRegistryError } = await supabase
               .from('voter_registry')
               .delete()
               .eq('voter_id', user.id)
               .eq('election_id', electionId);
+
+            if (deleteRegistryError) throw deleteRegistryError;
+
+            // Then delete all related anonymous votes
+            const { error: deleteVotesError } = await supabase
+              .from('anonymous_votes')
+              .delete()
+              .in('id', relatedVoteIds);
+
+            if (deleteVotesError) throw deleteVotesError;
           }
         }
 
