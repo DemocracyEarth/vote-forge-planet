@@ -58,7 +58,7 @@ const Vote = () => {
 
   // Quadratic voting specific state
   const [quadraticCredits, setQuadraticCredits] = useState<Record<string, number>>({});
-  const [totalCredits] = useState(100); // Default credit pool
+  const [totalCredits, setTotalCredits] = useState(100); // Default credit pool
 
   // Check if election is closed
   const isElectionClosed = () => {
@@ -360,6 +360,11 @@ const Vote = () => {
       const config = data.voting_logic_config as any;
       const model = config?.model || 'direct';
       setVotingModel(model);
+      
+      // Load quadratic credits from config if it's a quadratic election
+      if (model === 'quadratic' && config?.quadraticCredits) {
+        setTotalCredits(config.quadraticCredits);
+      }
       console.log('📊 Voting model detected:', model);
     } catch (error) {
       console.error('Error loading election:', error);
