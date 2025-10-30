@@ -459,42 +459,61 @@ const Vote = () => {
 
         // Handle update vs insert
         if (hasVoted) {
-          // For updates, delete old votes and insert new ones
-          const { data: previousVotes, error: fetchError } = await supabase
+          console.log('🔄 Updating existing quadratic vote...');
+          
+          // Step 1: Get all existing vote IDs for this user in this election
+          const { data: existingRegistry, error: fetchError } = await supabase
             .from('voter_registry')
             .select('vote_id')
             .eq('voter_id', user.id)
             .eq('election_id', electionId);
 
-          if (fetchError) throw fetchError;
+          if (fetchError) {
+            console.error('Error fetching existing registry:', fetchError);
+            throw fetchError;
+          }
 
-          if (previousVotes && previousVotes.length > 0) {
-            // Get all related vote IDs from the first vote's metadata
+          if (existingRegistry && existingRegistry.length > 0) {
+            console.log('📝 Found existing votes to delete:', existingRegistry.length);
+            
+            // Step 2: Get all related vote IDs from metadata
             const { data: firstVote } = await supabase
               .from('anonymous_votes')
               .select('metadata')
-              .eq('id', previousVotes[0].vote_id)
+              .eq('id', existingRegistry[0].vote_id)
               .maybeSingle();
 
             const metadata = firstVote?.metadata as any;
-            const relatedVoteIds = metadata?.related_votes || [previousVotes[0].vote_id];
+            const relatedVoteIds = metadata?.related_votes || [existingRegistry[0].vote_id];
+            console.log('🗑️ Will delete vote IDs:', relatedVoteIds);
 
-            // Delete the single registry entry FIRST
+            // Step 3: Delete registry entry FIRST (this is the constraint)
             const { error: deleteRegistryError } = await supabase
               .from('voter_registry')
               .delete()
               .eq('voter_id', user.id)
               .eq('election_id', electionId);
 
-            if (deleteRegistryError) throw deleteRegistryError;
+            if (deleteRegistryError) {
+              console.error('❌ Failed to delete registry:', deleteRegistryError);
+              throw deleteRegistryError;
+            }
+            console.log('✅ Registry entry deleted');
 
-            // Then delete all related anonymous votes
+            // Step 4: Delete all related votes
             const { error: deleteVotesError } = await supabase
               .from('anonymous_votes')
               .delete()
               .in('id', relatedVoteIds);
 
-            if (deleteVotesError) throw deleteVotesError;
+            if (deleteVotesError) {
+              console.error('❌ Failed to delete votes:', deleteVotesError);
+              throw deleteVotesError;
+            }
+            console.log('✅ All related votes deleted');
+            
+            // Small delay to ensure database consistency
+            await new Promise(resolve => setTimeout(resolve, 100));
           }
         }
 
