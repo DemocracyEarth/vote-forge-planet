@@ -527,14 +527,16 @@ const Vote = () => {
 
         if (voteError) throw voteError;
 
-        // Register in voter_registry (single entry per voter per election)
-        // We store the first vote_id as reference, all votes are linked via metadata
+        // Register in voter_registry using UPSERT to avoid race conditions
+        // If entry exists, update it; if not, insert it
         const { error: registryError } = await supabase
           .from('voter_registry')
-          .insert({
+          .upsert({
             election_id: electionId,
             voter_id: user.id,
             vote_id: voteIds[0] // Reference the first vote, all votes are linked via metadata
+          }, {
+            onConflict: 'election_id,voter_id' // Specify the unique constraint columns
           });
 
         if (registryError) throw registryError;
