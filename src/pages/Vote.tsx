@@ -461,22 +461,53 @@ const Vote = () => {
         if (hasVoted) {
           console.log('🔄 Updating existing quadratic vote...');
           
-          // Step 1: Get ALL vote_ids for this user in this election from registry
-          const { data: existingRegistry, error: fetchError } = await supabase
+          // Step 1: Get the reference vote_id from registry
+          const { data: registryEntry, error: fetchError } = await supabase
             .from('voter_registry')
             .select('vote_id')
             .eq('voter_id', user.id)
-            .eq('election_id', electionId);
+            .eq('election_id', electionId)
+            .maybeSingle();
 
           if (fetchError) {
-            console.error('Error fetching existing registry:', fetchError);
+            console.error('Error fetching registry:', fetchError);
             throw fetchError;
           }
 
-          const voteIdsToDelete = existingRegistry?.map(r => r.vote_id) || [];
-          console.log('🗑️ Will delete votes:', voteIdsToDelete);
+          if (registryEntry?.vote_id) {
+            console.log('📍 Found registry vote_id:', registryEntry.vote_id);
+            
+            // Step 2: Get the related_votes array from the referenced vote
+            const { data: referenceVote, error: voteError } = await supabase
+              .from('anonymous_votes')
+              .select('metadata')
+              .eq('id', registryEntry.vote_id)
+              .maybeSingle();
 
-          // Step 2: Delete registry entries
+            if (voteError) {
+              console.error('Error fetching reference vote:', voteError);
+              throw voteError;
+            }
+
+            const relatedVoteIds = (referenceVote?.metadata as any)?.related_votes || [];
+            console.log('🔗 Found related votes:', relatedVoteIds);
+
+            // Step 3: Delete ALL related votes
+            if (relatedVoteIds.length > 0) {
+              const { error: deleteVotesError } = await supabase
+                .from('anonymous_votes')
+                .delete()
+                .in('id', relatedVoteIds);
+
+              if (deleteVotesError) {
+                console.error('❌ Failed to delete votes:', deleteVotesError);
+                throw deleteVotesError;
+              }
+              console.log(`✅ Deleted ${relatedVoteIds.length} votes`);
+            }
+          }
+
+          // Step 4: Delete the registry entry (will be recreated by UPSERT)
           const { error: deleteRegistryError } = await supabase
             .from('voter_registry')
             .delete()
@@ -487,21 +518,7 @@ const Vote = () => {
             console.error('❌ Failed to delete registry:', deleteRegistryError);
             throw deleteRegistryError;
           }
-          console.log('✅ Registry entries deleted');
-
-          // Step 3: Delete all the votes (don't rely on metadata)
-          if (voteIdsToDelete.length > 0) {
-            const { error: deleteVotesError } = await supabase
-              .from('anonymous_votes')
-              .delete()
-              .in('id', voteIdsToDelete);
-
-            if (deleteVotesError) {
-              console.error('❌ Failed to delete votes:', deleteVotesError);
-              throw deleteVotesError;
-            }
-            console.log('✅ Votes deleted');
-          }
+          console.log('✅ Registry entry deleted');
 
           // Add a small delay to ensure deletions complete
           await new Promise(resolve => setTimeout(resolve, 100));
