@@ -1082,26 +1082,26 @@ const Vote = () => {
                   </h4>
                 </div>
                 <div className="space-y-4">
-                  {Object.entries(voteResults)
-                    .filter(([, value]) => value !== null)
-                    .sort(([, a], [, b]) => {
-                      if (a === null || b === null) return 0;
-                      const aVal = typeof a === 'object' ? a.votes : a;
-                      const bVal = typeof b === 'object' ? b.votes : b;
-                      return bVal - aVal;
-                    })
-                    .map(([option, data], index) => {
-                      if (data === null) return null;
-                      const count = typeof data === 'object' ? data.votes : data;
-                      const credits = typeof data === 'object' ? data.credits : null;
-                      const total = Object.values(voteResults)
-                        .filter(v => v !== null)
-                        .reduce((sum, val) => {
-                          if (val === null) return sum;
-                          const voteCount = typeof val === 'object' ? val.votes : val;
-                          return sum + voteCount;
-                        }, 0);
-                      const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : "0.0";
+                {Object.entries(voteResults)
+                  .filter(([, value]) => value !== null)
+                  .sort(([, a], [, b]) => {
+                    if (a === null || b === null) return 0;
+                    const aVal = typeof a === 'object' ? (a as any).votes : (a as number);
+                    const bVal = typeof b === 'object' ? (b as any).votes : (b as number);
+                    return bVal - aVal;
+                  })
+                  .map(([option, data], index) => {
+                    if (data === null) return null;
+                    const count = typeof data === 'object' ? (data as any).votes : (data as number);
+                    const credits = typeof data === 'object' ? (data as any).credits : null;
+                    const total = Object.values(voteResults)
+                      .filter(v => v !== null)
+                      .reduce((sum, val) => {
+                        if (val === null) return sum;
+                        const voteCount = typeof val === 'object' ? (val as any).votes : (val as number);
+                        return sum + voteCount;
+                      }, 0);
+                    const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : "0.0";
                       return (
                         <div key={option} className="space-y-2 p-4 rounded-lg bg-card/40 backdrop-blur-sm border border-border/50 hover:border-primary/30 smooth-transition">
                           <div className="flex justify-between items-center">
