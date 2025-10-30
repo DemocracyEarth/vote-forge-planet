@@ -762,13 +762,13 @@ const Vote = () => {
                     </span>
                   </div>
                   {user && eligibilityStatus && (
-                    <div className={`flex items-start gap-2 px-3 py-2 rounded-lg border ${
+                    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${
                       eligibilityStatus.canVote 
                         ? "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20" 
                         : "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20"
                     }`}>
                       <span className="font-medium text-base">{eligibilityStatus.canVote ? "✓" : "✗"}</span>
-                      <div className="flex-1 space-y-1">
+                      <div className="flex-1">
                         <span className="text-xs font-semibold block">
                           {eligibilityStatus.reason}
                         </span>
