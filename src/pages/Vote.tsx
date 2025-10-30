@@ -461,7 +461,7 @@ const Vote = () => {
         if (hasVoted) {
           console.log('🔄 Updating existing quadratic vote...');
           
-          // Step 1: Get the reference vote_id from registry
+          // Step 1: Get the current registry entry
           const { data: registryEntry, error: fetchError } = await supabase
             .from('voter_registry')
             .select('vote_id')
@@ -474,47 +474,49 @@ const Vote = () => {
             throw fetchError;
           }
 
-          if (registryEntry?.vote_id) {
-            console.log('📍 Found registry vote_id:', registryEntry.vote_id);
-            
-            // Step 2: Find ALL votes that reference this vote_id in their related_votes array
-            // This catches both single votes and multi-vote batches
-            const { data: allRelatedVotes, error: voteError } = await supabase
-              .from('anonymous_votes')
-              .select('id, metadata')
-              .eq('election_id', electionId);
+          // Step 2: Query ALL votes for this election
+          const { data: allVotes, error: votesError } = await supabase
+            .from('anonymous_votes')
+            .select('id, metadata')
+            .eq('election_id', electionId);
 
-            if (voteError) {
-              console.error('Error fetching votes:', voteError);
-              throw voteError;
+          if (votesError) {
+            console.error('Error fetching all votes:', votesError);
+            throw votesError;
+          }
+
+          // Step 3: Build a set of ALL vote IDs that belong to this user
+          // by finding all unique vote IDs across all related_votes arrays that contain the registry vote_id
+          const userVoteIds = new Set<string>();
+          
+          if (registryEntry?.vote_id && allVotes) {
+            // First, find any vote that has the registry vote_id in its related_votes
+            for (const vote of allVotes) {
+              const relatedVotes = (vote.metadata as any)?.related_votes || [];
+              if (relatedVotes.includes(registryEntry.vote_id)) {
+                // Add ALL IDs from this related_votes array (they're all part of the same batch)
+                relatedVotes.forEach((id: string) => userVoteIds.add(id));
+              }
             }
-
-            // Filter votes that contain the registry vote_id in their related_votes array
-            const voteIdsToDelete = allRelatedVotes
-              ?.filter(vote => {
-                const relatedVotes = (vote.metadata as any)?.related_votes || [];
-                return relatedVotes.includes(registryEntry.vote_id);
-              })
-              .map(vote => vote.id) || [];
-
-            console.log('🔗 Found related votes to delete:', voteIdsToDelete);
-
-            // Step 3: Delete ALL related votes
-            if (voteIdsToDelete.length > 0) {
+            
+            console.log('🔗 Found user vote IDs to delete:', Array.from(userVoteIds));
+            
+            // Step 4: Delete ALL votes belonging to this user
+            if (userVoteIds.size > 0) {
               const { error: deleteVotesError } = await supabase
                 .from('anonymous_votes')
                 .delete()
-                .in('id', voteIdsToDelete);
+                .in('id', Array.from(userVoteIds));
 
               if (deleteVotesError) {
                 console.error('❌ Failed to delete votes:', deleteVotesError);
                 throw deleteVotesError;
               }
-              console.log(`✅ Deleted ${voteIdsToDelete.length} votes`);
+              console.log(`✅ Deleted ${userVoteIds.size} votes`);
             }
           }
 
-          // Step 4: Delete the registry entry (will be recreated by UPSERT)
+          // Step 5: Delete the registry entry (will be recreated by UPSERT below)
           const { error: deleteRegistryError } = await supabase
             .from('voter_registry')
             .delete()
@@ -527,8 +529,8 @@ const Vote = () => {
           }
           console.log('✅ Registry entry deleted');
 
-          // Add a small delay to ensure deletions complete
-          await new Promise(resolve => setTimeout(resolve, 200));
+          // Add a delay to ensure deletions complete
+          await new Promise(resolve => setTimeout(resolve, 300));
         }
 
         // Pre-generate vote IDs so we can include related_votes in initial insert
