@@ -457,6 +457,9 @@ const Vote = () => {
             }
           }));
 
+        // Generate or retrieve persistent user_ref for this user's votes
+        let userRef = crypto.randomUUID();
+        
         // Handle update vs insert
         if (hasVoted) {
           console.log('🔄 Updating existing quadratic vote...');
@@ -474,7 +477,19 @@ const Vote = () => {
             throw fetchError;
           }
 
-          // Step 2: Query ALL votes for this election
+          // Step 2: Get the user_ref from the existing vote
+          if (registryEntry?.vote_id) {
+            const { data: existingVote } = await supabase
+              .from('anonymous_votes')
+              .select('metadata')
+              .eq('id', registryEntry.vote_id)
+              .maybeSingle();
+            
+            userRef = (existingVote?.metadata as any)?.user_ref || userRef;
+            console.log('📍 Found existing user_ref:', userRef);
+          }
+
+          // Step 3: Query ALL votes for this election and find those with matching user_ref
           const { data: allVotes, error: votesError } = await supabase
             .from('anonymous_votes')
             .select('id, metadata')
@@ -485,38 +500,28 @@ const Vote = () => {
             throw votesError;
           }
 
-          // Step 3: Build a set of ALL vote IDs that belong to this user
-          // by finding all unique vote IDs across all related_votes arrays that contain the registry vote_id
-          const userVoteIds = new Set<string>();
-          
-          if (registryEntry?.vote_id && allVotes) {
-            // First, find any vote that has the registry vote_id in its related_votes
-            for (const vote of allVotes) {
-              const relatedVotes = (vote.metadata as any)?.related_votes || [];
-              if (relatedVotes.includes(registryEntry.vote_id)) {
-                // Add ALL IDs from this related_votes array (they're all part of the same batch)
-                relatedVotes.forEach((id: string) => userVoteIds.add(id));
-              }
-            }
-            
-            console.log('🔗 Found user vote IDs to delete:', Array.from(userVoteIds));
-            
-            // Step 4: Delete ALL votes belonging to this user
-            if (userVoteIds.size > 0) {
-              const { error: deleteVotesError } = await supabase
-                .from('anonymous_votes')
-                .delete()
-                .in('id', Array.from(userVoteIds));
+          // Step 4: Filter votes by user_ref to find ALL votes from this user
+          const voteIdsToDelete = allVotes
+            ?.filter(vote => (vote.metadata as any)?.user_ref === userRef)
+            .map(vote => vote.id) || [];
 
-              if (deleteVotesError) {
-                console.error('❌ Failed to delete votes:', deleteVotesError);
-                throw deleteVotesError;
-              }
-              console.log(`✅ Deleted ${userVoteIds.size} votes`);
+          console.log('🔗 Found user vote IDs to delete (by user_ref):', voteIdsToDelete);
+          
+          // Step 5: Delete ALL votes belonging to this user
+          if (voteIdsToDelete.length > 0) {
+            const { error: deleteVotesError } = await supabase
+              .from('anonymous_votes')
+              .delete()
+              .in('id', voteIdsToDelete);
+
+            if (deleteVotesError) {
+              console.error('❌ Failed to delete votes:', deleteVotesError);
+              throw deleteVotesError;
             }
+            console.log(`✅ Deleted ${voteIdsToDelete.length} votes`);
           }
 
-          // Step 5: Delete the registry entry (will be recreated by UPSERT below)
+          // Step 6: Delete the registry entry (will be recreated by UPSERT below)
           const { error: deleteRegistryError } = await supabase
             .from('voter_registry')
             .delete()
@@ -542,7 +547,8 @@ const Vote = () => {
           id: voteIds[index],
           metadata: {
             ...entry.metadata,
-            related_votes: voteIds // Include all related vote IDs in metadata from the start
+            related_votes: voteIds, // Include all related vote IDs in metadata from the start
+            user_ref: userRef // Add persistent user identifier to track all votes from this user
           }
         }));
 
