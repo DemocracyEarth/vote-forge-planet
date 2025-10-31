@@ -140,7 +140,6 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
   });
   const [quadraticSettings, setQuadraticSettings] = useState({
     creditsPerVoter: "100",
-    voteCostFormula: "quadratic",
   });
   const [reputationSettings, setReputationSettings] = useState({
     minimumReputation: "100",
@@ -370,7 +369,7 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
       const modelSettings = votingModel === "token" 
         ? { tokenSettings }
         : votingModel === "quadratic"
-        ? { quadraticSettings }
+        ? { quadraticSettings: { ...quadraticSettings, voteCostFormula: "quadratic" } }
         : votingModel === "weighted"
         ? { reputationSettings }
         : {};
@@ -860,22 +859,6 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
                 />
                 <p className="text-xs text-muted-foreground">
                   Each voter receives this many credits to distribute
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="voteCostFormula" className="text-xs">Vote Cost Formula</Label>
-                <select
-                  id="voteCostFormula"
-                  value={quadraticSettings.voteCostFormula}
-                  onChange={(e) => setQuadraticSettings({...quadraticSettings, voteCostFormula: e.target.value})}
-                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                >
-                  <option value="quadratic">Quadratic (n²)</option>
-                  <option value="linear">Linear (n)</option>
-                  <option value="exponential">Exponential (2ⁿ)</option>
-                </select>
-                <p className="text-xs text-muted-foreground">
-                  Determines how voting power scales with credits spent
                 </p>
               </div>
             </div>
