@@ -440,138 +440,24 @@ const Vote = () => {
           return;
         }
 
-        // Create vote entries for each option with votes > 0
-        const voteEntries = Object.entries(quadraticCredits)
+        // Build allocations payload for server-side function
+        const allocations = Object.entries(quadraticCredits)
           .filter(([_, votes]) => votes > 0)
-          .map(([option, votes]) => ({
-            election_id: electionId,
-            vote_value: option,
-            vote_weight: votes * (1 + (delegatorInfo?.count || 0)), // Scale by delegation
-            metadata: {
-              voted_at: new Date().toISOString(),
-              voting_model: 'quadratic',
-              credits_spent: votes * votes,
-              base_votes: votes,
-              delegations_count: delegatorInfo?.count || 0,
-              related_votes: [] as string[] // Will store IDs of all votes in this batch
-            }
+          .map(([option, baseVotes]) => ({
+            option,
+            base_votes: baseVotes
           }));
 
-        // Generate or retrieve persistent user_ref for this user's votes
-        let userRef = crypto.randomUUID();
-        
-        // Handle update vs insert
-        if (hasVoted) {
-          console.log('🔄 Updating existing quadratic vote...');
-          
-          // Step 1: Get the current registry entry
-          const { data: registryEntry, error: fetchError } = await supabase
-            .from('voter_registry')
-            .select('vote_id')
-            .eq('voter_id', user.id)
-            .eq('election_id', electionId)
-            .maybeSingle();
+        // Call secure server-side RPC to atomically replace vote
+        const { error: rpcError } = await supabase.rpc('submit_quadratic_vote', {
+          p_election_id: electionId,
+          p_allocations: allocations
+        });
 
-          if (fetchError) {
-            console.error('Error fetching registry:', fetchError);
-            throw fetchError;
-          }
-
-          // Step 2: Get the user_ref from the existing vote
-          if (registryEntry?.vote_id) {
-            const { data: existingVote } = await supabase
-              .from('anonymous_votes')
-              .select('metadata')
-              .eq('id', registryEntry.vote_id)
-              .maybeSingle();
-            
-            userRef = (existingVote?.metadata as any)?.user_ref || userRef;
-            console.log('📍 Found existing user_ref:', userRef);
-          }
-
-          // Step 3: Query ALL votes for this election and find those with matching user_ref
-          const { data: allVotes, error: votesError } = await supabase
-            .from('anonymous_votes')
-            .select('id, metadata')
-            .eq('election_id', electionId);
-
-          if (votesError) {
-            console.error('Error fetching all votes:', votesError);
-            throw votesError;
-          }
-
-          // Step 4: Filter votes by user_ref to find ALL votes from this user
-          const voteIdsToDelete = allVotes
-            ?.filter(vote => (vote.metadata as any)?.user_ref === userRef)
-            .map(vote => vote.id) || [];
-
-          console.log('🔗 Found user vote IDs to delete (by user_ref):', voteIdsToDelete);
-          
-          // Step 5: Delete ALL votes belonging to this user
-          if (voteIdsToDelete.length > 0) {
-            const { error: deleteVotesError } = await supabase
-              .from('anonymous_votes')
-              .delete()
-              .in('id', voteIdsToDelete);
-
-            if (deleteVotesError) {
-              console.error('❌ Failed to delete votes:', deleteVotesError);
-              throw deleteVotesError;
-            }
-            console.log(`✅ Deleted ${voteIdsToDelete.length} votes`);
-          }
-
-          // Step 6: Delete the registry entry (will be recreated by UPSERT below)
-          const { error: deleteRegistryError } = await supabase
-            .from('voter_registry')
-            .delete()
-            .eq('voter_id', user.id)
-            .eq('election_id', electionId);
-
-          if (deleteRegistryError) {
-            console.error('❌ Failed to delete registry:', deleteRegistryError);
-            throw deleteRegistryError;
-          }
-          console.log('✅ Registry entry deleted');
-
-          // Add a delay to ensure deletions complete
-          await new Promise(resolve => setTimeout(resolve, 300));
+        if (rpcError) {
+          console.error('Error submitting quadratic vote:', rpcError);
+          throw rpcError;
         }
-
-        // Pre-generate vote IDs so we can include related_votes in initial insert
-        const voteIds = voteEntries.map(() => crypto.randomUUID());
-        
-        // Add IDs and complete metadata to all vote entries BEFORE insert
-        const voteEntriesWithMetadata = voteEntries.map((entry, index) => ({
-          ...entry,
-          id: voteIds[index],
-          metadata: {
-            ...entry.metadata,
-            related_votes: voteIds, // Include all related vote IDs in metadata from the start
-            user_ref: userRef // Add persistent user identifier to track all votes from this user
-          }
-        }));
-
-        // Insert all votes with complete metadata in one operation
-        const { error: voteError } = await supabase
-          .from('anonymous_votes')
-          .insert(voteEntriesWithMetadata);
-
-        if (voteError) throw voteError;
-
-        // Register in voter_registry using UPSERT to avoid race conditions
-        // If entry exists, update it; if not, insert it
-        const { error: registryError } = await supabase
-          .from('voter_registry')
-          .upsert({
-            election_id: electionId,
-            voter_id: user.id,
-            vote_id: voteIds[0] // Reference the first vote, all votes are linked via metadata
-          }, {
-            onConflict: 'election_id,voter_id' // Specify the unique constraint columns
-          });
-
-        if (registryError) throw registryError;
 
         toast({
           title: hasVoted ? "Vote Updated!" : t('vote.voteRecorded'),

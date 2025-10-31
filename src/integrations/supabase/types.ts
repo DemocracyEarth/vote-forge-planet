@@ -346,6 +346,10 @@ export type Database = {
         Args: { p_notification_type: string; p_user_id: string }
         Returns: boolean
       }
+      submit_quadratic_vote: {
+        Args: { p_allocations: Json; p_election_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       notification_type:
