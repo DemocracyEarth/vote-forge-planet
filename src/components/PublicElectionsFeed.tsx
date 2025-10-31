@@ -57,6 +57,7 @@ export function PublicElectionsFeed() {
   const [elections, setElections] = useState<PublicElection[]>([]);
   const [electionResults, setElectionResults] = useState<Record<string, ElectionResults[]>>({});
   const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
+  const [voterCounts, setVoterCounts] = useState<Record<string, number>>({});
   const [initialLoading, setInitialLoading] = useState(true);
   const [contentLoading, setContentLoading] = useState(false);
   const [filter, setFilter] = useState<FilterType>("all");
@@ -173,9 +174,18 @@ export function PublicElectionsFeed() {
           return { electionId: election.id, count: count || 0 };
         });
 
-        const [allResults, allCommentCounts] = await Promise.all([
+        const voterCountPromises = publicElections.map(async (election) => {
+          const { count } = await supabase
+            .from('voter_registry')
+            .select('*', { count: 'exact', head: true })
+            .eq('election_id', election.id);
+          return { electionId: election.id, count: count || 0 };
+        });
+
+        const [allResults, allCommentCounts, allVoterCounts] = await Promise.all([
           Promise.all(resultsPromises),
-          Promise.all(commentCountPromises)
+          Promise.all(commentCountPromises),
+          Promise.all(voterCountPromises)
         ]);
         
         const resultsMap: Record<string, ElectionResults[]> = {};
@@ -189,6 +199,12 @@ export function PublicElectionsFeed() {
           countsMap[electionId] = count;
         });
         setCommentCounts(countsMap);
+
+        const voterCountsMap: Record<string, number> = {};
+        allVoterCounts.forEach(({ electionId, count }) => {
+          voterCountsMap[electionId] = count;
+        });
+        setVoterCounts(voterCountsMap);
       }
     } catch (error) {
       console.error("Error loading public elections:", error);
@@ -442,7 +458,7 @@ export function PublicElectionsFeed() {
         <div className="grid gap-6">
           {elections.map((election) => {
           const results = electionResults[election.id] || [];
-          const totalVotes = results.length > 0 ? results[0].total_votes : 0;
+          const voterCount = voterCounts[election.id] || 0;
           
           return (
             <Card 
@@ -529,7 +545,7 @@ export function PublicElectionsFeed() {
                       </div>
                     )}
                   </div>
-                  {totalVotes > 0 && (
+                  {voterCount > 0 && (
                     <div 
                       className="flex flex-col items-end gap-1 px-4 py-2.5 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30 cursor-pointer hover:bg-primary/15 transition-colors"
                       onClick={() => setSelectedElectionForVoters({ id: election.id, title: election.title })}
@@ -537,9 +553,9 @@ export function PublicElectionsFeed() {
                     >
                       <div className="flex items-center gap-1.5">
                         <Users className="h-4 w-4 text-primary" />
-                        <span className="text-2xl font-bold text-primary">{totalVotes}</span>
+                        <span className="text-2xl font-bold text-primary">{voterCount}</span>
                       </div>
-                      <span className="text-xs text-muted-foreground">Total Votes</span>
+                      <span className="text-xs text-muted-foreground">Voters</span>
                     </div>
                   )}
                 </div>
@@ -667,7 +683,7 @@ export function PublicElectionsFeed() {
           electionTitle={selectedElectionForVoters.title}
           isOpen={true}
           onClose={() => setSelectedElectionForVoters(null)}
-          totalVotes={electionResults[selectedElectionForVoters.id]?.[0]?.total_votes || 0}
+          totalVotes={voterCounts[selectedElectionForVoters.id] || 0}
         />
       )}
     </div>
