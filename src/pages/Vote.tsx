@@ -1154,7 +1154,7 @@ const Vote = () => {
             </form>
 
             {/* Results Section */}
-            {Object.keys(voteResults).length > 0 && (
+            {Object.keys(voteResults).length > 0 && votingModel !== 'ranked' && (
               <div className="mt-8 p-6 rounded-xl bg-gradient-to-br from-primary/10 via-transparent to-accent/10 border border-primary/20 backdrop-blur-sm">
                 <div className="flex items-center gap-3 mb-5">
                   {election?.is_ongoing && (
