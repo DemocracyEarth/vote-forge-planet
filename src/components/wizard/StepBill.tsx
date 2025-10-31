@@ -622,24 +622,25 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
             {t('steps.bill.ballotOptions')}
           </div>
 
-          {/* Choice Type Toggle */}
-          <div className="flex items-center gap-4 text-xs sm:text-sm">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <div
-                className={`w-4 h-4 rounded-full border-2 flex items-center justify-center smooth-transition ${
-                  ballotType === "single"
-                    ? "border-primary bg-primary"
-                    : "border-muted-foreground/30"
-                }`}
-                onClick={() => setBallotType("single")}
-              >
-                {ballotType === "single" && (
-                  <div className="w-2 h-2 rounded-full bg-primary-foreground" />
-                )}
-              </div>
-              <span>{t('steps.bill.singleChoice')}</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
+          {/* Choice Type Toggle - Only for direct voting */}
+          {votingModel === "direct" && (
+            <div className="flex items-center gap-4 text-xs sm:text-sm">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <div
+                  className={`w-4 h-4 rounded-full border-2 flex items-center justify-center smooth-transition ${
+                    ballotType === "single"
+                      ? "border-primary bg-primary"
+                      : "border-muted-foreground/30"
+                  }`}
+                  onClick={() => setBallotType("single")}
+                >
+                  {ballotType === "single" && (
+                    <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                  )}
+                </div>
+                <span>{t('steps.bill.singleChoice')}</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
               <div
                 className={`w-4 h-4 rounded-full border-2 flex items-center justify-center smooth-transition ${
                   ballotType === "multiple"
@@ -655,6 +656,7 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
               <span>{t('steps.bill.multipleChoice')}</span>
             </label>
           </div>
+          )}
 
           {/* Options List */}
           <div className="space-y-2">
