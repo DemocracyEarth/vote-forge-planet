@@ -60,6 +60,8 @@ const Vote = () => {
   const [quadraticCredits, setQuadraticCredits] = useState<Record<string, number>>({});
   const [totalCredits, setTotalCredits] = useState(100); // Default credit pool
   const [voteCostFormula, setVoteCostFormula] = useState<'quadratic' | 'linear' | 'exponential'>('quadratic');
+  // Respect election setting: only count delegations when enabled
+  const allowLiquidDelegation = Boolean(election?.voting_logic_config?.allowLiquidDelegation);
 
   // Check if election is closed
   const isElectionClosed = () => {
@@ -83,8 +85,10 @@ const Vote = () => {
   useEffect(() => {
     if (user && election && !previousVoteLoaded) {
       loadPreviousVote();
-      loadDelegatorInfo();
-      loadUserDelegation();
+      if (election?.voting_logic_config?.allowLiquidDelegation) {
+        loadDelegatorInfo();
+        loadUserDelegation();
+      }
     }
   }, [user, election, previousVoteLoaded]);
 
@@ -284,22 +288,28 @@ const Vote = () => {
     if (!user) return;
     
     try {
-      const { data, error } = await supabase
+      // Fetch active delegation without relying on a foreign key relationship
+      const { data: delegation, error: delError } = await supabase
         .from('delegations')
-        .select('delegate_id, profiles:profiles!delegations_delegate_id_fkey(full_name, avatar_url)')
+        .select('delegate_id')
         .eq('delegator_id', user.id)
         .eq('active', true)
         .maybeSingle();
-      
-      if (error) {
-        console.error('Error loading user delegation:', error);
+
+      if (delError) {
+        console.error('Error loading user delegation:', delError);
         return;
       }
-      
-      if (data) {
-        const profile = Array.isArray(data.profiles) ? data.profiles[0] : data.profiles;
+
+      if (delegation?.delegate_id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name, avatar_url')
+          .eq('id', delegation.delegate_id)
+          .maybeSingle();
+
         setUserDelegation({
-          delegate_id: data.delegate_id,
+          delegate_id: delegation.delegate_id,
           delegate_name: profile?.full_name || 'Unknown',
           delegate_avatar: profile?.avatar_url || ''
         });
@@ -491,12 +501,12 @@ const Vote = () => {
               .from('anonymous_votes')
               .update({
                 vote_value: finalVoteValue,
-                vote_weight: (delegatorInfo?.count || 0) + 1,
+                vote_weight: (allowLiquidDelegation ? (delegatorInfo?.count || 0) + 1 : 1),
                 voted_at: new Date().toISOString(),
                 metadata: {
                   voted_at: new Date().toISOString(),
                   updated: true,
-                  delegations_count: delegatorInfo?.count || 0
+                  delegations_count: allowLiquidDelegation ? (delegatorInfo?.count || 0) : 0
                 }
               })
               .eq('id', previousVote.vote_id);
@@ -532,10 +542,10 @@ const Vote = () => {
         .insert({
           election_id: electionId,
           vote_value: finalVoteValue,
-          vote_weight: (delegatorInfo?.count || 0) + 1,
+          vote_weight: (allowLiquidDelegation ? (delegatorInfo?.count || 0) + 1 : 1),
           metadata: {
             voted_at: new Date().toISOString(),
-            delegations_count: delegatorInfo?.count || 0
+            delegations_count: allowLiquidDelegation ? (delegatorInfo?.count || 0) : 0
           }
         })
         .select('id')
@@ -816,7 +826,7 @@ const Vote = () => {
             </div>
 
             {/* User Delegation Override Notice */}
-            {!isElectionClosed() && userDelegation && !hasVoted && (
+            {!isElectionClosed() && allowLiquidDelegation && userDelegation && !hasVoted && (
               <div className="p-5 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/30 backdrop-blur-sm">
                 <div className="flex items-start gap-3">
                   <div className="p-2 rounded-lg bg-amber-500/20 mt-0.5">
@@ -838,7 +848,7 @@ const Vote = () => {
             )}
 
             {/* Delegation Power Display */}
-            {!isElectionClosed() && delegatorInfo && delegatorInfo.count > 0 && (
+            {!isElectionClosed() && allowLiquidDelegation && delegatorInfo && delegatorInfo.count > 0 && (
               <div className="p-5 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/30 backdrop-blur-sm">
                 <div className="flex items-center gap-3 mb-3">
                   <Users className="w-6 h-6 text-primary" />
