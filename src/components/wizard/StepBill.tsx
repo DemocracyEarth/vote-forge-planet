@@ -920,24 +920,6 @@ const StepBill = ({ votingModel, votingLogicData, onDataChange, onValidationChan
           </Card>
         )}
 
-        {/* Certification */}
-        <Card className="p-3 sm:p-4 space-y-2 sm:space-y-3">
-          <div className="flex items-center gap-2 text-xs sm:text-sm font-medium">
-            <Shield className="w-4 h-4 text-primary" />
-            Certification Type
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            We'll timestamp your proposal, store it on IPFS, and anchor the hash on-chain. Translation: it's permanent, verifiable, and censorship-proof. 🛡️
-          </p>
-        </Card>
-
-        {/* Output preview */}
-        <div className="p-4 bg-muted/50 rounded-lg border border-border">
-          <p className="text-sm text-muted-foreground">
-            <strong className="text-foreground">Output:</strong> Proposal metadata will be stored 
-            via IPFS and a cryptographic hash will be anchored on-chain for verification.
-          </p>
-        </div>
       </div>
         </>
       )}
