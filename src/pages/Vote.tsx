@@ -157,51 +157,46 @@ const Vote = () => {
       if (registry?.vote_id) {
         setHasVoted(true);
         
-        // Check voting model to determine how to load vote
-        if (votingModel === 'quadratic') {
-          // Fetch ALL votes from this user for this election
-          const { data: allRegistries } = await supabase
-            .from('voter_registry')
-            .select('vote_id')
-            .eq('voter_id', user.id)
-            .eq('election_id', electionId);
+        // Fetch the vote to check its metadata
+        const { data: mainVote } = await supabase
+          .from('anonymous_votes')
+          .select('vote_value, metadata')
+          .eq('id', registry.vote_id)
+          .single();
 
-          if (allRegistries && allRegistries.length > 0) {
-            const voteIds = allRegistries.map(r => r.vote_id);
-            
+        if (mainVote) {
+          const metadata = mainVote.metadata as any;
+          const relatedVotes = metadata?.related_votes;
+          
+          // Check if this is a quadratic vote with related votes
+          if (metadata?.voting_model === 'quadratic' && Array.isArray(relatedVotes) && relatedVotes.length > 0) {
+            // Load all related votes
             const { data: votes } = await supabase
               .from('anonymous_votes')
-              .select('vote_value, vote_weight, metadata')
-              .in('id', voteIds);
+              .select('vote_value, metadata')
+              .in('id', relatedVotes);
 
             // Reconstruct credit allocation from base_votes
             const creditsMap: Record<string, number> = {};
             votes?.forEach(vote => {
-              const metadata = vote.metadata as any;
-              const baseVotes = metadata?.base_votes || Math.sqrt(metadata?.credits_spent || vote.vote_weight);
-              creditsMap[vote.vote_value] = Math.round(baseVotes);
+              const voteMetadata = vote.metadata as any;
+              const baseVotes = voteMetadata?.base_votes;
+              if (typeof baseVotes === 'number' && baseVotes > 0) {
+                creditsMap[vote.vote_value] = baseVotes;
+              }
             });
             
             setQuadraticCredits(creditsMap);
             console.log('📊 Loaded previous quadratic vote:', creditsMap);
-          }
-        } else {
-          // Existing direct voting load logic
-          const { data: vote } = await supabase
-            .from('anonymous_votes')
-            .select('vote_value')
-            .eq('id', registry.vote_id)
-            .single();
-
-          if (vote?.vote_value) {
-            // Pre-populate the form with previous vote
+          } else {
+            // Direct voting - pre-populate the form with previous vote
             if (election.bill_config?.ballotOptions) {
               // For ballot options, split by comma if multiple choice
-              const previousSelections = vote.vote_value.split(", ").filter(Boolean);
+              const previousSelections = mainVote.vote_value.split(", ").filter(Boolean);
               setSelectedOptions(previousSelections);
             } else {
               // For free text
-              setVoteValue(vote.vote_value);
+              setVoteValue(mainVote.vote_value);
             }
           }
         }
