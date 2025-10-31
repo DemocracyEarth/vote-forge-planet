@@ -182,7 +182,16 @@ export const LiveResults = ({ voteResults, votingLogicConfig, ballotOptions }: L
                 {Array.isArray(voteResults.rounds) && voteResults.rounds.map((round: any, roundIndex: number) => {
                   const tallies = round.tallies || {};
                   const eliminated = round.eliminated;
-                  const sortedOptions = Object.entries(tallies).sort((a: any, b: any) => b[1] - a[1]);
+                  const remainingOptions = round.remaining_options || [];
+                  
+                  // Create a complete list of all options with their vote counts
+                  const allOptions = (ballotOptions || remainingOptions).map((option: string) => ({
+                    option,
+                    votes: tallies[option] || 0
+                  }));
+                  
+                  // Sort by votes (highest first)
+                  const sortedOptions = allOptions.sort((a: any, b: any) => b.votes - a.votes);
                   
                   return (
                     <div key={roundIndex} className="p-4 rounded-lg bg-muted/20 border border-border/50">
@@ -197,7 +206,7 @@ export const LiveResults = ({ voteResults, votingLogicConfig, ballotOptions }: L
                         )}
                       </div>
                       <div className="space-y-2">
-                        {sortedOptions.map(([option, votes]: any, idx: number) => {
+                        {sortedOptions.map(({ option, votes }: any, idx: number) => {
                           const isEliminated = option === eliminated;
                           const percentage = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
                           
@@ -212,7 +221,7 @@ export const LiveResults = ({ voteResults, votingLogicConfig, ballotOptions }: L
                               <div className="w-full bg-muted/50 rounded-full h-2 overflow-hidden">
                                 <div 
                                   className={`h-full rounded-full smooth-transition ${
-                                    idx === 0 ? 'bg-primary' : 'bg-accent'
+                                    idx === 0 && votes > 0 ? 'bg-primary' : 'bg-accent'
                                   }`}
                                   style={{ width: `${percentage}%` }}
                                 />
