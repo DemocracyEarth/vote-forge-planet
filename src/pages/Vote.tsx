@@ -1011,7 +1011,7 @@ const Vote = () => {
                       <VoteIcon className="w-5 h-5 mr-2" />
                       Cast Quadratic Votes
                     </>
-                  ) : delegatorInfo && delegatorInfo.count > 0 ? (
+                  ) : allowLiquidDelegation && delegatorInfo && delegatorInfo.count > 0 ? (
                     <>
                       <Users className="w-5 h-5 mr-2" />
                       Cast {delegatorInfo.count + 1} Votes (Your Power: {delegatorInfo.count + 1})
