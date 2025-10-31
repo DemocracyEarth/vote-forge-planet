@@ -318,6 +318,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_ranked_choice_winner: {
+        Args: { p_election_id: string }
+        Returns: Json
+      }
       can_user_vote_in_election: {
         Args: { p_election_id: string; p_user_id?: string }
         Returns: boolean

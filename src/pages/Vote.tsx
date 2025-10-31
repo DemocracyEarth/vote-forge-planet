@@ -22,6 +22,7 @@ import { LiveResults } from "@/components/LiveResults";
 import { ElectionCountdown } from "@/components/ElectionCountdown";
 import { marked } from "marked";
 import { QuadraticVotingInterface } from "@/components/QuadraticVotingInterface";
+import { RankedVotingInterface } from "@/components/RankedVotingInterface";
 
 const Vote = () => {
   const { t } = useTranslation();
@@ -35,7 +36,7 @@ const Vote = () => {
   const [voteValue, setVoteValue] = useState("");
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [voteResults, setVoteResults] = useState<Record<string, number>>({});
+  const [voteResults, setVoteResults] = useState<Record<string, any>>({});
   const [creator, setCreator] = useState<any>(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [previousVoteLoaded, setPreviousVoteLoaded] = useState(false);
@@ -60,6 +61,9 @@ const Vote = () => {
   const [quadraticCredits, setQuadraticCredits] = useState<Record<string, number>>({});
   const [totalCredits, setTotalCredits] = useState(100); // Default credit pool
   const [voteCostFormula, setVoteCostFormula] = useState<'quadratic' | 'linear' | 'exponential'>('quadratic');
+  
+  // Ranked voting specific state
+  const [rankedChoices, setRankedChoices] = useState<string[]>([]);
   // Respect election setting: only count delegations when enabled
   const allowLiquidDelegation = Boolean(election?.voting_logic_config?.allowLiquidDelegation);
 
@@ -192,6 +196,17 @@ const Vote = () => {
             
             setQuadraticCredits(creditsMap);
             console.log('📊 Loaded previous quadratic vote:', creditsMap);
+          } else if (metadata?.voting_model === 'ranked') {
+            // For ranked voting, parse the JSON array of ranked choices
+            try {
+              const rankings = JSON.parse(mainVote.vote_value);
+              if (Array.isArray(rankings)) {
+                setRankedChoices(rankings);
+                console.log('📊 Loaded previous ranked vote:', rankings);
+              }
+            } catch (error) {
+              console.error('Error parsing ranked vote:', error);
+            }
           } else {
             // Direct voting - pre-populate the form with previous vote
             if (election.bill_config?.ballotOptions) {
@@ -243,6 +258,17 @@ const Vote = () => {
             results[vote.vote_value].credits += metadata?.credits_spent || 0;
           }
         });
+      } else if (votingModel === 'ranked') {
+        // For ranked voting, call the instant-runoff calculation function
+        const { data: rankedResults, error: rankedError } = await supabase
+          .rpc('calculate_ranked_choice_winner', { p_election_id: electionId });
+        
+        if (rankedError) {
+          console.error('Error calculating ranked results:', rankedError);
+        } else {
+          setVoteResults((rankedResults as any) || {});
+          return; // Exit early for ranked voting
+        }
       } else {
         // Direct voting (existing logic)
         data?.forEach((item: any) => {
@@ -476,6 +502,99 @@ const Vote = () => {
         await loadDelegatorInfo();
         setSubmitting(false);
         return; // Exit early to prevent direct voting logic from running
+      }
+
+      // Handle ranked voting submission
+      if (votingModel === 'ranked') {
+        // Validate that at least one option is ranked
+        if (rankedChoices.length === 0) {
+          toast({
+            title: "No Rankings Provided",
+            description: "Please rank at least one option before submitting your vote.",
+            variant: "destructive",
+          });
+          setSubmitting(false);
+          return;
+        }
+
+        // Store ranked choices as JSON array
+        const rankedVoteValue = JSON.stringify(rankedChoices);
+        const voteWeight = (allowLiquidDelegation ? (delegatorInfo?.count || 0) + 1 : 1);
+
+        // If user has already voted, update their vote
+        if (hasVoted) {
+          const { data: previousVote } = await supabase
+            .from('voter_registry')
+            .select('vote_id')
+            .eq('election_id', electionId)
+            .eq('voter_id', user.id)
+            .single();
+
+          if (previousVote?.vote_id) {
+            const { error: updateVoteError } = await supabase
+              .from('anonymous_votes')
+              .update({
+                vote_value: rankedVoteValue,
+                vote_weight: voteWeight,
+                voted_at: new Date().toISOString(),
+                metadata: {
+                  voted_at: new Date().toISOString(),
+                  voting_model: 'ranked',
+                  ranked_choices: rankedChoices,
+                  delegations_count: allowLiquidDelegation ? (delegatorInfo?.count || 0) : 0,
+                  updated: true
+                }
+              })
+              .eq('id', previousVote.vote_id);
+
+            if (updateVoteError) throw updateVoteError;
+          }
+        } else {
+          // Insert new vote
+          const { data: newVote, error: voteError } = await supabase
+            .from('anonymous_votes')
+            .insert({
+              election_id: electionId,
+              vote_value: rankedVoteValue,
+              vote_weight: voteWeight,
+              metadata: {
+                voted_at: new Date().toISOString(),
+                voting_model: 'ranked',
+                ranked_choices: rankedChoices,
+                delegations_count: allowLiquidDelegation ? (delegatorInfo?.count || 0) : 0
+              }
+            })
+            .select('id')
+            .single();
+
+          if (voteError) throw voteError;
+
+          // Register voter with reference to the vote
+          const { error: registryError } = await supabase
+            .from('voter_registry')
+            .insert({
+              election_id: electionId,
+              voter_id: user.id,
+              vote_id: newVote.id,
+            });
+
+          if (registryError && registryError.code !== '23505') {
+            throw registryError;
+          }
+        }
+
+        toast({
+          title: hasVoted ? "Vote Updated!" : t('vote.voteRecorded'),
+          description: hasVoted 
+            ? "Your ranked vote has been updated" 
+            : "Your ranked choices have been recorded",
+        });
+        
+        setHasVoted(true);
+        await loadVoteResults();
+        await loadDelegatorInfo();
+        setSubmitting(false);
+        return;
       }
 
       // If user has already voted, update their vote
@@ -937,6 +1056,13 @@ const Vote = () => {
                     onCreditsChange={setQuadraticCredits}
                     totalCredits={totalCredits}
                     costFormula={voteCostFormula}
+                    disabled={!eligibilityStatus?.canVote || submitting || isElectionClosed()}
+                  />
+                ) : votingModel === 'ranked' && election?.bill_config?.ballotOptions ? (
+                  <RankedVotingInterface
+                    options={election.bill_config.ballotOptions}
+                    rankedChoices={rankedChoices}
+                    onRankChange={setRankedChoices}
                     disabled={!eligibilityStatus?.canVote || submitting || isElectionClosed()}
                   />
                 ) : election?.bill_config?.ballotOptions ? (

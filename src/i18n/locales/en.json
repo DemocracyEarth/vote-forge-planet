@@ -68,7 +68,14 @@
     "creditsExceeded": "You've exceeded your credit limit!",
     "noCreditsAllocated": "You must allocate at least one vote",
     "quadraticExplainer": "💡 The more votes you give to an option, the more credits it costs. This helps express how strongly you feel about each choice.",
-    "creditsSpent": "credits"
+    "creditsSpent": "credits",
+    "rankYourChoices": "Rank Your Choices",
+    "dragToReorder": "Drag to reorder your preferences",
+    "firstChoice": "1st Choice",
+    "notRanked": "Not Ranked",
+    "rankedResults": "Ranked Choice Results",
+    "eliminationRounds": "Elimination Rounds",
+    "roundNumber": "Round {number}"
   },
   "dashboard": {
     "publicFeed": "Public Feed",
