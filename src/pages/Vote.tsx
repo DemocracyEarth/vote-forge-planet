@@ -265,6 +265,13 @@ const Vote = () => {
         
         if (rankedError) {
           console.error('Error calculating ranked results:', rankedError);
+          toast({
+            title: "Error calculating results",
+            description: "Unable to calculate ranked voting results. Please try again.",
+            variant: "destructive",
+          });
+          setVoteResults({});
+          return;
         } else {
           setVoteResults((rankedResults as any) || {});
           return; // Exit early for ranked voting
